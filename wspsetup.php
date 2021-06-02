@@ -129,6 +129,13 @@ else {
     foreach($errorclass AS $ek => $ev) {
         $errorclass[$ek] = 0;
     }
+
+    var_export($errorclass);
+
+    // remove FTP from errorgroups if ignore is checked
+    if (isset($_POST['ftp_ignore'])) { unset($errorgroup[3]); }
+
+    // run
     foreach ($errorgroup AS $egk => $egv) { 
         foreach ($egv AS $ck => $cv) { 
             if (isset($_POST[strtolower($cv)])) {
@@ -136,7 +143,7 @@ else {
                     $data[$cv] = '';
                     $errorclass[$egk] = $errorclass[$egk]+(count($errorgroup)*count($egv));
                 } else {
-                    $data[$cv] = trim($_POST[strtolower($cv)]);
+                    $data[$cv] = filter_var(trim($_POST[strtolower($cv)]), FILTER_SANITIZE_STRING);
                     $errorclass[$egk]--;
                 }
             }
@@ -154,51 +161,66 @@ else {
         // run install routine
         $errorclass[4] = -1;
         $errorclass[5] = -1;
-        // check ftp-connection
-        $_SESSION['ftp_ssl'] = (($data['FTP_SSL']==1)?true:false);
-        $_SESSION['ftp_host'] = $data['FTP_HOST'];
-        $_SESSION['ftp_port'] = $data['FTP_PORT'];
-        $_SESSION['ftp_user'] = $data['FTP_USER'];
-        $_SESSION['ftp_pass'] = $data['FTP_PASS'];
-        $_SESSION['ftp_base'] = $data['FTP_BASE'];
-        $_SESSION['ftp_pasv'] = false;
-        $ftpstat = @doFTP();
-        if ($ftpstat) {
-            // check the login directory
-            $ftpldlist = @ftp_nlist($ftpstat,'/');
-            if (is_array($ftpldlist) && count($ftpldlist)>0) {
-                // we got a ftp structure
-                $install = false;
-                foreach ($ftpldlist AS $flk => $flv) {
-                    if (cleanPath('/'.$flv.'/')==cleanPath('/'.$data['FTP_BASE'].'/')) {
-                        // the given directory was found
-                        // try to change to this folder
-                        if (ftp_chdir($ftpstat, cleanPath('/'.$data['FTP_BASE'].'/'))) {
-                            // get the basedir structure 
-                            $ftpbdlist = @ftp_nlist($ftpstat,'*');
-                            foreach ($ftpbdlist AS $fbk => $fbv) {
-                                // this directory should have a folder with wsp_basename
-                                if (cleanPath('/'.$fbv.'/')==cleanPath('/'.$_SESSION['tmpwspbasedir'].'/')) {
-                                    // we got a match
-                                    // ftp was successful
-                                    // we use it a bit later, so it will stay open
-                                    $_SESSION['msg'][] = returnIntLang('install could connect with ftp data');
-                                    $install = true;
+        // check ftp-connection - if not ignored
+        if (!(isset($_POST['ftp_ignore']))) { 
+            $_SESSION['ftp_ssl'] = (($data['FTP_SSL']==1)?true:false);
+            $_SESSION['ftp_host'] = $data['FTP_HOST'];
+            $_SESSION['ftp_port'] = $data['FTP_PORT'];
+            $_SESSION['ftp_user'] = $data['FTP_USER'];
+            $_SESSION['ftp_pass'] = $data['FTP_PASS'];
+            $_SESSION['ftp_base'] = $data['FTP_BASE'];
+            $_SESSION['ftp_pasv'] = false;
+            $ftpstat = @doFTP();
+            $webstat = false;
+        } else {
+            $ftpstat = false;
+            $webstat = true;
+        }
+        if ($ftpstat || $webstat) {
+            if ($ftpstat) {
+                // check the login directory with ftp credentials
+                $ftpldlist = @ftp_nlist($ftpstat,'/');
+                if (is_array($ftpldlist) && count($ftpldlist)>0) {
+                    // we got a ftp structure
+                    $install = false;
+                    foreach ($ftpldlist AS $flk => $flv) {
+                        if (cleanPath('/'.$flv.'/')==cleanPath('/'.$data['FTP_BASE'].'/')) {
+                            // the given directory was found
+                            // try to change to this folder
+                            if (ftp_chdir($ftpstat, cleanPath('/'.$data['FTP_BASE'].'/'))) {
+                                // get the basedir structure 
+                                $ftpbdlist = @ftp_nlist($ftpstat,'*');
+                                foreach ($ftpbdlist AS $fbk => $fbv) {
+                                    // this directory should have a folder with wsp_basename
+                                    if (cleanPath('/'.$fbv.'/')==cleanPath('/'.$_SESSION['tmpwspbasedir'].'/')) {
+                                        // we got a match
+                                        // ftp was successful
+                                        // we use it a bit later, so it will stay open
+                                        $_SESSION['msg'][] = returnIntLang('install could connect with ftp data');
+                                        $install = true;
+                                    }
                                 }
+                            } 
+                            else {
+                                $_SESSION['msg'][] = returnIntLang('install could not change to correct ftp base folder');
+                                $install = false;
+                                @ftp_close($ftpstat);
                             }
-                        } 
-                        else {
-                            $_SESSION['msg'][] = returnIntLang('install could not change to correct ftp base folder');
-                            $install = false;
-                            @ftp_close($ftpstat);
                         }
                     }
                 }
+                else {
+                    $_SESSION['msg'][] = returnIntLang('install some error occured while reading ftp login directory');
+                    $install = false;
+                    @ftp_close($ftpstat);
+                }
             }
             else {
-                $_SESSION['msg'][] = returnIntLang('install some error occured while reading ftp login directory');
-                $install = false;
-                @ftp_close($ftpstat);
+                // check the login directory with webserver credentials
+
+                echo __DIR__;
+
+                $install = true;
             }
         } 
         else {
@@ -212,10 +234,8 @@ else {
                 $_SESSION['msg'][] = returnIntLang('install could not connect to database');
                 $install = false;
             } 
-            else {
-                // database connection established
-                // we use it a bit later, so it will stay open 
-            }
+            // else database connection established
+            // we use it a bit later, so it will stay open 
         }
         // check smtp-connection » this is not required for install
         /*
@@ -245,97 +265,103 @@ else {
             // setup output and feedback vars
             $error = false;
             $didinstall = false;
-            // setup key
-            // setup final location and name of installer zip 
-            $sysfile = cleanPath(DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/tmp/wspsystem.zip');
-            // create temporary directory (it will be used in wsp later, too)
-            createDirFTP('/'.$_SESSION['tmpwspbasedir'].'/tmp/');
-            // getting installer file from server, upload or local file
-            // getting zip from server
-            if (isset($_POST['serversystem']) && trim($_POST['serversystem'])!='') {
-                // get update file from update server
-                $updsystem = trim($_POST['serversystem']);
-                if (isCurl()) {
-                    $defaults = array( 
-                        CURLOPT_URL => trim($_SESSION['installserver'].'/versions/system/'),
-                        CURLOPT_HEADER => 0, 
-                        CURLOPT_POST => 0,
-                        CURLOPT_POSTFIELDS => array(
-                            'file' => $updsystem,
-                            'key' => $updkey,
-                        ),
-                        CURLOPT_RETURNTRANSFER => TRUE, 
-                        CURLOPT_TIMEOUT => 4 
-                    );
-                    $ch = curl_init();
-                    curl_setopt_array($ch, $defaults);    
-                    if( ! $getversion = curl_exec($ch)) { trigger_error(curl_error($ch)); } 
-                    curl_close($ch);
-                } 
-                else {
-                    $fh = fopen('https://'.$_SESSION['installserver']."/versions/system/?file=".$updsystem."&key=".$updkey, 'r');
-                    if (intval($fh)!=0):
-                    while (!feof($fh)) {
-                        $getversion .= fgets($fh);
+            if (isset($_POST['serversystem']) && trim($_POST['serversystem'])=='git') {
+                // wsp updates using git
+                // git brings database.xml to _wsp_/tmp/
+                $error = false;
+            } else {
+                // setup key
+                // setup final location and name of installer zip 
+                $sysfile = cleanPath(DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/tmp/wspsystem.zip');
+                // create temporary directory (it will be used in wsp later, too)
+                createDirFTP('/'.$_SESSION['tmpwspbasedir'].'/tmp/');
+                // getting installer file from server, upload or local file
+                // getting zip from server
+                if (isset($_POST['serversystem']) && trim($_POST['serversystem'])!='') {
+                    // get update file from update server
+                    $updsystem = trim($_POST['serversystem']);
+                    if (isCurl()) {
+                        $defaults = array( 
+                            CURLOPT_URL => trim($_SESSION['installserver'].'/versions/system/'),
+                            CURLOPT_HEADER => 0, 
+                            CURLOPT_POST => 0,
+                            CURLOPT_POSTFIELDS => array(
+                                'file' => $updsystem,
+                                'key' => $updkey,
+                            ),
+                            CURLOPT_RETURNTRANSFER => TRUE, 
+                            CURLOPT_TIMEOUT => 4 
+                        );
+                        $ch = curl_init();
+                        curl_setopt_array($ch, $defaults);    
+                        if( ! $getversion = curl_exec($ch)) { trigger_error(curl_error($ch)); } 
+                        curl_close($ch);
+                    } 
+                    else {
+                        $fh = fopen('https://'.$_SESSION['installserver']."/versions/system/?file=".$updsystem."&key=".$updkey, 'r');
+                        if (intval($fh)!=0):
+                        while (!feof($fh)) {
+                            $getversion .= fgets($fh);
+                        }
+                        endif;
+                        fclose($fh);
                     }
-                    endif;
-                    fclose($fh);
-                }
-                $tmpsys = fopen($sysfile, "w");
-                if (fwrite($tmpsys, $getversion)) {
-                    $error = false;
-                } else {
-                    $_SESSION['msg'][] = returnIntLang('install could not write server based update file');
-                    $error = true;
-                }
-            } 
-            // else if upload
-            else if (isset($_FILES['uploadsystem'])) {
-                if ($_FILES['uploadsystem']['error']==0) {
-                    if ($_FILES['uploadsystem']['type']=='application/zip') {
-                        $didcopy = @ftp_put($ftpstat, $data['FTP_BASE'].'/'.trim($_SESSION['tmpwspbasedir']).'/tmp/wspsystem.zip', $_FILES['uploadsystem']['tmp_name'], FTP_BINARY);
-                        if (!$didcopy) {
-                            $_SESSION['msg'][] = returnIntLang('install got no usable installer file');
+                    $tmpsys = fopen($sysfile, "w");
+                    if (fwrite($tmpsys, $getversion)) {
+                        $error = false;
+                    } else {
+                        $_SESSION['msg'][] = returnIntLang('install could not write server based update file');
+                        $error = true;
+                    }
+                } 
+                // else if upload
+                else if (isset($_FILES['uploadsystem'])) {
+                    if ($_FILES['uploadsystem']['error']==0) {
+                        if ($_FILES['uploadsystem']['type']=='application/zip') {
+                            $didcopy = @ftp_put($ftpstat, $data['FTP_BASE'].'/'.trim($_SESSION['tmpwspbasedir']).'/tmp/wspsystem.zip', $_FILES['uploadsystem']['tmp_name'], FTP_BINARY);
+                            if (!$didcopy) {
+                                $_SESSION['msg'][] = returnIntLang('install got no usable installer file');
+                                $error = true;
+                            }
+                        } else {
+                            $_SESSION['msg'][] = returnIntLang('install uploaded file was no zip');
                             $error = true;
                         }
                     } else {
-                        $_SESSION['msg'][] = returnIntLang('install uploaded file was no zip');
+                        $_SESSION['msg'][] = returnIntLang('install could not upload installer file');
                         $error = true;
                     }
-                } else {
-                    $_SESSION['msg'][] = returnIntLang('install could not upload installer file');
-                    $error = true;
                 }
-            }
-            // else if is local
-            // check for existing zip-file
-            else if (is_file(DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/wsp-install.zip')) {
-                $didcopy = @ftp_put($ftpstat, $data['FTP_BASE'].'/'.trim($_SESSION['tmpwspbasedir']).'/tmp/wspsystem.zip', DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/wsp-install.zip', FTP_BINARY);
-                if (!$didcopy) {
+                // else if is local
+                // check for existing zip-file
+                else if (is_file(DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/wsp-install.zip')) {
+                    $didcopy = @ftp_put($ftpstat, $data['FTP_BASE'].'/'.trim($_SESSION['tmpwspbasedir']).'/tmp/wspsystem.zip', DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/wsp-install.zip', FTP_BINARY);
+                    if (!$didcopy) {
+                        $_SESSION['msg'][] = returnIntLang('install got no usable installer file');
+                        $error = true;
+                    }
+                }
+                else {
                     $_SESSION['msg'][] = returnIntLang('install got no usable installer file');
                     $error = true;
                 }
-            }
-            else {
-                $_SESSION['msg'][] = returnIntLang('install got no usable installer file');
-                $error = true;
-            }
-            // unzip database.xml (if it is in zip)
-            if (is_file($sysfile) && $error===false) {
-                $zip = new ZipArchive;
-                if ($zip->open($sysfile)===true) {        
-                    // run archive for files
-                    for($i = 0; $i < $zip->numFiles; $i++) {
-                        $filename = $zip->getNameIndex($i);
-                        $fileinfo = pathinfo($filename);
-                        if ($filename=='database.xml') {
-                            copy("zip://".$sysfile."#".$filename, cleanPath(DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/tmp/database.xml'));
+                // unzip database.xml (if it is in zip)
+                if (is_file($sysfile) && $error===false) {
+                    $zip = new ZipArchive;
+                    if ($zip->open($sysfile)===true) {        
+                        // run archive for files
+                        for($i = 0; $i < $zip->numFiles; $i++) {
+                            $filename = $zip->getNameIndex($i);
+                            $fileinfo = pathinfo($filename);
+                            if ($filename=='database.xml') {
+                                copy("zip://".$sysfile."#".$filename, cleanPath(DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/tmp/database.xml'));
+                            }
                         }
                     }
+                } else {
+                    $_SESSION['msg'][] = returnIntLang('install could not access installer file');
+                    $error = true;
                 }
-            } else {
-                $_SESSION['msg'][] = returnIntLang('install could not access installer file');
-                $error = true;
             }
             // prepare tablename prefix
             if (isset($data['DB_PREFIX']) && trim($data['DB_PREFIX'])!='') {
@@ -397,6 +423,7 @@ else {
                 }
             }
             // unpack zip file from temporary directory
+            // only happens if sysfile is avaiable -> it's not while using git
             if ($error===false && isset($sysfile)) {
                 $zip = new ZipArchive;
                 if ($zip->open($sysfile)===true) {        
@@ -447,9 +474,11 @@ else {
                 }
             }
             
-            
             // create conf file if isset overwriteconf or no conf file exists
             if ($error===false) {
+
+                echo 'conf file creation';
+
                 if (!(is_file(DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/data/include/wspconf.inc.php')) || $_POST['overwriteconf']==1) {
                     $confdata = "<?php\n";
                     $confdata.= "/**\n";
@@ -502,12 +531,15 @@ else {
                     }
                 }
             }
-            // closing the ftp connection opened in ftp testing
-            @ftp_close($ftpstat);
+            
+            if (!(isset($_POST['ftp_ignore']))) { 
+                // closing the ftp connection opened in ftp testing    
+                @ftp_close($ftpstat); 
+                // remove zip file from tmp
+                @unlink($sysfile);
+            }
             // closing the database connection opened in db testing
             @mysqli_close($dbcon);
-            // remove zip file from tmp
-            @unlink($sysfile);
             
             if ($error===false) {
                 $_SESSION['msg'][] = returnIntLang('install installation succesful');
@@ -515,15 +547,10 @@ else {
             }
         }
         
-        // unset all vars used in installation process
-        unset($_SESSION['ftp_ssl']);
-        unset($_SESSION['ftp_host']);
-        unset($_SESSION['ftp_port']);
-        unset($_SESSION['ftp_user']);
-        unset($_SESSION['ftp_pass']);
-        unset($_SESSION['ftp_pasv']);
+        // ? unset all vars used in installation process
+        
     }
-
+    
 ?>    
 
 <!doctype html>
@@ -784,7 +811,14 @@ else {
                                 <div class="step-pane form-section-4" data-step="4">
                                     <h2 class="wizarddesc"><?php echo returnIntLang('install steps ftp'); ?></h2>
                                     <p class='wizarddesc'><?php echo returnIntLang('install steps ftp desc'); ?></p>
-                                    <p><input type="checkbox" id="ftp_ignore" name="ftp_ignore" value="1" /></p>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <p><?php echo returnIntLang('install steps ftp ignore'); ?></p>
+                                        </div>
+                                        <div class="col-md-4">
+                                        <input type="checkbox" id="ftp_ignore" name="ftp_ignore" value="1" onchange="ignoreFTP(this.checked)" />
+                                        </div>
+                                    </div>
                                     <div class="row">
                                         <div class="col-md-4">
                                             <p><?php echo returnIntLang('install steps ftp host'); ?></p>
@@ -872,7 +906,7 @@ else {
                                             <p><?php echo returnIntLang('install steps smtp port'); ?></p>
                                         </div>
                                         <div class="col-md-4">
-                                            <p><input type="number" id="smtp_port" name="smtp_port" required class="form-control validate" value="<?php echo $data['SMTP_PORT']; ?>" data-parsley-group="validate" data-parsley-required-message="SMTP_PORT"></p>
+                                            <p><input type="number" id="smtp_port" name="smtp_port" class="form-control" value="<?php echo $data['SMTP_PORT']; ?>" /></p>
                                         </div>
                                     </div>
                                     <div class="row">
@@ -892,6 +926,7 @@ else {
                                         <div class="col-md-6">
                                             <p><select name="serversystem" id="serversystem" class="form-control" onchange="showInstall('server')">
                                                 <option value=""><?php echo returnIntLang('install steps server choose server'); ?></option>
+                                                <option value="git"><?php echo returnIntLang('install steps server install git'); ?></option>
                                                 <option value="full"><?php echo returnIntLang('install steps server install full'); ?></option>
                                                 <!-- <option value="last"><?php echo returnIntLang('install steps server install last'); ?></option> -->
                                                 <option value="nightly"><?php echo returnIntLang('install steps server install nightly'); ?></option>
@@ -940,7 +975,7 @@ else {
 			<div class="clearfix"></div>
 			<footer>
 				<div class="container-fluid">
-					<p class="copyright">© 2021 COVI.DE</p>
+					<p class="copyright">© 2019 COVI.DE</p>
 				</div>
 			</footer>
 		</div>
@@ -953,6 +988,24 @@ else {
         <script src="./data/script/wspbase.min.js"></script>
 		<script>
             
+            function ignoreFTP(val) {
+                if (val) {
+                    $('#ftp_host').removeClass('validate').attr('required', false).attr('data-parsley-group', false).attr('disabled', 'disabled');
+                    $('#ftp_user').removeClass('validate').attr('required', false).attr('data-parsley-group', false).attr('disabled', 'disabled');
+                    $('#ftp_pass').removeClass('validate').attr('required', false).attr('data-parsley-group', false).attr('disabled', 'disabled');
+                    $('#ftp_base').removeClass('validate').attr('required', false).attr('data-parsley-group', false).attr('disabled', 'disabled');
+                    $('#ftp_port').removeClass('validate').attr('required', false).attr('data-parsley-group', false).attr('disabled', 'disabled');
+                    $('#ftp_ssl').attr('disabled', 'disabled');
+                } else {
+                    $('#ftp_host').addClass('validate').attr('required', true).attr('data-parsley-group', 'validate').attr('disabled', false);
+                    $('#ftp_user').addClass('validate').attr('required', true).attr('data-parsley-group', 'validate').attr('disabled', false);
+                    $('#ftp_pass').addClass('validate').attr('required', true).attr('data-parsley-group', 'validate').attr('disabled', false);
+                    $('#ftp_base').addClass('validate').attr('required', true).attr('data-parsley-group', 'validate').attr('disabled', false);
+                    $('#ftp_port').addClass('validate').attr('required', true).attr('data-parsley-group', 'validate').attr('disabled', false);
+                    $('#ftp_ssl').attr('disabled', false);
+                }
+            }
+
             function showInstall(givenVal) {
                 if (givenVal=='upload') {
                     $('.wizard').find('.btn-next').find('i').removeClass('fa-placeholder').removeClass('fa-server').removeClass('fa-download').addClass('fa-upload');

@@ -150,34 +150,34 @@ endif;
 
 // do sql statement
 // returns array with resultset and complete information
-if (!(function_exists('doSQL'))):
-function doSQL($statement = '') {
-	$set = array('res'=>false,'aff'=>0,'num'=>0,'set'=>array(),'sql'=>$statement,'inf'=>'','err'=>'');
-	if ($_SESSION['wspvars']['db']):
-		$res = $_SESSION['wspvars']['db']->query($statement);
-		if ($res===true):
-			$set['res'] = true;
-			$set['aff'] = $_SESSION['wspvars']['db']->affected_rows;
-		elseif ($res):
-			$set['res'] = true;
-			$set['aff'] = $_SESSION['wspvars']['db']->affected_rows;
-			$set['num'] = $res->num_rows;
-		else:
-			$set['err'] = $_SESSION['wspvars']['db']->error_list;
-		endif;
-		if ($set['res']):
-			$set['inf'] = $_SESSION['wspvars']['db']->insert_id;
-		endif;
-		if ($set['num'] && $set['num']>0):
-			for($n=0; $n<$set['num']; $n++):
-				$set['set'][$n] = mysqli_fetch_assoc($res);
-			endfor;
-			mysqli_free_result($res);
-		endif;
-	endif;
-	return $set;
-	}
-endif;
+if (!(function_exists('doSQL'))) {
+    function doSQL($statement = '') {
+        $set = array('res'=>false,'aff'=>0,'num'=>0,'set'=>array(),'sql'=>$statement,'inf'=>'','err'=>'');
+        if ($_SESSION['wspvars']['db']) {
+            $res = $_SESSION['wspvars']['db']->query($statement);
+            if ($res===true) {
+                $set['res'] = true;
+                $set['aff'] = $_SESSION['wspvars']['db']->affected_rows;
+            } else if ($res) {
+                $set['res'] = true;
+                $set['aff'] = $_SESSION['wspvars']['db']->affected_rows;
+                $set['num'] = $res->num_rows;
+            } else {
+                $set['err'] = $_SESSION['wspvars']['db']->error_list;
+            }
+            if ($set['res']) {
+                $set['inf'] = $_SESSION['wspvars']['db']->insert_id;
+            }
+            if ($set['num'] && $set['num']>0) {
+                for($n=0; $n<$set['num']; $n++) {
+                    $set['set'][$n] = mysqli_fetch_assoc($res);
+                }
+                mysqli_free_result($res);
+            }
+        }
+        return $set;
+    }
+}
 
 // returns ONE result with a given statement that SHOULD return ONE result 
 if (!(function_exists('doResultSQL'))):
@@ -660,13 +660,13 @@ function returnIntLang($internationalize, $textoutput = true) {
 endif;
 
 if (!function_exists('generate_password')) {
-	function generate_password(){
-		$pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	function generate_password() {
+		$pool  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 		$pool .= "abcdefghijklmnopqrstuvwxyz";
 		$pool .= "1234567890";
-		$password="";
+		$password = "";
 		for ($i = 0; $i < 10; $i++) {
-			$password .= $pool{rand(0, strlen($pool)-1)};
+			$password .= $pool[rand(0, strlen($pool)-1)];
 		}
 		return $password;
 	}
