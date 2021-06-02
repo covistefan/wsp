@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 6.0
  * @version 7.0
- * @lastchange 2016-03-22
+ * @lastchange 2019-03-25
  */
 
 // if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!=''):
@@ -41,4 +41,5 @@ foreach ($tempdirs AS $tv) {
 echo "</pre>";
 
 echo "</body></html>";
-// EOF ?>
+
+// EOF

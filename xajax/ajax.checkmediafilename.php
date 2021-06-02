@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 6.0
  * @version 7.0
- * @lastchange 2015-09-30
+ * @lastchange 2021-06-02
  */
 
 if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
@@ -24,9 +24,10 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
             echo $newfilename;
         }
     } else {
-        echo "";
+        echo '';
     }
 } else {
-    echo "";
+    echo '';
 }
-?>
+
+// EOF

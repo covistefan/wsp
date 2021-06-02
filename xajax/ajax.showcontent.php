@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 6.0
  * @version 7.0
- * @lastchange 2015-12-04
+ * @lastchange 2021-06-02
  */
 
 if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
@@ -75,4 +75,5 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
         echo returnIntLang('contents this section is not editable');
     }
 }
-?>
+
+// EOF

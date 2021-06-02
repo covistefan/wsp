@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 6.0
  * @version 7.0
- * @lastchange 2014-03-21
+ * @lastchange 2019-01-03
  */
 if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!=''):
 session_start();

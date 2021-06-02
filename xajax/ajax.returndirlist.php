@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 6.0
  * @version 7.0
- * @lastchange 2018-11-21
+ * @lastchange 2019-07-31
  */
 
 if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
@@ -64,4 +64,3 @@ else {
 }
 
 // EOF
-?>

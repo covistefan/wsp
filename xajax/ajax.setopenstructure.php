@@ -4,8 +4,9 @@
  * @author stefan@covi.de
  * @since 6.0
  * @version 7.0
- * @lastchange 2016-09-12
+ * @lastchange 2017-09-04
  */
+
 session_start();
 if (isset($_POST['mid']) && intval($_POST['mid'])>0):
 	if (isset($_SESSION['wspvars']['openpath'])):
@@ -21,4 +22,5 @@ if (isset($_POST['mid']) && intval($_POST['mid'])>0):
         unset($_SESSION['wspvars']['openpath'][$mk]);
     endif;
 endif;
-?>
+
+// EOF
