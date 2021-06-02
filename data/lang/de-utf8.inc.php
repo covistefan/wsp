@@ -72,7 +72,7 @@ $lang['de'] = array(
 
 'install database pass required' => 'Das Datenbank-Passwort ist zwingend erforderlich. Wenn Ihr Datenbankserver eine anonyme Authentifizierung erlaubt, tragen Sie bitte ein * ein.',
 
-'install steps ftp desc' => 'Konfigurieren Sie hier den FTP-Server-Zugriff. WSP ist ein schreibendes System - es benötigt also die Rechte eines FTP-Benutzers, um final die entsprechenden Dateien anlegen zu können.',
+'install steps ftp desc' => 'Konfigurieren Sie hier den FTP-Server-Zugriff. WSP ist ein schreibendes System - es benötigt im Idealfall die Rechte eines FTP-Benutzers, um final die entsprechenden Dateien anlegen zu können. Sie können aber auch die Schreibrechte des Webservers benutzen, wenn Sie sich sicher sind, das dies keine Probleme beim späteren Löschen oder Bearbeiten der Dateien mit sich bringt.',
 'install steps ftp host' => 'FTP-Server URI oder IP',
 'install ftp host required' => 'Der FTP-Server ist zwingend erforderlich. In vielen Fällen ist der FTP-Server auch über \'localhost\' erreichbar, da WSP direkt auf dem Server arbeitet',
 'install steps ftp user' => 'FTP-Benutzer', 

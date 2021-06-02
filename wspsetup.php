@@ -522,15 +522,8 @@ else {
         unset($_SESSION['ftp_user']);
         unset($_SESSION['ftp_pass']);
         unset($_SESSION['ftp_pasv']);
-//        unset($_SESSION['smtp_ssl']);
-//        unset($_SESSION['smtp_host']);
-//        unset($_SESSION['smtp_port']);
-//        unset($_SESSION['smtp_user']);
-//        unset($_SESSION['smtp_pass']);
     }
 
-    
-    
 ?>    
 
 <!doctype html>
@@ -791,6 +784,7 @@ else {
                                 <div class="step-pane form-section-4" data-step="4">
                                     <h2 class="wizarddesc"><?php echo returnIntLang('install steps ftp'); ?></h2>
                                     <p class='wizarddesc'><?php echo returnIntLang('install steps ftp desc'); ?></p>
+                                    <p><input type="checkbox" id="ftp_ignore" name="ftp_ignore" value="1" /></p>
                                     <div class="row">
                                         <div class="col-md-4">
                                             <p><?php echo returnIntLang('install steps ftp host'); ?></p>
@@ -946,7 +940,7 @@ else {
 			<div class="clearfix"></div>
 			<footer>
 				<div class="container-fluid">
-					<p class="copyright">© 2019 COVI.DE</p>
+					<p class="copyright">© 2021 COVI.DE</p>
 				</div>
 			</footer>
 		</div>
