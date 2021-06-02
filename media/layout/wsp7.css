@@ -4178,6 +4178,10 @@ ul.activity-list > li .timestamp {
   position: relative;
   overflow: hidden;
   background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  margin: 10vh auto;
+  width: 90%;
+  max-width: 1280px;
 }
 
 .wizard:before, .wizard:after {
@@ -4190,28 +4194,36 @@ ul.activity-list > li .timestamp {
   clear: both;
 }
 
-.wizard ul {
+.wizard ul.steps {
   width: 4000px;
   padding: 0;
   margin: 0;
   list-style: none outside none;
+  background: #f2f2f2;
 }
 
-.wizard ul.previous-disabled li.complete {
-  cursor: default;
+.wizard ul.steps::after {
+  content: ' ';
+  width: 100%;
+  height: 1px;
+  display: table;
 }
 
-.wizard ul.previous-disabled li.complete:hover {
+.wizard ul.steps.previous-disabled li.complete {
+cursor: default;
+}
+
+.wizard ul.steps.previous-disabled li.complete:hover {
   color: #468847;
   cursor: default;
   background: #f3f4f5;
 }
 
-.wizard ul.previous-disabled li.complete:hover .chevron:before {
+.wizard ul.steps.previous-disabled li.complete:hover .chevron:before {
   border-left-color: #f3f4f5;
 }
 
-.wizard ul li {
+.wizard ul.steps li {
   position: relative;
   float: left;
   height: 47px;
@@ -4224,11 +4236,11 @@ ul.activity-list > li .timestamp {
   background: #f2f2f2;
 }
 
-.wizard ul li:first-child {
+.wizard ul.steps li:first-child {
   padding-left: 20px;
 }
 
-.wizard ul li .chevron {
+.wizard ul.steps li .chevron {
   border: 24px solid transparent;
   border-left: 14px solid #d4d4d4;
   border-right: 0;
@@ -4239,9 +4251,9 @@ ul.activity-list > li .timestamp {
   z-index: 1;
 }
 
-.wizard ul li .chevron:before {
+.wizard ul.steps li .chevron:before {
   border: 24px solid transparent;
-  border-left: 14px solid #eeeeee;
+  border-left: 14px solid #f2f2f2;
   border-right: 0;
   content: "";
   display: block;
@@ -4250,50 +4262,49 @@ ul.activity-list > li .timestamp {
   top: -24px;
 }
 
-.wizard ul li.complete {
+.wizard ul.steps li.complete {
   color: #fff;
   background: #41B314;
 }
 
-.wizard ul li.complete:hover {
+.wizard ul.steps li.complete:hover {
   cursor: pointer;
 }
 
-.wizard ul li.complete:hover .chevron:before {
+.wizard ul.steps li.complete:hover .chevron:before {
   border-left: 14px solid #41B314;
 }
 
-.wizard ul li.complete .chevron:before {
+.wizard ul.steps li.complete .chevron:before {
   border-left: 14px solid #41B314;
 }
 
-.wizard ul li.active {
+.wizard ul.steps li.active {
   color: #fff;
   background: #00AAFF;
 }
 
-.wizard ul li.active .chevron:before {
+.wizard ul.steps li.active .chevron:before {
   border-left: 14px solid #00AAFF;
 }
 
-.wizard ul li .badge {
+.wizard ul.steps li .badge {
   position: relative;
   top: -2px;
   margin-right: 8px;
   padding: 4px 7px;
 }
 
-.wizard ul li .badge.badge-info {
+.wizard ul.steps li .badge.badge-info {
   background-color: #0088cc;
 }
 
-.wizard ul li .badge.badge-success {
+.wizard ul.steps li .badge.badge-success {
   background-color: #30850f;
 }
 
 .wizard .step-content {
-  margin: 30px 0;
-  padding-left: 20px;
+  padding: 20px;
   float: left;
   width: 100%;
 }
@@ -4310,9 +4321,24 @@ ul.activity-list > li .timestamp {
   display: inline-block;
 }
 
+.wizard .wizarddesc {
+    clear: both;
+    float: none;
+    margin-bottom: 10px;
+}
+
+.wizard .wizardmsg {
+    font-weight: bold;
+}
+
 .wizard .actions {
   float: left;
   padding: 20px;
+}
+
+.wizard .parsley-errors-list {
+    list-style-type: none;
+    padding-left: 0px;
 }
 
 .wizard .parsley-errors-list li {
