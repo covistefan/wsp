@@ -1,7 +1,7 @@
 <?php
 /**
  * global language file
- * @author s.haendler@covi.de
+ * @author stefan@covi.de
  * @copyright (c) 2018, Common Visions Media.Agentur (COVI)
  * @since 3.1
  * @version 6.8

@@ -1,8 +1,7 @@
 <?php
 /**
  * global WSP variables 
- * @author cms@covi.de
- * @copyright (c) 2021, Common Visions Media.Agentur (COVI)
+ * @author stefan@covi.de
  * @since 3.1
  * @version 6.9.3
  * @lastchange 2021-02-22

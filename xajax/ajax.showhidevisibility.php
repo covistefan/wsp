@@ -1,8 +1,7 @@
 <?php
 /**
  * sichtbarkeit von ausgeblendeten / weitergeleiteten menüpunkten
- * @author t.friedrich@covi.de
- * @copyright (c) 2014, Common Visions Media.Agentur (COVI)
+ * @author stefan@covi.de
  * @since 6.0
  * @version 6.8
  * @lastchange 2018-09-14

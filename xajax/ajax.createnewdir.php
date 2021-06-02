@@ -1,7 +1,7 @@
 <?php
 /**
  * creating media directories
- * @author s.haendler@covi.de
+ * @author stefan@covi.de
  * @copyright (c) 2019, Common Visions Media.Agentur (COVI)
  * @since 6.0
  * @version 6.8.1

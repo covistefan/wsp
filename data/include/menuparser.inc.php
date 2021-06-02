@@ -1,8 +1,7 @@
 <?php
 /**
  * parser-functions to create dynamic menus from menu-template
- * @author s.haendler@covi.de
- * @copyright (c) 2021, Common Visions Media.Agentur (COVI)
+ * @author stefan@covi.de
  * @since 3.3
  * @version 6.10.3
  * @lastchange 2021-03-02

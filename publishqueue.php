@@ -1,8 +1,7 @@
 <?php
 /**
  * website publisher
- * @author s.haendler@covi.de
- * @copyright (c) 2021, Common Visions Media.Agentur (COVI)
+ * @author stefan@covi.de
  * @since 3.1
  * @version 6.10
  * @lastchange 2021-03-02

@@ -1,8 +1,7 @@
 <?php
 /**
  * Startseite von WSP3
- * @author s.haendler@covi.de
- * @copyright (c) 2021, Common Visions Media.Agentur (COVI)
+ * @author stefan@covi.de
  * @since 3.1
  * @version 6.9.4
  * @lastchange 2021-02-22

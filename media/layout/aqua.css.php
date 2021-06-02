@@ -2,7 +2,7 @@
 
 /**
  * @description Aqua
- * @author s.haendler@covi.de
+ * @author stefan@covi.de
  * @copyright (c) 2009, Common Visions Media.Agentur (COVI)
  * @since 3.2.3
  * @version 3.4.2

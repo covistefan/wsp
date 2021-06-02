@@ -1,7 +1,7 @@
 <?php
 /**
  * @description WSPStyle
- * @author s.haendler@covi.de
+ * @author stefan@covi.de
  * @copyright (c) 2018, Common Visions Media.Agentur (COVI)
  * @since 3.2.3
  * @type design

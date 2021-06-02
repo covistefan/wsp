@@ -1,8 +1,7 @@
 <?php
 /**
  * Verwaltung von Dateien
- * @author s.haendler@covi.de
- * @copyright (c) 2020, Common Visions Media.Agentur (COVI)
+ * @author stefan@covi.de
  * @since 3.1
  * @version 6.9
  * @lastchange 2020-07-13

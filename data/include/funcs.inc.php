@@ -1,8 +1,7 @@
 <?php
 /**
  * Allgemeine Funktionen
- * @author COVI
- * @copyright (c) 2021, Common Visions Media.Agentur (COVI)
+ * @author stefan@covi.de
  * @since 3.1
  * @version 6.10.1
  * @lastchange 2021-04-14

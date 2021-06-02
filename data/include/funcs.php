@@ -1,8 +1,7 @@
 <?php
 /**
 *
-* @author COVI
-* @copyright (c) 2007, Common Visions Media.Agentur (COVI)
+* @author stefan@covi.de
 * @since 3.1
 * @version 3.2.3.1
 * @lastchange 2007-08-30
@@ -71,7 +70,7 @@ if (!(__FUNCS__ === true)) {
 	}	// writeMySQLError()
 
 	/**
-	* Pfad für veröffentlichte Seite erstellen
+	* Pfad fï¿½r verï¿½ffentlichte Seite erstellen
 	*/
 	function createPath($mid) {
 		$path = '';
@@ -92,7 +91,7 @@ if (!(__FUNCS__ === true)) {
 	}	// createPath()
 
 	/**
-	* GET/POST-String für Sessionvar zurüchgeben, wenn Sessionvar genutzt wird
+	* GET/POST-String fï¿½r Sessionvar zurï¿½chgeben, wenn Sessionvar genutzt wird
 	* und Cookie nicht gesetzt wurde
 	*/
 	function getSessionVar($get = true) {
@@ -130,7 +129,7 @@ if (!(__FUNCS__ === true)) {
 	}	// getBreakTreeID()
 
 	/**
-	 * entsprechend den übergebenen Parameter Stylesheet schreiben oder ignorieren
+	 * entsprechend den ï¿½bergebenen Parameter Stylesheet schreiben oder ignorieren
 	 * @param $css	String	css-File
 	 * @param $media	String	Medien-Type
 	 * @param $browser	String	Browser
