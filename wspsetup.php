@@ -541,13 +541,13 @@ else {
 		<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
 		<!-- VENDOR CSS -->
-		<link rel="stylesheet" href="./media/layout/bootstrap.min.css">
-		<link rel="stylesheet" href="./media/layout/font-awesome-5-7-2.min.css">
-        <link rel="stylesheet" href="./media/layout/dropify.min.css">
+		<link rel="stylesheet" href="./media/layout/bootstrap.css">
+		<link rel="stylesheet" href="./media/layout/font-awesome-5-7-2.css">
+        <link rel="stylesheet" href="./media/layout/dropify.css">
         <!-- MAIN CSS -->
-		<link rel="stylesheet" href="./media/layout/wsp7.min.css">
+		<link rel="stylesheet" href="./media/layout/wsp7.css">
         <!-- JS -->
-        <script src="./data/script/jquery/js/jquery-3.3.1.min.js"></script>
+        <script src="./data/script/jquery/js/jquery-3.3.1.js"></script>
 	</head>
 	<body>
 		<!-- WRAPPER -->
