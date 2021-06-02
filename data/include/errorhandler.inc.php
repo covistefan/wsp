@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 3.1
  * @version 7.0
- * @lastchange 2017-08-27
+ * @lastchange 2019-03-08
  */
 
 if (defined('WSP_DEV') && WSP_DEV):

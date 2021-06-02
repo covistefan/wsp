@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 7.0
  * @version 7.0
- * @lastchange 2017-08-23
+ * @lastchange 2019-03-08
  */
 ?>
 <div class="widget widget-metric_6">

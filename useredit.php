@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 3.1
  * @version 7.0
- * @lastchange 2018-09-06
+ * @lastchange 2019-06-18
  */
 
 /* start session ----------------------------- */

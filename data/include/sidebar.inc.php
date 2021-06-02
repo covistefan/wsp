@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 3.1
  * @version 7.0
- * @lastchange 2016-06-09
+ * @lastchange 2019-11-01
  */
 
 $standardtemp = getWSPProperties('templates_id');

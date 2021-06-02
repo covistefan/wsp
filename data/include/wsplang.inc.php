@@ -4,10 +4,12 @@
  * @author stefan@covi.de
  * @since 3.1
  * @version 7.0
- * @lastchange 2017-08-30
+ * @lastchange 2021-06-02
  */
 
-if (isset($_REQUEST['setlang'])): $_SESSION['wspvars']['locallang'] = trim($_REQUEST['setlang']); endif;
+if (isset($_REQUEST['setlang']) && trim($_REQUEST['setlang'])) {
+	$_SESSION['wspvars']['locallang'] = trim(filter_var($_REQUEST['setlang'], FILTER_SANITIZE_URL));
+}
 
 $_SESSION['wspvars']['locallanguages'] = array();
 if (is_dir(str_replace("//", "/", DOCUMENT_ROOT."/".WSP_DIR."/data/lang/"))):

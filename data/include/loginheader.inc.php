@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 7.0
  * @version 7.0
- * @lastchange 2017-08-14
+ * @lastchange 2019-03-12
 */
 
 ksort($_SESSION);

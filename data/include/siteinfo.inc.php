@@ -4,13 +4,13 @@
  * @author stefan@covi.de
  * @since 3.1
  * @version 7.0
- * @lastchange 2017-08-29
+ * @lastchange 2021-06-02
  */
 
 // redirect to secure connection
-if (intval(getWSPProperties('sslmode'))==1 && $_SERVER['REQUEST_SCHEME']=='http'):
+if (intval(getWSPProperties('sslmode'))==1 && $_SERVER['REQUEST_SCHEME']=='http') {
     header('location: https://'.str_replace("//", "/", $_SERVER['HTTP_HOST'].'/'.$_SERVER['SCRIPT_URL']));
-endif;
+}
 
 $_SESSION['wspvars']['workspaceurl'] = doResultSQL("SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'devurl'");
 $_SESSION['wspvars']['liveurl'] = doResultSQL("SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'siteurl'");
