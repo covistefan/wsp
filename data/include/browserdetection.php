@@ -1,8 +1,7 @@
 <?php
 /**
 *
-* @author COVI
-* @copyright (c) 2007, Common Visions Media.Agentur (COVI)
+* @author stefan@covi.de
 * @since 3.1
 * @version 3.2.3
 * @lastchange 2007-08-10

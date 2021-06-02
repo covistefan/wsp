@@ -1,8 +1,7 @@
 <?php
 /**
  * rss parser-functions
- * @author s.haendler@covi.de
- * @copyright (c) 2015, Common Visions Media.Agentur (COVI)
+ * @author stefan@covi.de
  * @since 6.0
  * @version 6.2
  * @lastchange 2015-11-30

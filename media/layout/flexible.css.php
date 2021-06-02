@@ -1,7 +1,7 @@
 <?php
 /**
  * WSP Main Stylesheet
- * @author s.haendler@covi.de
+ * @author stefan@covi.de
  * @copyright (c) 2020, Common Visions Media.Agentur (COVI)
  * @since 3.2.3
  * @version 6.8.5

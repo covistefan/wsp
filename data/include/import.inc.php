@@ -1,8 +1,7 @@
 <?php
 /**
  * class to import wsp-data
- * @author COVI
- * @copyright (c) 2018, Common Visions Media.Agentur (COVI)
+ * @author stefan@covi.de
  * @since 3.1
  * @version 6.8
  * @lastchange 2018-09-18
@@ -272,10 +271,10 @@ function import(){
 		require ("data/parser/parserfuncs.inc.php"); // file-path
 		
 //		Filenamen falls bereits vorhanden durch neuen Namen ersetzten zb. test -> test_1
-//		Alternativ: Menupunkte gleichen Dateinamens einander ergŠnzen.
+//		Alternativ: Menupunkte gleichen Dateinamens einander ergï¿½nzen.
 //		
-//		Positions ŸberprŸfen und menupunkt hinten anhŠngen
-//		in menu und template_id ŸberprŸfen
+//		Positions ï¿½berprï¿½fen und menupunkt hinten anhï¿½ngen
+//		in menu und template_id ï¿½berprï¿½fen
 //			-> Ansatz: beim exportieren nicht die template_id exportieren sondern den Namen/Titel und dannach abgleichen, wenn nicht mit 1 bzw ersten template importieren
 		
 		//Menupunkte einlesen	
@@ -287,7 +286,7 @@ function import(){
 		if ($count > 0):
 			for($i = 0; $i < $count; $i++):
 				foreach($xml->menu->item[$i] as $itemkey => $item): //XML-Object einlesen
-					if (is_array($item)): //PrŸfen ob XML Atribut ein Array ist
+					if (is_array($item)): //Prï¿½fen ob XML Atribut ein Array ist
 						$item = $item[0]; // Fals Array ersten Eintrag in eine normale Variable umwandeln
 					endif;
 					if ($itemkey == 'mid'):
@@ -388,7 +387,7 @@ function import(){
 					$cc++;
 				endforeach;
 				foreach($xml->content->item[$i] as $itemkey => $item): //XML-Object einlesen
-					if(is_array($item)): //PrŸfen ob XML Atribut ein Array ist
+					if(is_array($item)): //Prï¿½fen ob XML Atribut ein Array ist
 						$item = $item[0]; // Fals Array ersten Eintrag in eine normale Variable umwandeln
 					endif;
 					$var.= $itemkey;
@@ -415,7 +414,7 @@ function import(){
 		endif;
 		foreach($import as $im):
 			echo "<pre>$im</pre><hr />\n";
-//			$err = mysql_query($im); //SQL-Statements ausfŸhren
+//			$err = mysql_query($im); //SQL-Statements ausfï¿½hren
 //			if(!$err): //auf SQL-Fehler ueberpruefen
 //				echo "Fehler im SQL-Statement<br />\n";
 //			endif;					

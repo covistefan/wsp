@@ -1,8 +1,7 @@
 <?php
 /**
  * functions, managing media folders
- * @author cms@covi.de
- * @copyright (c) 2019, Common Visions Media.Agentur (COVI)
+ * @author stefan@covi.de
  * @since 3.1
  * @version 6.7.2
  * @lastchange 2019-01-25
