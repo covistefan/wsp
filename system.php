@@ -1,64 +1,56 @@
 <?php
 /**
- * system administration
- * @author s.roscher@covi.de
- * @copyright (c) 2021, Common Visions Media.Agentur (COVI)
+ * @description system administration
+ * @author stefan@covi.de
  * @since 3.1
- * @version 6.10.1
- * @lastchange 2021-04-14
+ * @version 7.0
+ * @lastchange 2020-04-30
  */
 
-// switching off errors to prevent update failures
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+/* switching off errors to prevent update failures in LIVE version */
+/*
+error_reporting(0);
+ini_set('error_reporting', 0);
+*/
 
-// start session -----------------------------
+/* start session ----------------------------- */
 session_start();
-// base includes -----------------------------
+/* base includes ----------------------------- */
 require ("./data/include/usestat.inc.php");
 require ("./data/include/globalvars.inc.php");
-// first includes ----------------------------
-require ("./data/include/wsplang.inc.php");
-require ("./data/include/dbaccess.inc.php");
-require ("./data/include/ftpaccess.inc.php");
-require ("./data/include/funcs.inc.php");
-require ("./data/include/filesystemfuncs.inc.php");
-// checkParamVar -----------------------------
-
-// define actual system position -------------
+/* define actual system position ------------- */
 $_SESSION['wspvars']['lockstat'] = 'system';
+$_SESSION['wspvars']['pagedesc'] = array('far fa-cogs',returnIntLang('menu manage'),returnIntLang('menu manage system'));
 $_SESSION['wspvars']['mgroup'] = 10;
 $_SESSION['wspvars']['fpos'] = $_SERVER['PHP_SELF'];
 $_SESSION['wspvars']['fposcheck'] = true;
 $_SESSION['wspvars']['preventleave'] = false;
-// second includes ---------------------------
+$_SESSION['wspvars']['addpagecss'] = array(
+    'dropify.css',
+    );
+$_SESSION['wspvars']['addpagejs'] = array(
+    'dropify.js',
+    );
+/* second includes --------------------------- */
 require ("./data/include/checkuser.inc.php");
-require ("./data/include/errorhandler.inc.php");
 require ("./data/include/siteinfo.inc.php");
-// page specific includes --------------------
-if (phpversion()>4):
-    include_once "./data/include/lib5.xml.inc.php";
-else:
-    include_once "./data/include/lib.xml.inc.php";
-endif;
+// page specific includes -------------------- 
+
+/* include_once "./data/include/lib5.xml.inc.php"; // 2017-02-21 - php < 5 not supported */
 // define page specific vars -----------------
-
-$c = 0; $freespace = diskfreespace($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']);
-while ($freespace>1024):
-	$freespace = $freespace/1024;
-	$c++;
-endwhile;
-
+// calculate free and total space
+$cf = 0; $freespace = disk_free_space(DOCUMENT_ROOT);
+while ($freespace>1024): $freespace = $freespace/1024; $cf++; endwhile;
+$ct = 0; $totalspace = disk_total_space(DOCUMENT_ROOT);
+while ($totalspace>1024): $totalspace = $totalspace/1024; $ct++; endwhile;
 // define page specific funcs ----------------
 
 if (!(function_exists('checkDatabase'))):
 function checkDatabase($own,$dev,$dev_tablename,$own_tablename) {
-	$temp = false;
-    foreach ($own_tablename as $table) {
+	foreach ($own_tablename as $table) {
 		if (in_array($table,$dev_tablename)){
 			$x=0;
-			$_SESSION['dbchanges'] = '';
-            // anzahl der felder der dev-tabelle und der aktuellen tabelle ueberpruefen
+			// anzahl der felder der dev-tabelle und der aktuellen tabelle ueberpruefen
 			if (sizeof($dev[$table]['field']) < sizeof($own[$table]['field'])):
 				$length = sizeof($own[$table]['field']);
 			else:
@@ -68,11 +60,11 @@ function checkDatabase($own,$dev,$dev_tablename,$own_tablename) {
 			for ($i=0; $i<$length; $i++){
 				$same = true;
 				// pruefen ob neue spalte in der dev-tabelle vorhanden ist
-				if (isset($dev[$table]['field'][$i]) && !(in_array($dev[$table]['field'][$i], $own[$table]['field'])) && $dev[$table]['field'][$i]!=""):
+				if (@(!in_array($dev[$table]['field'][$i],$own[$table]['field']) && $dev[$table]['field'][$i]!="")):
 					$temp[$table][$x]['action']="addnew";
 					$temp[$table][$x]['field']=$dev[$table]['field'][$i];
 					$x++;
-				elseif (isset($own[$table]['field'][$i]) && in_array($own[$table]['field'][$i], $dev[$table]['field']) && $own[$table]['field'][$i]!=""):
+				elseif (in_array($own[$table]['field'][$i],$dev[$table]['field']) && $own[$table]['field'][$i]!=""):
 					// position im dev array bestimmten
 					$key = array_search($own[$table]['field'][$i],$dev[$table]['field']);
 					// check for field type
@@ -125,7 +117,7 @@ function checkDatabase($own,$dev,$dev_tablename,$own_tablename) {
 					//
 					// test for extra changes
 					//
-					if (isset($dev[$table]['extras'][$i]) && $own[$table]['extras'][$i]!=$dev[$table]['extras'][$i]):
+					if ($own[$table]['extras'][$i]!=$dev[$table]['extras'][$i]):
 						$temp[$table][$x]['field']=$dev[$table]['field'][$i];
 						$temp[$table][$x]['extras']="extras";
 						$temp[$table][$x]['action']="changed";
@@ -151,9 +143,13 @@ function checkDatabase($own,$dev,$dev_tablename,$own_tablename) {
 } // checkDatabase
 endif;
 
-if (!(function_exists('checkDatabaseNew'))):
 function checkDatabaseNew($own = array(), $dev = array()) {
 	$returnsql = array();
+//	echo "<pre>";
+//	print_r($own);
+//	echo "<hr />";
+//	print_r($dev);
+//	echo "</pre>";
 	foreach ($dev AS $dkey => $dvalue):
 		if (array_key_exists($dkey, $own)):
 			foreach ($dvalue['field'] AS $dfkey => $dfvalue):
@@ -246,129 +242,33 @@ function checkDatabaseNew($own = array(), $dev = array()) {
 	endforeach;
 	return $returnsql;
 } // checkDatabaseNew
-endif;
-
-// Kopiert eine Verzeichnisstruktur mit allen Files und Subdirs an den angegebenen Platz
-if (!(function_exists('copyTree'))) {
-    function copyTree($src, $dest) {
-
-        $ftp = ((isset($_SESSION['wspvars']['ftpssl']) && $_SESSION['wspvars']['ftpssl']===true)?ftp_ssl_connect($_SESSION['wspvars']['ftphost'], intval($_SESSION['wspvars']['ftpport'])):ftp_connect($_SESSION['wspvars']['ftphost'], intval($_SESSION['wspvars']['ftpport'])));
-        if ($ftp!==false) {if (!ftp_login($ftp, $_SESSION['wspvars']['ftpuser'], $_SESSION['wspvars']['ftppass'])) { $ftp = false; }}
-        if (isset($_SESSION['wspvars']['ftppasv']) && $ftp!==false) { ftp_pasv($ftp, $_SESSION['wspvars']['ftppasv']); }
-
-        if ($ftp) {
-            $dh = dir($src);
-            while (false !== ($entry = $dh->read())) {
-                if (($entry != '.') && ($entry != '..')) {
-                    if (is_dir($src."/".$entry)) {
-                        @ftp_mkdir($ftp, $dest."/".$entry);
-                        copyTree($src."/".$entry, $dest."/".$entry);
-                    }
-                    elseif (is_file($src."/".$entry)) {
-                        @ftp_put($ftp, $dest."/".$entry, $src."/".$entry, FTP_BINARY);
-                        @unlink ($src."/".$entry);
-                    }
-                }
-            }
-            ftp_close($ftp);
-        }
-    }
-}
-
-// update plugin
-function plugUpdate($file, $plugin, $ftp) {
-	$plugin_sql = "SELECT * FROM `wspplugins` WHERE `guid` = '".trim($plugin)."'";
-	$plugin_res = doSQL($plugin_sql);
-	$_SESSION['wspvars']['showsql'][] = array('time' => time(), 'page' => $_SERVER['PHP_SELF'], 'sql' => $plugin_sql);
-	$plugin_num = intval($plugin_res['num']);
-	
-	if ($plugin_num>0):
-		require($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/plugins/".trim($plugin_res['set'][0]['pluginfolder'])."/data/include/globalvars.inc.php");
-		if (trim($pluginvars[$plugin]['updateuri'])!=""):
-			// read update file
-            
-            if (_isCurl()) {
-                $defaults = array( 
-                    CURLOPT_URL => trim($pluginvars[$plugin]['updateuri']."/updater.php?file=".$file), 
-                    CURLOPT_HEADER => 0, 
-                    CURLOPT_RETURNTRANSFER => TRUE, 
-                    CURLOPT_TIMEOUT => 4 
-                );
-                $ch = curl_init();
-                curl_setopt_array($ch, $defaults);    
-                if( ! $fileupdate = curl_exec($ch)) { trigger_error(curl_error($ch)); } 
-                curl_close($ch);
-            }
-    
-            // write temporary file
-				$fullfile = str_replace("//", "/", str_replace("//", "/", $file));
-				$tmppfad = $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".basename($fullfile);
-				$tmpdat = fopen($tmppfad,'w');
-				fwrite($tmpdat, $fileupdate);
-				fclose($tmpdat);
-				// file transfer action
-				$filename = strrchr($fullfile, "/");
-				$dirstruct = str_replace($filename, "/", $fullfile);
-				$dirstruct = explode("/", $dirstruct);
-				if (!(is_dir($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.implode("/", $dirstruct)))):
-					ftp_mkdir($ftp, $_SESSION['wspvars']['ftpbasedir']."/".implode("/", $dirstruct));
-				endif;
-				if (!(is_dir($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.implode("/", $dirstruct)))):
-					$_SESSION['wspvars']['errormsg'].= '<p>Kann Verzeichnis "'.implode("/", $dirstruct).'" nicht anlegen. (mkdir)</p>';
-				endif;
-				if (!(ftp_put($ftp, $_SESSION['wspvars']['ftpbasedir']."/".$fullfile, $tmppfad, FTP_BINARY))):
-					$_SESSION['wspvars']['errormsg'].= '<p>Kann erzeugte Datei "'.$fullfile.'" nicht hochladen. (put)</p>';
-				endif;
-				@unlink($tmppfad);
-
-    endif;
-	endif;
-	}
 
 // Datenbankstruktur updaten
 function DatabaseUpdate($changes, $dbsource = '', $dbstructure = array()) {
-    // grep actual database structure from update file
+	// grep actual database structure from update file
 	if (trim($dbsource)!=""):
-//		$tempdev_fh = fopen(trim($dbsource), 'r');;
-//		$tempdev_xmlversion = '';
-//		while (!feof($tempdev_fh)):
-//			$tempdev_xmlversion .= fgets($tempdev_fh, 4096);
-//		endwhile;
-//		fclose($tempdev_fh);
-//		$tempdev_xml = xml_parser_create();
-//		xml_parse_into_struct($tempdev_xml, $tempdev_xmlversion, $tempdev_values, $index);
+		$tempdev_fh = fopen(trim($dbsource), 'r');;
+		$tempdev_xmlversion = '';
+		while (!feof($tempdev_fh)):
+			$tempdev_xmlversion .= fgets($tempdev_fh, 4096);
+		endwhile;
+		fclose($tempdev_fh);
+		$tempdev_xml = xml_parser_create();
+		xml_parse_into_struct($tempdev_xml, $tempdev_xmlversion, $tempdev_values, $index);
+		$tempdevtable = array();
 		
-        // begin getting data from update server
-        $tempdev_values = false;
-        $tempdev_xmldata = '';
-        $defaults = array( 
-            CURLOPT_URL => trim($dbsource), 
-            CURLOPT_HEADER => 0, 
-            CURLOPT_RETURNTRANSFER => TRUE, 
-            CURLOPT_TIMEOUT => 4 
-        );
-        $ch = curl_init();
-        curl_setopt_array($ch, $defaults);    
-        if( ! $tempdev_xmldata = curl_exec($ch)) { trigger_error(curl_error($ch)); } 
-        curl_close($ch);
-        $tempdev_xml = xml_parser_create();
-        xml_parse_into_struct($tempdev_xml, $tempdev_xmldata, $tempdev_values, $tempdev_index);
-        // end getting data from update server
-        
-        $tempdevtable = array();
-		
-        foreach ($tempdev_values as $tags):
+		foreach ($tempdev_values as $tags):
 			if ($tags['tag']=='TABLENAME'):
 				$tempdev_tablename[]=$tags['value'];
 				foreach ($tempdev_values as $tags2):
 					if($tags2['tag']=='TABLENAME') $tempdev_tablenametemp=$tags2['value'];
-					if(isset($tempdev_tablenametemp) && $tempdev_tablenametemp==$tags['value']):
-						if($tags2['tag']=='FIELD' && isset($tags2['value'])) $tempdevtable[$tags['value']]['field'][]=$tags2['value'];
-						if($tags2['tag']=='TYPE' && isset($tags2['value'])) $tempdevtable[$tags['value']]['type'][]=$tags2['value'];
-						if($tags2['tag']=='NULL' && isset($tags2['value'])) $tempdevtable[$tags['value']]['null'][]=$tags2['value'];
-						if($tags2['tag']=='KEY' && isset($tags2['value'])) $tempdevtable[$tags['value']]['key'][]=$tags2['value'];
-						if($tags2['tag']=='DEFAULT' && isset($tags2['value'])) $tempdevtable[$tags['value']]['default'][]=$tags2['value'];
-						if($tags2['tag']=='EXTRAS' && isset($tags2['value'])) $tempdevtable[$tags['value']]['extras'][]=$tags2['value'];
+					if($tempdev_tablenametemp==$tags['value']):
+						if($tags2['tag']=='FIELD') $tempdevtable[$tags['value']]['field'][]=$tags2['value'];
+						if($tags2['tag']=='TYPE') $tempdevtable[$tags['value']]['type'][]=$tags2['value'];
+						if($tags2['tag']=='NULL') $tempdevtable[$tags['value']]['null'][]=$tags2['value'];
+						if($tags2['tag']=='KEY') $tempdevtable[$tags['value']]['key'][]=$tags2['value'];
+						if($tags2['tag']=='DEFAULT') $tempdevtable[$tags['value']]['default'][]=$tags2['value'];
+						if($tags2['tag']=='EXTRAS') $tempdevtable[$tags['value']]['extras'][]=$tags2['value'];
 					endif;
 				endforeach;
 			endif;
@@ -376,31 +276,36 @@ function DatabaseUpdate($changes, $dbsource = '', $dbstructure = array()) {
 		
 		$uptable = array();
 		// switch between wsp-based tables and plugin-tables
-		for ($i=0;$i<sizeof($dbstructure);$i++) {
+		for($i=0;$i<sizeof($dbstructure);$i++):
 			$sql = "DESCRIBE `".$dbstructure[$i]."`";
-			$res = doSQL($sql);
+			$query = mysql_query($sql);
+			$_SESSION['wspvars']['showsql'][] = array('time' => time(), 'page' => $_SERVER['PHP_SELF'], 'sql' => $sql);
 			$tablename[$i] = $dbstructure[$i];
-			if ($res['res']) {
-				foreach ($res['set'] AS $rsk => $rsv) {
-					$uptable[$tablename[$i]]['field'][] = $rsv['Field'];
-					$uptable[$tablename[$i]]['type'][] = $rsv['Type'];
-					$uptable[$tablename[$i]]['null'][] = $rsv['Null'];
-					$uptable[$tablename[$i]]['key'][] = $rsv['Key'];
-					$uptable[$tablename[$i]]['default'][] = $rsv['Default'];
-					$uptable[$tablename[$i]]['extras'][] = $rsv['Extra'];
-                }
-            }
-		}
+			if ($query):
+				while ($row = mysql_fetch_array($query)):
+					$uptable[$tablename[$i]]['field'][] = $row['Field'];
+					$uptable[$tablename[$i]]['type'][] = $row['Type'];
+					$uptable[$tablename[$i]]['null'][] = $row['Null'];
+					$uptable[$tablename[$i]]['key'][] = $row['Key'];
+					$uptable[$tablename[$i]]['default'][] =$row['Default'];
+					$uptable[$tablename[$i]]['extras'][] = $row['Extra'];
+				endwhile;
+			endif;
+		endfor;
 		
 		// adds changes and deletes tables
 		for($i=0;$i<sizeof($tablename);$i++):
-			if(isset($changes[$i]) && isset($changes[$i]['tablename']) && isset($tablename[$i]) && $changes[$i]['tablename']==$tablename[$i] && $changes[$i]['tableaction']=="deletetable"):
-				doSQL("DROP TABLE `".$changes[$i]['tablename']."`");
+			if($changes[$i]['tablename']==$tablename[$i] && $changes[$i]['tableaction']=="deletetable"):
+				$sqlstrdelt="DROP TABLE `".$changes[$i]['tablename']."`";
+				mysql_query($sqlstrdelt);
+				$_SESSION['wspvars']['showsql'][] = array('time' => time(), 'page' => $_SERVER['PHP_SELF'], 'sql' => $sqlstrdelt);
 			else:
+//				$xml.="<table>\r\n";
+//				$xml.="<tablename>".$tablename[$i]."</tablename>\r\n";
 				for($j=0;$j<sizeof($uptable[$tablename[$i]]['field']);$j++):
-					if(isset($changes[$i]) && sizeof($changes[$i])>0):
+					if(sizeof($changes[$i])>0):
 						$isin=false;
-						for($k=0;$k<(count($changes[$i])-1);$k++):
+						for($k=0;$k<sizeof($changes[$i]);$k++):
 							if($changes[$i][$k]['field']==$uptable[$tablename[$i]]['field'][$j]):
 								$isin=true;
 								if($changes[$i][$k]['action']=="changed" ):
@@ -411,9 +316,9 @@ function DatabaseUpdate($changes, $dbsource = '', $dbstructure = array()) {
 										$nullstr="NOT NULL";
 									endif;
 									if ($changes[$i][$k]['key']=="PRI"):
-										$sqlstrch[] = "ALTER TABLE `".$tablename[$i]."` DROP PRIMARY KEY, ADD PRIMARY KEY (`".$changes[$i][$k]['field']."`)";
+										$sqlstrch[] = "ALTER TABLE `".$tablename[$i]."` DROP PRIMARY KEY, ADD PRIMARY KEY (".$changes[$i][$k]['field'].")";
 									elseif($changes[$i][$k]['key']=="MUL"):
-										$sqlstrch[] = "ALTER TABLE `".$tablename[$i]."` ADD INDEX (`".$changes[$i][$k]['field']."`)";
+										$sqlstrch[] = "ALTER TABLE `".$tablename[$i]."` ADD INDEX (".$changes[$i][$k]['field'].")";
 									elseif($changes[$i][$k]['key']=="UNI"):
 										$sqlstrch[] = "ALTER TABLE `".$tablename[$i]."` ADD UNIQUE (`".$changes[$i][$k]['field']."`)";
 									elseif($changes[$i][$k]['key']==""):
@@ -426,51 +331,49 @@ function DatabaseUpdate($changes, $dbsource = '', $dbstructure = array()) {
 									endif;
 									$sqlstrch[] = "ALTER TABLE `".$tablename[$i]."` MODIFY `".$changes[$i][$k]['field']."` ".$changes[$i][$k]['type']." ".$defaultch." ".$nullstr." ".$changes[$i][$k]['extras'];
 									foreach ($sqlstrch AS $statement):
-										$res = doSQL($statement);
-										$_SESSION['wspvars']['showsql'][] = array('time' => time(), 'page' => $_SERVER['PHP_SELF'], 'sql' => var_export($res, true));
+										mysql_query($statement);
+										$_SESSION['wspvars']['showsql'][] = array('time' => time(), 'page' => $_SERVER['PHP_SELF'], 'sql' => $statement);
 									endforeach;
 									unset($sqlstrch);
 								elseif ($changes[$i][$k]['action']=="delete"):
 									$sqlstrdel="ALTER TABLE `".$tablename[$i]."` DROP COLUMN `".$changes[$i][$k]['field']."`";
-									$res = doSQL($sqlstrdel);
-									$_SESSION['wspvars']['showsql'][] = array('time' => time(), 'page' => $_SERVER['PHP_SELF'], 'sql' => var_export($res, true));
+									mysql_query($sqlstrdel);
+									$_SESSION['wspvars']['showsql'][] = array('time' => time(), 'page' => $_SERVER['PHP_SELF'], 'sql' => $sqlstrdel);
 								endif;
 							endif;
 						endfor;
 					endif;
 				endfor;
-                if (isset($changes[$i])) {
-                    for($x=0;$x<(count($changes[$i])-1);$x++) {
-                        if($changes[$i][$x]['action']=="addnew"):
-                            if($changes[$i][$x]['null']=="YES"):
-                                $nullstr="NULL";
-                            else:
-                                $nullstr="NOT NULL";
-                            endif;
-                            if($changes[$i][$x]['key']=="PRI"):
-                                $keystr=", DROP PRIMARY KEY, ADD PRIMARY KEY (".$changes[$i][$x]['field'].")";
-                            elseif($changes[$i][$x]['key']=="MUL"):
-                                $keystr=", ADD INDEX (".$changes[$i][$x]['field'].")";
-                            else:
-                                $keystr="";
-                            endif;
-                            if($changes[$i][$x]['default']!=""):
-                                $defaultan=" DEFAULT '".$changes[$i][$x]['default']."'";
-                            else:
-                                $defaultan="";
-                            endif;
-                            $sqlstradn="ALTER TABLE `".$tablename[$i]."` ADD `".$changes[$i][$x]['field']."` ".$changes[$i][$x]['type']." ".$defaultan." ".$nullstr." ".$changes[$i][$x]['extras']." ".$keystr;
-                            $res = doSQL($sqlstradn);
-                            $_SESSION['wspvars']['showsql'][] = array('time' => time(), 'page' => $_SERVER['PHP_SELF'], 'sql' => var_export($res, true));
-                        endif;
-                    }
-                }
+				for($x=0;$x<sizeof($changes[$i]);$x++):
+					if($changes[$i][$x]['action']=="addnew"):
+						if($changes[$i][$x]['null']=="YES"):
+							$nullstr="NULL";
+						else:
+							$nullstr="NOT NULL";
+						endif;
+						if($changes[$i][$x]['key']=="PRI"):
+							$keystr=", DROP PRIMARY KEY, ADD PRIMARY KEY (".$changes[$i][$x]['field'].")";
+						elseif($changes[$i][$x]['key']=="MUL"):
+							$keystr=", ADD INDEX (".$changes[$i][$x]['field'].")";
+						else:
+							$keystr="";
+						endif;
+						if($changes[$i][$x]['default']!=""):
+							$defaultan=" DEFAULT '".$changes[$i][$x]['default']."'";
+						else:
+							$defaultan="";
+						endif;
+						$sqlstradn="ALTER TABLE `".$tablename[$i]."` ADD `".$changes[$i][$x]['field']."` ".$changes[$i][$x]['type']." ".$defaultan." ".$nullstr." ".$changes[$i][$x]['extras']." ".$keystr;
+						mysql_query($sqlstradn);
+						$_SESSION['wspvars']['showsql'][] = array('time' => time(), 'page' => $_SERVER['PHP_SELF'], 'sql' => $sqlstradn);
+					endif;
+				endfor;
 			endif;
 		endfor;
 		
 		// adds new tables
 		for ($i=0;$i<intval($changes['tablecount']);$i++):
-			if (isset($changes[$i]) && isset($changes[$i]['tableaction']) && $changes[$i]['tableaction']=="addnewtable"):
+			if ($changes[$i]['tableaction']=="addnewtable"):
 				$key=array_search($changes[$i]['tablename'],$tempdev_tablename);
 				$sqlstradnt.="CREATE TABLE `".$tempdev_tablename[$key]."` (";
 				for ($j=0;$j<sizeof($tempdevtable[$tempdev_tablename[$key]]['field']);$j++):
@@ -502,1389 +405,300 @@ function DatabaseUpdate($changes, $dbsource = '', $dbstructure = array()) {
 						$sqlstradnt.=", ";
 					endif;
 				endfor;
-				$res = doSQL($sqlstradnt);
-				$_SESSION['wspvars']['showsql'][] = array('time' => time(), 'page' => $_SERVER['PHP_SELF'], 'sql' => var_export($res, true));
+				mysql_query($sqlstradnt);
+				$_SESSION['wspvars']['showsql'][] = array('time' => time(), 'page' => $_SERVER['PHP_SELF'], 'sql' => $sqlstradnt);
 			endif;
 		endfor;
 //		echo $funcsqlstat;
 //		die();
 	endif;
+	} // DatabaseUpdate()
+
+if (isset($_POST['doupdate'])) {
+    $install = false;
+    // create temporary file name for update file
+    $sysfilename = 'update-'.time().'.zip';
+    if ($_POST['doupdate']=='upload' && isset($_FILES['uploadsystem'])) {
+        if ($_FILES['uploadsystem']['type']=='application/zip' && intval($_FILES['uploadsystem']['error'])==0) {
+            $tmpdir = cleanPath(DOCUMENT_ROOT.'/'.WSP_DIR.'/tmp/'.$_SESSION['wspvars']['usevar'].'/');
+            $sysfile = cleanPath($tmpdir.'/'.$sysfilename);
+            if (createDirFTP('/'.WSP_DIR.'/tmp/')===false) {
+                addWSPMsg('errormsg', returnIntLang('system update could not create tmp directory'));
+                $install = false;
+            }
+            if (move_uploaded_file($_FILES['uploadsystem']['tmp_name'], $sysfile)) {
+                $install = true;
+            } else {
+                addWSPMsg('errormsg', returnIntLang('system update failed while copying archive to tmp folder'));
+            }
+        } else {
+            addWSPMsg('errormsg', returnIntLang('system update failed with wrong archive type'));
+        }
+    }
+    // UPDATE VOM SERVER FERTIG MACHEN !!! 2019-10-21
+    else if ($_POST['doupdate']=='server') {
+        if (isCurl()) {
+            $defaults = array( 
+                CURLOPT_URL => trim('https://'.WSP_UPDSRV.'/versions/system/?file='.trim($_POST['getversion'])),
+                CURLOPT_HEADER => 0, 
+                CURLOPT_RETURNTRANSFER => TRUE, 
+                CURLOPT_TIMEOUT => 4 
+            );
+            $ch = curl_init();
+            curl_setopt_array($ch, $defaults);    
+            if( ! $getversion = curl_exec($ch)) { addWSPMsg('errormsg', trigger_error(curl_error($ch))); }
+            curl_close($ch);
+        }
+        else {
+            $fh = fopen('https://'.WSP_UPDSRV."/versions/system/?file=".trim($_POST['getversion']), 'r');
+            if (intval($fh)!=0):
+            while (!feof($fh)) {
+                $getversion .= fgets($fh);
+            }
+            endif;
+            fclose($fh);
+        }
+        // try to copy file to tmp user directory
+        $tmpdir = cleanPath(DOCUMENT_ROOT.'/'.WSP_DIR.'/tmp/'.$_SESSION['wspvars']['usevar'].'/');
+        if (createDirFTP('/'.WSP_DIR.'/tmp/')===false) {
+            addWSPMsg('errormsg', returnIntLang('system update could not create tmp directory'));
+            $install = false;
+        }
+		$sysfile = cleanPath($tmpdir.'/'.$sysfilename);
+		$tmpdat = fopen($sysfile,'w');
+		if (fwrite($tmpdat, $getversion)) {
+			$install = true;
+		} else {
+			addWSPMsg('errormsg', returnIntLang('system update could not be retrieved from server'));
+		}
+		fclose ($tmpdat);        
+    }
+    // if file could be copied
+    if ($install===true && is_file($sysfile) && filesize($sysfile)>2048) {
+        $ftp = doFTP();
+        // extract zip archive
+        $zip = new ZipArchive;
+        if ($zip->open($sysfile)===true) {        
+            // run archive for files
+            if ($zip->open($sysfile)===true) {        
+                // run archive for files
+                for($i = 0; $i < $zip->numFiles; $i++) {
+                    $filename = $zip->getNameIndex($i);
+                    $fileinfo = pathinfo($filename);
+                    // dont use hidden files
+                    if (substr($fileinfo['basename'],0,1)=='.') {
+                        // entry will be ignored
+                    } 
+                    else if ($fileinfo['basename']=='database.xml') {
+                        @copy("zip://".$sysfile."#".$filename, cleanPath(DOCUMENT_ROOT.'/'.WSP_DIR.'/'.$_SESSION['wspvars']['usevar'].'/database.xml'));
+                    } 
+                    // dont use double underscore stuff
+                    else if (substr($fileinfo['dirname'],0,2)=='__' || substr($fileinfo['basename'],0,2)=='__') {
+                        // entry will be ignored
+                    }
+                    // rename _wsp_ folder to WSP_DIR
+                    else if (substr($fileinfo['dirname'],0,5)=='_wsp_') {
+                        if ($fileinfo['basename']==$fileinfo['filename'] && !(isset($fileinfo['extension']))) {
+                            // it's a directory and the entry will be ignored
+                        } else {
+                            if (!(is_dir(cleanPath(DOCUMENT_ROOT.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']))))) {
+                                $createdir = createDirFTP('/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/');
+                            }
+                            // try to make backup of file (but only once per day)
+                            if (!(is_file(cleanPath(DOCUMENT_ROOT.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/'.$fileinfo['basename'].'.backup-'.((defined('WSP_BETA') && WSP_BETA)?time():date('Ymd')))))) {
+                                ftp_put($ftp, cleanPath(FTP_BASE.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/'.$fileinfo['basename'].'.backup-'.((defined('WSP_BETA') && WSP_BETA)?time():date('Ymd'))), cleanPath(DOCUMENT_ROOT.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/'.$fileinfo['basename']));
+                            }
+                            @copy("zip://".$sysfile."#".$filename, cleanPath(DOCUMENT_ROOT.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/'.$fileinfo['basename']));
+                        }
+                    }
+                    else {
+                        if ($fileinfo['basename']==$fileinfo['filename'] && !(isset($fileinfo['extension']))) {
+                            // it's a directory and the entry will be ignored
+                        } else {
+                            if (!(is_dir(DOCUMENT_ROOT.'/'.$fileinfo['dirname']))) {
+                                createDirFTP('/'.$fileinfo['dirname'].'/');
+                            }
+                            @copy("zip://".$sysfile."#".$filename, cleanPath(DOCUMENT_ROOT.'/'.$fileinfo['dirname'].'/'.$fileinfo['basename']));
+                        }
+                    }
+                }      
+                $zip->close();
+                $_SESSION['msg'][] = returnIntLang('install copied all install files');
+                // finaly remove file from tmp
+                unlink($sysfile);
+            } else {
+                $_SESSION['msg'][] = returnIntLang('install could not open zip file');
+                $error = true;
+            }
+            addWSPMsg('resultmsg', returnIntLang('system update all files were copied'));
+            // finaly remove file from tmp
+        } else {
+            addWSPMsg('errormsg', returnIntLang('system update could not open zip file'));
+        }
+        deleteFile(WSP_DIR.DIRECTORY_SEPARATOR."tmp".DIRECTORY_SEPARATOR.$_SESSION['wspvars']['usevar'].DIRECTORY_SEPARATOR.basename($sysfile));
+        // run system UDPATER file
+        if (is_file(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR.'sysupdate.php')) {
+            addWSPMsg('errormsg', returnIntLang('system update ran system update'));
+            deleteFile(WSP_DIR.DIRECTORY_SEPARATOR.'sysupdate.php');
+        }
+        if (is_file(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR.'sqlupdate.php')) {
+            addWSPMsg('errormsg', returnIntLang('system update ran database update'));
+            deleteFile(WSP_DIR.DIRECTORY_SEPARATOR.'sqlupdate.php');
+        }
+        ftp_close($ftp);
+    }
 }
 
-// update wsp files
-if (!(function_exists('wspUpdate'))) {
-    function wspUpdate($data, $ftp, $run = 1) {
-        
-        if ($ftp!==false) {
+// head der datei
+require ("./data/include/header.inc.php");
+require ("./data/include/navbar.inc.php");
+require ("./data/include/sidebar.inc.php");
+
+?>
+<!-- MAIN -->
+<div class="main">
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="content-heading clearfix">
+            <div class="heading-left">
+                <h1 class="page-title"><?php echo returnIntLang('system headline'); ?></h1>
+                <p class="page-subtitle"><?php echo returnIntLang('system info'); ?></p>
+            </div>
+            <ul class="breadcrumb">
+                <li><i class="<?php echo $_SESSION['wspvars']['pagedesc'][0]; ?>"></i> <?php echo $_SESSION['wspvars']['pagedesc'][1]; ?></li>
+                <li><?php echo $_SESSION['wspvars']['pagedesc'][2]; ?></li>
+            </ul>
+        </div>
+        <div class="container-fluid">
+            <?php
             
-            $fileupdate = '';
-            if (_isCurl()) {
+            showWSPMsg($_SESSION['wspvars']['shownotice']);
+            
+            // get update version from update server
+            $updversion = false;
+            if (isCurl()) {
                 $defaults = array( 
-                    CURLOPT_URL => trim($_SESSION['wspvars']['updateuri']."/updater.php?key=".$_SESSION['wspvars']['wspkey']."&file=".str_replace("[wsp]", "wsp", $data)), 
+                    CURLOPT_URL => trim(WSP_UPDSRV."/download/version.php?key=".WSP_UPDKEY), 
                     CURLOPT_HEADER => 0, 
                     CURLOPT_RETURNTRANSFER => TRUE, 
                     CURLOPT_TIMEOUT => 4 
                 );
                 $ch = curl_init();
                 curl_setopt_array($ch, $defaults);    
-                if( ! $fileupdate = curl_exec($ch)) { trigger_error(curl_error($ch)); } 
+                if( ! $updversion = curl_exec($ch)) { trigger_error(curl_error($ch)); } 
                 curl_close($ch);
             } 
             else {
-                $fh = fopen(trim($_SESSION['wspvars']['updateuri']."/updater.php?key=".$_SESSION['wspvars']['wspkey']."&file=".str_replace("[wsp]", "wsp", $data)), 'r');
-                $fileupdate = '';
+                $fh = fopen('http://'.WSP_UPDSRV."/download/version.php?key=".WSP_UPDKEY, 'r');
                 if (intval($fh)!=0):
-                    while (!feof($fh)):
-                        $fileupdate .= fgets($fh, 4096);
-                    endwhile;
+                while (!feof($fh)) {
+                    $updversion .= fgets($fh, 4096);
+                }
                 endif;
                 fclose($fh);
             }
             
-            if (trim($fileupdate)=='') {
-                die('error reading file');
-            }
-
-            $tmppfad = str_replace("//", "/", str_replace("//", "/", str_replace("//", "/", $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".basename(str_replace('[wsp]', $_SESSION['wspvars']['wspbasedir'], $data)))));
-            $tmpdat = fopen($tmppfad,'w');
-            fwrite($tmpdat, $fileupdate);
-            fclose($tmpdat);
+            ?>
+            <div class="row">
+                <div class="col-md-6" <?php echo (compareVersion($_SESSION['wspvars']['localversion'],$updversion)>0)?'':' style="display: none;" '; ?>>
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <h3 class="panel-title"><?php echo returnIntLang('system automatic update'); ?></h3>
+                        </div>
+                        <div class="panel-body">
+                            <form name="uploadsystem_zip" id="uploadsystem_zip" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="doupdate" value="server" />
+                                <input type="hidden" name="getversion" value="full" />
+                                <p><?php echo returnIntLang('system automatic update your version1')." ".$_SESSION['wspvars']['localversion']." ".returnIntLang('system automatic update your version2'); echo returnIntLang('system automatic update avaiable version1')." <strong>".$updversion."</strong> ".returnIntLang('system automatic update avaiable version2') ?></p>
+                                <?php if ((defined('WSP_DEV') && WSP_DEV) || (defined('WSP_BETA') && WSP_BETA)) { ?>
+                                    <p><input type="checkbox" name="getversion" value="nightly" checked="checked" /> <?php echo returnIntLang('system automatic update use nightly'); ?></p>
+                                <?php } ?>
+                                <p class="submitter"><input type="submit" class="btn btn-primary" value="<?php echo returnIntLang('str do update', false); ?>" /></p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <h3 class="panel-title"><?php echo returnIntLang('system upload update'); ?></h3>
+                            <p class="panel-subtitle"><?php echo returnIntLang('system upload update info'); ?></p>
+                        </div>
+                        <div class="panel-body">
+                            <form name="uploadsystem_zip" id="uploadsystem_zip" method="post" enctype="multipart/form-data">
+                                <p><input name="uploadsystem" type="file" id="dropify-uploadsystem" data-height="100" data-allowed-file-extensions="zip" /></p>
+                                <input type="hidden" name="doupdate" value="upload" />
+                                <p class="submitter" style="display: none;"><input type="submit" class="btn btn-primary" value="<?php echo returnIntLang('str do upload', false); ?>" /></p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
-            $data = str_replace('[wsp]', $_SESSION['wspvars']['wspbasedir'], $data);
-            $filename = strrchr($data, "/");
-            $dirstruct = str_replace($filename, "/", $data);
-            $dirstruct = explode("/", $dirstruct);
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <h3 class="panel-title"><?php echo returnIntLang('system information widgets'); ?></h3>
+                            <?php panelOpener(true, array(), false); ?>
+                            <p class="panel-subtitle"><?php echo returnIntLang('system widget activation information'); ?></p>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row clear-4">
+                                <?php 
+                                
+                                showWSPWidget('activepages', true);
+                                showWSPWidget('activecontents', true);
+                                showWSPWidget('freespace', true);
+                                showWSPWidget('imagecount', true);
+                                showWSPWidget('publishqueue', true);
+                                showWSPWidget('documentcount', true);
+                                showWSPWidget('zend', true);
+                                showWSPWidget('phpversion', true);
+                                showWSPWidget('gdlib', true);
+                                showWSPWidget('uploadmax', true);
+                                showWSPWidget('postmax', true);
+                                showWSPWidget('mysqlserver', true);
+                                showWSPWidget('mysqlclient', true);
+
+                                ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <script>
             
-            // create new directory if needed
-            if (!(is_dir($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.implode("/", $dirstruct)))):
-                ftp_mkdir($ftp, $_SESSION['wspvars']['ftpbasedir']."/".implode("/", $dirstruct));
-            endif;
-            // output error if directory could not be created
-            if (!(is_dir($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.implode("/", $dirstruct)))):
-                $_SESSION['wspvars']['errormsg'].= '<p>Kann Verzeichnis "'.implode("/", $dirstruct).'" nicht anlegen. (mkdir)</p>';
-                addWSPMsg('errormsg', returnIntLang('system could not create directory1', false)." ".implode("/", $dirstruct)."\" ".returnIntLang('system could not create directory2', false));
-            endif;
-            // create backup of old file
-            if (!(ftp_rename($ftp, str_replace("//", "/", str_replace("//", "/", $_SESSION['wspvars']['ftpbasedir']."/".$data)), str_replace("//", "/", str_replace("//", "/", $_SESSION['wspvars']['ftpbasedir']."/".$data."-backup-".time()))))):
-                addWSPMsg('errormsg', returnIntLang('system creating backup file failed1', false)." \"".str_replace("//", "/", str_replace("//", "/", $_SESSION['wspvars']['ftpbasedir']."/".$data))."\" ".returnIntLang('system creating backup file failed2', false));
-            endif;
-            // move new file to its destination
-            if (!(ftp_put($ftp, str_replace("//", "/", str_replace("//", "/", $_SESSION['wspvars']['ftpbasedir']."/".$data)), $tmppfad, FTP_BINARY))):
-                addWSPMsg('errormsg', returnIntLang('system could not upload file (put)1', false)." \"".str_replace($_SERVER['DOCUMENT_ROOT'], "", $tmppfad)."\" ".returnIntLang('system could not upload file (put)2', false)." \"".str_replace("//", "/", str_replace("//", "/", $_SESSION['wspvars']['ftpbasedir']."/".$data))."\" ".returnIntLang('system could not upload file (put)3', false));
-                return false;
-            else:
-                @unlink($tmppfad);
-                return true;
-            endif;
-        } 
-        else {
-            addWSPMsg('errormsg', returnIntLang('system could not connect', false));
-            return false;
-        }
-    }
-}
-
-// update packages
-if (!(function_exists('packageUpdate'))){
-    function packageUpdate($package) {
-
-        $ftp = ((isset($_SESSION['wspvars']['ftpssl']) && $_SESSION['wspvars']['ftpssl']===true)?ftp_ssl_connect($_SESSION['wspvars']['ftphost'], intval($_SESSION['wspvars']['ftpport'])):ftp_connect($_SESSION['wspvars']['ftphost'], intval($_SESSION['wspvars']['ftpport'])));
-        if ($ftp!==false) {if (!ftp_login($ftp, $_SESSION['wspvars']['ftpuser'], $_SESSION['wspvars']['ftppass'])) { $ftp = false; }}
-        if (isset($_SESSION['wspvars']['ftppasv'])) { ftp_pasv($ftp, $_SESSION['wspvars']['ftppasv']); }
-
-        if ($ftp) {
-
-            $defaults = array( 
-                CURLOPT_URL => trim($_SESSION['wspvars']['updateuri'].'/updater.php?key='.$_SESSION['wspvars']['wspkey'].'&file=updater/media/packages/'.$package.'.wsp3.tgz'), 
-                CURLOPT_HEADER => 0, 
-                CURLOPT_RETURNTRANSFER => TRUE, 
-                CURLOPT_TIMEOUT => 4 
-            );
-            $ch = curl_init();
-            curl_setopt_array($ch, $defaults);    
-            if( ! $fileupdate = curl_exec($ch)) { trigger_error(curl_error($ch)); } 
-            curl_close($ch);
-
-            $tmppfad = $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package.".wsp3.tgz";
-            $tmpdat = fopen($tmppfad,'w');
-            fwrite($tmpdat, $fileupdate);
-            fclose($tmpdat);
-
-            @mkdir($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package."_pkgdir");
-
-            try {
-                $phar = new PharData($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package.".wsp3.tgz");
-                $phar->extractTo($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package."_pkgdir"); // extract all files
-            } catch (Exception $e) {
-                exec("cd ".$_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package."_pkgdir; tar xzf ".$_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package.".wsp3.tgz");
-            }
-
-            ftp_put($ftp, $_SESSION['wspvars']['ftpbasedir']."/".$_SESSION['wspvars']['wspbasedir']."/packages/".$package.".wsp3.tgz", $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package.".wsp3.tgz", FTP_BINARY);
-            ftp_put($ftp, $_SESSION['wspvars']['ftpbasedir']."/".$_SESSION['wspvars']['wspbasedir']."/packages/".$package.".wsp3.xml", $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package."_pkgdir/package.xml", FTP_BINARY);
-            ftp_close($ftp);
-
-            $d = dir("tmp/".$_SESSION['wspvars']['usevar']."/".$package."_pkgdir");
-            while (false !== ($entry = $d->read())) {
-                if (!($entry=='.') && !($entry=='..') && !($entry=='package.xml')) {
-                    copyTree($_SERVER['DOCUMENT_ROOT']. "/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package."_pkgdir/".$entry, $_SESSION['wspvars']['ftpbasedir']."/".$entry);
+                function updateWidget(widget, val) {
+                    $.post("xajax/ajax.updatewidgetstat.php", { 'widget' : widget , 'val' : val})
+                        .done (function(data) {
+                    });
                 }
-            }
-            $d->close();
-
-            @unlink($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package.".wsp3");
-            @unlink($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package.".wsp3.tgz");
-            @rmdir($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package."_pkgdir");
-
-        }
-    }
-}
-
-// update mediafiles
-if (!(function_exists('mediaUpdate'))){
-    function mediaUpdate($package) {
-
-        $ftp = ((isset($_SESSION['wspvars']['ftpssl']) && $_SESSION['wspvars']['ftpssl']===true)?ftp_ssl_connect($_SESSION['wspvars']['ftphost'], intval($_SESSION['wspvars']['ftpport'])):ftp_connect($_SESSION['wspvars']['ftphost'], intval($_SESSION['wspvars']['ftpport'])));
-        if ($ftp!==false) {if (!ftp_login($ftp, $_SESSION['wspvars']['ftpuser'], $_SESSION['wspvars']['ftppass'])) { $ftp = false; }}
-        if (isset($_SESSION['wspvars']['ftppasv'])) { ftp_pasv($ftp, $_SESSION['wspvars']['ftppasv']); }
-
-        if ($ftp!='') {
-
-            $defaults = array( 
-                CURLOPT_URL => trim($_SESSION['wspvars']['updateuri'].'/updater.php?key='.$_SESSION['wspvars']['wspkey'].'&file=updater/media/media/'.$package.'.wsp3'), 
-                CURLOPT_HEADER => 0, 
-                CURLOPT_RETURNTRANSFER => TRUE, 
-                CURLOPT_TIMEOUT => 4 
-            );
-            $ch = curl_init();
-            curl_setopt_array($ch, $defaults);    
-            if( ! $fileupdate = curl_exec($ch)) { trigger_error(curl_error($ch)); } 
-            curl_close($ch);
-
-            $tmppfad = $_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package.".wsp3";
-            $tmpdat = fopen($tmppfad,'w');
-            fwrite($tmpdat, $fileupdate);
-            fclose($tmpdat);
-
-            @mkdir($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package."_pkgdir");
-
-            try {
-                $phar = new PharData($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package.".wsp3");
-                $phar->extractTo($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package."_pkgdir"); // extract all files
-            } catch (Exception $e) {
-                exec("cd ".$_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package."_pkgdir; tar xzf ".$_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package.".wsp3");
-            }
-
-            ftp_put($ftp, $_SESSION['wspvars']['ftpbasedir']."/".$_SESSION['wspvars']['wspbasedir']."/packages/".$package.".wsp3", $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package.".wsp3", FTP_BINARY);
-            ftp_put($ftp, $_SESSION['wspvars']['ftpbasedir']."/".$_SESSION['wspvars']['wspbasedir']."/packages/".$package.".wsp3.xml", $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package."_pkgdir/package.xml", FTP_BINARY);
-            ftp_close($ftp);
-
-            $d = dir("tmp/".$_SESSION['wspvars']['usevar']."/".$package."_pkgdir");
-            while (false !== ($entry = $d->read())) {
-                if (!($entry=='.') && !($entry=='..') && !($entry=='package.xml')) {
-                    copyTree($_SERVER['DOCUMENT_ROOT']. "/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package."_pkgdir/".$entry, $_SESSION['wspvars']['ftpbasedir']."/".$entry);
-                }
-            }
-            $d->close();
-
-            @unlink($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package.".wsp3");
-            @unlink($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package.".wsp3.tgz");
-            @rmdir($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/".$package."_pkgdir");
-        }
-    }
-}
-
-function GetCopyTree($startsysdir) {
-	$dirread = dir($startsysdir);
-	while (false !== ($entry = $dirread->read())):
-		if (!($entry=='.') && !($entry=='..') && !($entry=='package.xml')):
-			$GLOBALS['copytree'][] = str_replace("//","/",$startsysdir."/".$entry);
-			if (is_dir($startsysdir."/".$entry)):
-				GetCopyTree($startsysdir."/".$entry);
-			endif;
-		endif;
-	endwhile;
-	}
-
-if (isset($_SESSION['dbchange']) && count($_SESSION['dbchange'])>0):
-    foreach ($_SESSION['dbchange'] AS $pkey => $pvalue):
-		foreach ($pvalue AS $sqlvalue):
-            $res = doSQL($sqlvalue);
-			if (!($res['res'])):
-				addWSPMsg('errormsg', "Fehler beim Ausführen des SQL-Statements ".addslashes($sqlvalue));
-			endif;
-		endforeach;
-	endforeach;
-endif;
-// empty array
-$_SESSION['dbchange'] = array();
-
-// head der datei
-
-$op = checkParamVar('op', '');
-$id = checkParamVar('id', '');
-
-include ("data/include/header.inc.php");
-include ("data/include/wspmenu.inc.php");
-
-flush();flush();flush();
-
-?>
-<div id="contentholder">
-	<fieldset><h1><?php echo returnIntLang('system headline'); ?></h1></fieldset>
-	<fieldset id="updating" class="text" style="display: none;">
-		<legend>Aktualisiere Dateisystem</legend>
-		<?php
-
-		if(isset($_POST['wspupdate']) && $_POST['wspupdate']=="wspupdate"):
-			?>
-        <script type="text/javascript" language="javascript">
-            document.getElementById('updating').style.display='block';
-            document.getElementById('updatingmedia').style.display = 'block';
-        </script>
-        <?php
-        
-        // updating mediafiles
-        if (isset($_POST['mediafile'])) {
-            foreach ($_POST['mediafile'] as $media) {
-                echo '<div id="updmedia_'.strtolower($media).'">'.$media.'</div>';
-            }
-	   				
-            flush();flush();flush();
-		  		
-            for ($i=0; $i<=count($_POST['mediafile']); $i++) {
-                mediaUpdate($_POST['mediafile'][$i]);
-        ?>
-        <script type="text/javascript" language="javascript">
-            document.getElementById('updmedia_<?php echo $_POST['mediafile'][$i]; ?>').style.display = 'none';
-        </script>
-        <?php
-                flush();flush();flush();
-            }
-        ?>
-        <script type="text/javascript" language="javascript">
-            document.getElementById('updatingmedia').style.display = 'none';
-            window.location.href ="<?php echo $_SERVER['PHP_SELF']; ?>";
-        </script>
-        <?php
-        }	
-        
-        if (isset($_POST['package'])) {
-            foreach ($_POST['package'] as $package) {
-                echo '<div id="updpackage_'.$package.'">'.$package.'</div>';
-            }
-					
-            flush();flush();flush();
-				
-            for ($i=0; $i<=count($_POST['package']); $i++) {
-                if (isset($_POST['package'][$i])) { 
-                    packageUpdate($_POST['package'][$i]);
-        ?>
-        <script type="text/javascript" language="javascript">
-            document.getElementById('updpackage_<?php echo $_POST['package'][$i]; ?>').style.display='none';
-        </script>
-        <?php
-                    flush();flush();flush();
-                }
-            }
-        ?>
-        <script type="text/javascript" language="javascript">
-            document.getElementById('updatingpackages').style.display='none';
-        </script>
-        <?php
-        }
-				
-        $updatpfad = $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/updatedateien.php";
-        $updat = file($updatpfad);
-		
-        for($i=1;$i<=$updat[0];$i++) {
-            echo "<div id='up_".$i."' ".(($i>0)?' style="display: none;" ':'').">".returnIntLang('system next file', false)." \"".trim($updat[$i])."\"</div>";
-        }
-        
-        $deldatpfad = str_replace("//", "/", str_replace("//", "/", str_replace("//", "/", $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/deletefiles.php")));
-        $deldat = is_file($deldatpfad)?file($deldatpfad):array();
-        
-        flush();flush();flush();
-
-        $ftp = false; $ftpt = 0;
-        while ($ftp===false && $ftpt<3) {
-            $ftp = ((isset($_SESSION['wspvars']['ftpssl']) && $_SESSION['wspvars']['ftpssl']===true)?ftp_ssl_connect($_SESSION['wspvars']['ftphost'], intval($_SESSION['wspvars']['ftpport'])):ftp_connect($_SESSION['wspvars']['ftphost'], intval($_SESSION['wspvars']['ftpport'])));
-            if ($ftp!==false) {
-                if (!ftp_login($ftp, $_SESSION['wspvars']['ftpuser'], $_SESSION['wspvars']['ftppass'])) { 
-                    $ftp = false; 
-                }
-            }
-            if (isset($_SESSION['wspvars']['ftppasv']) && $ftp!==false) { 
-                ftp_pasv($ftp, $_SESSION['wspvars']['ftppasv']); 
-            }
-            $ftpt++;
-        }
-        
-        if ($ftp!==false) {
-            // remove unused files on the fly
-            if (count($deldat)>0) {
-                for($i=1;$i<=intval($deldat[0]);$i++) {
-                    if (trim($deldat[$i])!='') {
-                        ftp_delete($ftp, trim(str_replace("//", "/", str_replace("//", "/", str_replace('[wsp]', $_SESSION['wspvars']['wspbasedir'], $_SESSION['wspvars']['ftpbasedir']."/".$deldat[$i])))));
-                    }
-                }
-            }
-            
-            // do wsp file updates
-            $try = true;
-            for ($i=1; $i<=$updat[0]; $i++) {
-                if ($try===true) {
-                    $try = wspUpdate(trim($updat[$i]), $ftp, $i);
-                    echo '<script type="text/javascript" language="javascript">'."\n";
-                    echo "document.getElementById('up_".$i."').style.display='none';\n";
-                    if (($i+1)<$updat[0]): echo "document.getElementById('up_".($i+1)."').style.display='block'"; endif;
-                    echo '</script>';
-                    flush();flush();flush();
-                }
-            }
-            doSQL("UPDATE `wspproperties` SET `varvalue` = '".time()."' WHERE `varname` = 'lastupdate'");
-            $_SESSION['wspvars']['updatesystem'] = false;
-            ftp_close($ftp);
-        } else {
-            addWSPMsg('errormsg', returnIntLang('system could not connect', false));
-        }
                 
-        $updatabasepfad = $_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/updatedatabase.php";
-        $updatabase = file($updatabasepfad);
-        $selectChanges = unserializeBroken(trim($updatabase[0]));
-        DatabaseUpdate($selectChanges, $_SESSION['wspvars']['updatedatabase'].'/media/xml/database.xml', $_SESSION['wspvars']['tables']);
-				
-                ?>
-				<script type="text/javascript" language="javascript">
-				<!--
-//				document.getElementById('updating').style.display = 'none';
-//				window.location.href = '<?php echo $_SERVER['PHP_SELF']; ?>';
-				//-->
-				</script>
-			<?php elseif (isset($_POST['pluginupdaten'])): ?>
-				<script type="text/javascript" language="javascript">
-				<!--
-				document.getElementById('updating').style.display='block';
-				//-->
-				</script>
-				<?php
-				
-				if (is_array($_POST['updatefile'])):
-					foreach ($_POST['updatefile'] AS $key => $value):
-						echo "<div id=\"up_".$key."\">".$value."</div>";
-					endforeach;
-					flush();flush();flush();
-					ob_flush(); ob_flush(); ob_flush();
-					
-					foreach ($_POST['updatefile'] AS $key => $value) {
-                        plugUpdate(trim($value), trim($_POST['pluginupdaten']));
-                        ?>
-                        <script type="text/javascript" language="javascript">
-                        <!--
-                        document.getElementById('up_<?php echo $key;?>').style.display='none';
-                        //-->
-                        </script>
-                        <?php
-                        flush();flush();flush();
-                        ob_flush(); ob_flush(); ob_flush();
-                    }
-				endif;
-				
-				if (isset($_SESSION['dbchange'][($pluginvars['guid'])]) && is_array($_SESSION['dbchange'][($pluginvars['guid'])]) && count($_SESSION['dbchange'][($pluginvars['guid'])])>0):
-					foreach ($_SESSION['dbchange'][($pluginvars['guid'])] AS $sqlvalue):
-						$res = doSQL($sqlvalue);
-                        if (!($res['res'])):
-							addWSPMsg('errormsg', "Fehler beim Ausführen des SQL-Statements ".addslashes($sqlvalue));
-						endif;
-					endforeach;
-				endif;
-
-				unset($pluginvars);
-				
-				?>
-				<script type="text/javascript" language="javascript">
-				<!--
-				document.getElementById('updating').style.display = 'none';
-				window.location.href = '<?php echo $_SERVER['PHP_SELF']; ?>';
-				//-->
-				</script>
-			<?php endif; ?>
-		</fieldset>
-		<?php 
-		
-		flush();flush();flush();
-		
-		$wspkey_sql = "SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'wspkey'";
-		$wspkey_res = doResultSQL($wspkey_sql);
-        if (trim($wspkey_res)!=''):
-			$_SESSION['wspvars']['wspkey'] = trim($wspkey_res);
-		endif;
-		if (trim($_SESSION['wspvars']['wspkey'])==""):
-			$_SESSION['wspvars']['wspkey'] = $_SESSION['wspvars']['updatekey'];
-		endif;
-		
-		flush();flush();flush();
-
-		if (trim($_SESSION['wspvars']['wspkey'])==""):
-			?>
-			<fieldset id="fieldset_wspkey" class="errormsg">
-				<p>F&uuml;r die automatische Update-Funktion von WSP ben&ouml;tigen Sie einen Key, den Sie bei Ihrem Anbieter/Betreiber von WSP erhalten k&ouml;nnen. Sie k&ouml;nnen den Key unter "Editor Einstellungen" setzen - oder aktualisieren, wenn Sie beim Update einen Warnhinweis zu einem falschen oder veralteten Key bekommen.</p>
-			</fieldset>
-			<?php
-		else:
-			
-			flush();flush();flush();
-			
-            // begin getting data from update server
-            $values = false;
-            $xmldata = '';
-            
-            if (_isCurl()) {
-                $defaults = array( 
-                    CURLOPT_URL => $_SESSION['wspvars']['updatefiles'].'/versions.php?key='.$_SESSION['wspvars']['wspkey'].'&url='.$_SESSION['wspvars']['workspaceurl'].'&system='.$_SESSION['wspvars']['wspversion'], 
-                    CURLOPT_HEADER => 0, 
-                    CURLOPT_RETURNTRANSFER => TRUE, 
-                    CURLOPT_TIMEOUT => 4 
-                );
-                $ch = curl_init();
-                curl_setopt_array($ch, $defaults);    
-                if( ! $xmldata = curl_exec($ch)) { trigger_error(curl_error($ch)); } 
-                curl_close($ch);
-                $xml = xml_parser_create();
-                xml_parse_into_struct($xml, $xmldata, $values, $index);
-            } 
-            else {
-                $fh = fopen($_SESSION['wspvars']['updatefiles'].'/versions.php?key='.$_SESSION['wspvars']['wspkey'].'&url='.$_SESSION['wspvars']['workspaceurl'].'&system='.$_SESSION['wspvars']['wspversion'], 'r');
-                $xmlversion = '';
-                if (intval($fh)==0) {
-                    addWSPMsg('errormsg', "error reading file \"".$_SESSION['wspvars']['updatefiles'].'/versions.php?key='.$_SESSION['wspvars']['wspkey'].'&url='.$_SESSION['wspvars']['workspaceurl'].'&system='.$_SESSION['wspvars']['wspversion']."\" from update server<br />");
-                    }
-                else {
-                    while (!feof($fh)) {
-                        $xmlversion .= fgets($fh, 4096);
-                    }
-                    fclose($fh);
-                    $xml = xml_parser_create();
-                    xml_parse_into_struct($xml, $xmlversion, $values, $index);
-                }
-            }
-            // end getting data from update server
-    		
-	        $devdata = array();		
-            if (is_array($values)):
-				$f = 0; foreach ($values as $file):
-                    if (isset($file['tag']) && trim($file['tag'])=='FILE' && isset($file['type']) && trim($file['type'])=='open'):
-                        $devdata[$f] = array();
-                    endif;
-                    if ($file['tag']=='FILENAME' && isset($file['value'])):
-                        $devdata[$f]['filename'] = trim($file['value']);
-                    elseif ($file['tag']=='DATE' && isset($file['value'])):
-                        $devdata[$f]['date'] = trim($file['value']);
-                    elseif ($file['tag']=='VERSION' && isset($file['value'])):
-                        $devdata[$f]['version'] = trim($file['value']);
-                    elseif ($file['tag']=='SIZE' && isset($file['value'])):
-                        $devdata[$f]['size'] = intval($file['value']);
-                    elseif ($file['tag']=='NOTE' && isset($file['value'])):
-                        $devdata[$f]['note'] = (isset($file['value'])?trim($file['value']):'');
-                    endif;
-                    if (isset($file['tag']) && trim($file['tag'])=='FILE' && isset($file['type']) && trim($file['type'])=='close'):
-                        $f++;
-                    endif;
-				endforeach;
-			endif;
-    
-			$x= 0;
-			$newversion = false;
-			$newmodul = array();
-            $delfiles = array();
-			
-			if (count($devdata)>0) {
-				foreach ($_SESSION['wspvars']['files'] as $file) {
-					$version = '';
-					$lastchange = '';
-                    $overridediv = false;
-    
-                    if (is_file($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.str_replace('[wsp]', $_SESSION['wspvars']['wspbasedir'], $file))):
-						
-						$aFRows = file($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.str_replace('[wsp]', $_SESSION['wspvars']['wspbasedir'], $file));
-						foreach ($aFRows as $value):
-							$value = trim($value);
-                            if (!(strpos($value, '@version')===false)):
-								$version = trim(substr($value, strpos($value, '@version')+8));
-							endif;
-							if (!(strpos($value, '@lastchange')===false)):
-								$lastchange = trim(substr($value, strpos($value, '@lastchange')+12));
-							endif;
-							if (!(strpos($value, '*/')===false)):
-								break;
-							endif;
-                        endforeach;
-                        if (isset($aFRows[(count($aFRows)-1)]) && strpos($aFRows[(count($aFRows)-1)], 'EOF')===false):
-                            $overridediv = true;
-                        endif;
-					endif;
-					
-					foreach ($devdata AS $ddk => $ddv) {
-                        if ($file==$ddv['filename']) {
-                            $devpos = $ddk;
-                            break;
-                        }
-                    }
-                    
-					if (isset($devdata[$devpos]['note']) && trim($devdata[$devpos]['note'])=='deprecated') {
-                        if (is_file($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.str_replace('[wsp]', $_SESSION['wspvars']['wspbasedir'], $file))) {
-                            $delfiles[] = trim($file);
-                        }
-                    }
-                    else {
-                        $devversion = (isset($devdata[$devpos]['version']))?$devdata[$devpos]['version']:0;
-                        $devdate = (isset($devdata[$devpos]['date']))?$devdata[$devpos]['date']:'';
-                        if (compVersion($version, $devversion)==1) {
-                            $newversion = true;
-                            $diffversion = true;
-                            $newmodulversionact[$x] = $version;
-                            $newmodulversionnew[$x] = $devversion;
-                            $newmodul[$x] = trim($file);
-                            $x++;
-                        }
-                        else if (compVersion($devversion, $version)==1) {
-                            $diffversion = true;
-                        }
-                        if ($overridediv && !($newversion)) {
-                            $newversion = true;
-                            $diffversion = true;
-                            $newmodulversionact[$x] = $version.' [EOF]';
-                            $newmodulversionnew[$x] = $devversion;
-                            $newmodul[$x] = trim($file);
-                            $x++;
-                        }
-					}
-    
-                }
-		      
-                if (count($delfiles)==0): $delfiles = false; endif;
-    
-				$upddbstruc['wsp'] = false;
-				
-                // begin getting data from update server
-                $values = false;
-                $xmldata = '';
-                
-                if (_isCurl()) {
-                    $defaults = array( 
-                        CURLOPT_URL => $_SESSION['wspvars']['updatedatabase'].'/media/xml/database.xml', 
-                        CURLOPT_HEADER => 0, 
-                        CURLOPT_RETURNTRANSFER => TRUE, 
-                        CURLOPT_TIMEOUT => 4
-                    );
-                    $ch = curl_init();
-                    curl_setopt_array($ch, $defaults);    
-                    if( ! $xmldata = curl_exec($ch)) { trigger_error(curl_error($ch)); } 
-                    curl_close($ch);
-                    $xml = xml_parser_create();
-                    xml_parse_into_struct($xml, $xmldata, $values, $index);
-                } 
-                else {
-                    $fh = fopen($_SESSION['wspvars']['updatedatabase'].'/media/xml/database.xml', 'r');
-                    $xmlversion = '';
-                    if (intval($fh)==0) {
-                        addWSPMsg('errormsg', "error reading file \"".$_SESSION['wspvars']['updatedatabase']."/media/xml/database.xml\" from update server<hr />");
-                        }
-                    else {
-                        while (!feof($fh)) {
-                            $xmlversion .= fgets($fh, 4096);
-                        }
-                        fclose($fh);
-                        $xml = xml_parser_create();
-                        xml_parse_into_struct($xml, $xmlversion, $values, $index);
-                    }
-                }
-                // end getting data from update server
-    
-				$devtable = array();
-				
-				if (is_array($values)) {
-					foreach ($values as $tags) {
-						if ($tags['tag']=='TABLENAME') {
-							$dev_tablename[]=$tags['value'];
-							$dev_tablenametemp='';
-							foreach ($values as $tags2) {
-								if ($tags2['tag']=='TABLENAME') {
-									$dev_tablenametemp=$tags2['value'];
-                                }
-								if ($dev_tablenametemp==$tags['value']) {
-									if($tags2['tag']=='FIELD'){
-										$devtable[$tags['value']]['field'][]=$tags2['value'];
-									}
-									if($tags2['tag']=='TYPE'){
-										$devtable[$tags['value']]['type'][]=$tags2['value'];
-									}
-									if($tags2['tag']=='NULL'){
-										$devtable[$tags['value']]['null'][]=$tags2['value'];
-									}
-									if($tags2['tag']=='KEY') {
-										if (array_key_exists('value', $tags2)) {
-											$devtable[$tags['value']]['key'][]=$tags2['value'];
-                                        }
-										else {
-											$devtable[$tags['value']]['key'][]='';
-                                        }
-                                    }
-									if($tags2['tag']=='DEFAULT') {
-										if (array_key_exists('value', $tags2)) {
-											$devtable[$tags['value']]['default'][]=$tags2['value'];
-                                        }
-										else {
-											$devtable[$tags['value']]['default'][]='';
-                                        }
-                                    }
-									if($tags2['tag']=='EXTRAS') {
-										if (array_key_exists('value', $tags2)) {
-											$devtable[$tags['value']]['extras'][]=$tags2['value'];
-                                        }
-										else {
-											$devtable[$tags['value']]['extras'][]='';
-                                        }
-                                    }
-                                }
-                            }
-                        }
-					}
-				}
-				
-				$owntable = array();
-				for($i=0;$i<sizeof($_SESSION['wspvars']['tables']);$i++) {
-					$sql = "DESCRIBE `".$_SESSION['wspvars']['tables'][$i]."`";
-					$res = doSQL($sql);
-					if ($res['res']) {
-						$own_tablename[$i] = $_SESSION['wspvars']['tables'][$i];
-						foreach ($res['set'] AS $rsk => $rsv) {
-                        	$owntable[$own_tablename[$i]]['field'][]= $rsv['Field'];
-							$owntable[$own_tablename[$i]]['type'][]=$rsv['Type'];
-							$owntable[$own_tablename[$i]]['null'][]=$rsv['Null'];
-							$owntable[$own_tablename[$i]]['key'][]=$rsv['Key'];
-							$owntable[$own_tablename[$i]]['default'][]=$rsv['Default'];
-							$owntable[$own_tablename[$i]]['extras'][]=$rsv['Extra'];
-						}
-					}
-				}
-				
-				flush();flush();flush();
-				
-				$changes = checkDatabase($owntable,$devtable,$dev_tablename,$own_tablename);
-				$id = 0;
-				$x= 0;
-				$temarray = array();
-				$devid = 0;
-				$dbchanges = '';
-				
-				// search for changed tables
-				foreach ($own_tablename as $table) {
-					if (in_array($table, $dev_tablename)):
-						
-						// tabellenname von own ist in dev(wurde geaendert)
-						
-						if (isset($table) && is_array($changes) && array_key_exists($table, $changes) && sizeof($changes[$table])!=0):
-							$upddbstruc['wsp'] = true;
-							for($i=0;$i<sizeof($changes[$table]);$i++):
-								$key= array_search($changes[$table][$i]['field'],$devtable[$table]['field']);
-								$own_key= array_search($changes[$table][$i]['field'],$owntable[$table]['field']);
-		
-								if ($changes[$table][$i]['action']=="delete"):
-									$temarray[$id][$i]['field']=$owntable[$table]['field'][$own_key];
-									$temarray[$id][$i]['action']="delete";
-								else:
-									$temarray[$id][$i]['field']=$devtable[$table]['field'][$key];
-									$temarray[$id][$i]['type']=$devtable[$table]['type'][$key];
-									$temarray[$id][$i]['null']=$devtable[$table]['null'][$key];
-									$temarray[$id][$i]['key']=$devtable[$table]['key'][$key];
-									$temarray[$id][$i]['default']=$devtable[$table]['default'][$key];
-									$temarray[$id][$i]['extras']=$devtable[$table]['extras'][$key];
-								endif;
-								
-								$dbchanges .= $table." : ".$changes[$table][$i]['action']." field ".$devtable[$table]['field'][$key]."<br />";
-								
-								if ($changes[$table][$i]['action']=="changed"):
-									// $newversion = true;
-									$upddbstruc['wsp'] = true;
-									$temarray[$id][$i]['action'] = "changed";
-								endif;
-								
-								if ($changes[$table][$i]['action']=="addnew"):
-									// $newversion = true;
-									$upddbstruc['wsp'] = true;
-									$temarray[$id][$i]['action'] = "addnew";
-								endif;
-								
-								if ($changes[$table][$i]['action']=="delete"):
-									// $newversion = true;
-									$upddbstruc['wsp'] = true;
-								endif;
-							endfor;
-							$temarray[$id]['changecount']=$i;
-						endif;
-					endif;		
-					$id++;
-					$devid = $id;
-				}
-				
-				flush();flush();flush();
-				
-				// search for new tables
-				foreach ($dev_tablename as $table) {
-					if(!in_array($table,$own_tablename)) {
-						// $newversion = true;
-						$upddbstruc['wsp'] = true;
-						$temarray[$devid]['tableaction'] = "addnewtable";
-						$temarray[$devid]['tablename'] = $table;
-						$devid++;
-					}
-                }
-					
-				$temarray['tablecount'] = $devid;
-				$datbasepfad = $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/updatedatabase.php";
-				$datbasedat = fopen($datbasepfad,'w');
-				fwrite($datbasedat, serialize($temarray));
-				fclose($datbasedat);
-				
-				if (trim($_SESSION['dbchanges']) == trim($dbchanges)) {
-					$_SESSION['dbchangerun'] = isset($_SESSION['dbchangerun'])?$_SESSION['dbchangerun']+1:1;
-                }
-				else {
-					$_SESSION['dbchanges'] = $dbchanges;
-					$_SESSION['dbchangerun'] = 0;
-				}
-				if ($_SESSION['dbchangerun']>3) {
-					$upddbstruc['wsp'] = false;
-				}
-				$status = array('0' => 'inaktiv', '1' => 'aktiv');
-            }
-			else {
-                $devfiles = array('error');
-            }
-    
-			?>
-		<fieldset class="text">
-			<legend><?php echo returnIntLang('system sysinfo'); ?> <?php echo legendOpenerCloser('sysinfo'); ?></legend>
-			<div id="sysinfo">
-				<table class="tablelist">
-					<tr>
-						<td class="tablecell two"><?php echo returnIntLang('system zend version'); ?></td>
-						<td class="tablecell two"><?php echo zend_version(); ?></td>
-						<td class="tablecell two"><?php echo returnIntLang('system php version'); ?></td>
-						<td class="tablecell two"><?php echo phpversion(); ?></td>
-					</tr>
-					<tr>
-						<td class="tablecell two"><?php echo returnIntLang('system mysql version'); ?></td>
-						<td class="tablecell two"><?php echo (doSQL("SHOW GLOBAL VARIABLES LIKE '%version%'")['mysqli']); ?></td>
-						<td class="tablecell two"><?php echo returnIntLang('system gdlib version'); ?></td>
-						<td class="tablecell two"><?php $gdinfo = gd_info(); echo $gdinfo['GD Version']; ?></td>
-					</tr>
-					<tr>
-						<td class="tablecell two"><?php echo returnIntLang('system wsp version'); ?></td>
-						<td class="tablecell two"><?php echo $wspvars['wspversion']; ?></td>
-						<td class="tablecell two"><?php echo returnIntLang('system free space'); ?></td>
-						<td class="tablecell two"><?php
-					
-						$spacevals = array(
-							1 => returnIntLang('system free space Byte'),
-							2 => returnIntLang('system free space kB'),
-							3 => returnIntLang('system free space MB'),
-							4 => returnIntLang('system free space GB'),
-							5 => returnIntLang('system free space TB')
-							);
-						
-						echo ceil($freespace).' '.$spacevals[$c].'<br />';
-						
-						?></td>
-					</tr>
-					<tr>
-						<td class="tablecell two"><?php echo returnIntLang('system structure entries all'); ?></td>
-						<td class="tablecell two"><?php echo doSQL('SELECT `mid` FROM `menu`')['num']; ?></td>
-						<td class="tablecell two"><?php echo returnIntLang('system structure entries active'); ?></td>
-						<td class="tablecell two"><?php echo doSQL('SELECT `mid` FROM `menu` WHERE `trash` = 0')['num']; ?></td>
-					</tr>
-					<tr>
-						<td class="tablecell two"><?php echo returnIntLang('system content entries all'); ?></td>
-						<td class="tablecell two"><?php echo doSQL('SELECT `cid` FROM `content`')['num']; ?></td>
-						<td class="tablecell two"><?php echo returnIntLang('system content entries active'); ?></td>
-						<td class="tablecell two"><?php echo doSQL('SELECT `cid` FROM `content` WHERE `trash` = 0')['num']; ?></td>
-					</tr>
-					<tr>
-						<td class="tablecell two"><?php echo returnIntLang('system post size'); ?></td>
-						<td class="tablecell two"><?php echo ini_get('post_max_size'); ?></td>
-						<td class="tablecell two"><?php echo returnIntLang('system upload size'); ?></td>
-						<td class="tablecell two"><?php echo ini_get('upload_max_filesize'); ?></td>
-					</tr>
-				</table>
-			</div>
-		</fieldset>
-		<?php if (isset($devfiles[0]) && $devfiles[0]=="error"): ?>
-			<fieldset id="fieldset_wspkey" class="errormsg">
-				<p>F&uuml;r die automatische Update-Funktion von WSP wird <strong>CURL</strong> oder die Unterstützung der Funktion <strong>fopen()</strong> benötigt.</p>
-                <p>Updateserver: <?php echo str_replace("/wsp", "", $_SESSION['wspvars']['updatefiles']); ?></p>
-				<p>WSP-Version: <?php echo $_SESSION['wspvars']['wspversion']; ?></p>
-            </fieldset>
-		<?php else:
-			
-			// find mediafile updates
-			$media = array();
-			// begin getting data from update server
-            $values = false;
-            
-            if (_isCurl()) {
-                $xmldata = '';
-                $defaults = array( 
-                    CURLOPT_URL => $_SESSION['wspvars']['updateuri'].'/versionsmedia.php', 
-                    CURLOPT_HEADER => 0, 
-                    CURLOPT_RETURNTRANSFER => TRUE, 
-                    CURLOPT_TIMEOUT => 4
-                );
-                $ch = curl_init();
-                curl_setopt_array($ch, $defaults);    
-                if( ! $xmldata = curl_exec($ch)) { trigger_error(curl_error($ch)); } 
-                curl_close($ch);
-                $xml = xml_parser_create();
-                xml_parse_into_struct($xml, $xmldata, $values, $index);
-            } 
-            else {
-                $fh = fopen($_SESSION['wspvars']['updateuri'].'/versionsmedia.php', 'r');
-                $xmlversion = '';
-                if (intval($fh)==0) {
-                    addWSPMsg('errormsg', "error reading file \"".$_SESSION['wspvars']['updateuri']."/versionsmedia.php\" from update server<hr />");
-                    }
-                else {
-                    while (!feof($fh)) {
-                        $xmlversion .= fgets($fh, 4096);
-                    }
-                    fclose($fh);
-                    $xml = xml_parser_create();
-                    xml_parse_into_struct($xml, $xmlversion, $values, $index);
-                }
-            }
-
-            $mediapackage = array();
-			$mediaversion = array();
-			$mediadescription = array();
-			$i = 0;
-			foreach ($values as $file):
-				if ($file['tag']=='PACKAGENAME'):
-					$i++;
-					$mediapackage[$i] = $file['value'];
-				endif;
-				if ($file['tag']=='VERSION'):
-					$mediaversion[$i] = $file['value'];
-				endif;
-				if ($file['tag']=='DESCRIPTION'):
-					$mediadescription[$i] = $file['value'];
-				endif;
-			endforeach;
-			// read layout files			
-			$cssdir = opendir ($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.$_SESSION['wspvars']['wspbasedir']."/media/layout/");
-			$cssdesc = array();
-			$i = 0;
-			while ($file=readdir($cssdir)):
-				if (substr($file,0,1)!="." && $file!="screen.css.php" && $file!="screen.css"):
-					$readcss = $_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.$_SESSION['wspvars']['wspbasedir']."/media/layout/".$file;
-					$fileinfo = file($readcss);
-					for ($x=0; $x<=8; $x++):
-						if (str_replace("@description", "@", $fileinfo[$x])!=$fileinfo[$x]):
-							$cssdesc[$i] = trim(str_replace(" * @description ","",$fileinfo[$x]));
-						endif;
-						if (str_replace("@version", "@", $fileinfo[$x])!=$fileinfo[$x]):
-							$cssversion[$i] = trim(str_replace(" * @version ","",$fileinfo[$x]));
-						endif;
-					endfor;
-					$cssfile[$i] = $file;
-				endif;
-				$i++;
-			endwhile;
-			closedir ($cssdir);
-			// set update field visible
-			$mediaupdate = false;
-			
-			// package update
-			if (!is_dir($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.$_SESSION['wspvars']['wspbasedir']."/packages")):
-				$ftphdl = ((isset($_SESSION['wspvars']['ftpssl']) && $_SESSION['wspvars']['ftpssl']===true)?ftp_ssl_connect($_SESSION['wspvars']['ftphost'], intval($_SESSION['wspvars']['ftpport'])):ftp_connect($_SESSION['wspvars']['ftphost'], intval($_SESSION['wspvars']['ftpport'])));
-				$login = ftp_login($ftphdl, $_SESSION['wspvars']['ftpuser'], $_SESSION['wspvars']['ftppass']);
-				ftp_mkdir($ftphdl, $_SESSION['wspvars']['ftpbasedir']."/".$_SESSION['wspvars']['wspbasedir']."/packages");
-			endif;
-			
-			$packages = array();
-			if (is_dir($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.$_SESSION['wspvars']['wspbasedir']."/packages")):
-				$d = dir($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.$_SESSION['wspvars']['wspbasedir']."/packages");
-				while (false !== ($entry = $d->read())):
-					if (substr($entry, -4)=='.xml'):
-						$xmldesc = new XML($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.$_SESSION['wspvars']['wspbasedir']."/packages/".$entry);
-						$xmlpackages = $xmldesc->childNodes[0];
-						$package = $entry;
-						$version = 'n/a';
-						for ($i=0; $i<count($xmlpackages->childNodes); $i++):
-							$xmlnode = $xmlpackages->childNodes[$i];
-							if ($xmlnode->nodeName=='package'):
-								$package = $xmlnode->firstChild->nodeValue;
-							elseif ($xmlnode->nodeName=='version'):
-								$version = $xmlnode->firstChild->nodeValue;
-							elseif ($xmlnode->nodeName=='description'):
-								$desc = $xmlnode->firstChild->nodeValue;
-							endif;
-						endfor;
-						$packages[$package]['version'] = $version;
-						$packages[$package]['desc'] = $desc;
-					endif;
-				endwhile;
-				$d->close();
-			endif;
-			
-            // begin getting data from update server
-            $values = false;
-            
-            if (_isCurl()) {
-                $xmldata = '';
-                $defaults = array( 
-                    CURLOPT_URL => $_SESSION['wspvars']['updateuri'].'/versionspackage.php', 
-                    CURLOPT_HEADER => 0, 
-                    CURLOPT_RETURNTRANSFER => TRUE, 
-                    CURLOPT_TIMEOUT => 4
-                );
-                $ch = curl_init();
-                curl_setopt_array($ch, $defaults);    
-                if( ! $xmldata = curl_exec($ch)) { trigger_error(curl_error($ch)); } 
-                curl_close($ch);
-                $xml = xml_parser_create();
-                xml_parse_into_struct($xml, $xmldata, $values, $index);
-            } 
-            else {
-                $fh = fopen($_SESSION['wspvars']['updateuri'].'/versionspackage.php', 'r');
-                $xmlversion = '';
-                if (intval($fh)==0) {
-                    addWSPMsg('errormsg', "error reading file \"".$_SESSION['wspvars']['updateuri']."/versionspackage.php\" from update server<br />");
-                    }
-                else {
-                    while (!feof($fh)) {
-                        $xmlversion .= fgets($fh, 4096);
-                    }
-                    fclose($fh);
-                    $xml = xml_parser_create();
-                    xml_parse_into_struct($xml, $xmlversion, $values, $index);
-                }
-            }
-            // end getting data from update server
-            
-			$updversions = array();
-			$updpackages = array();
-			$updpackagefiles = array();
-			foreach ($values as $file):
-				if ($file['tag']=='PACKAGENAME') {
-					$updpackages[] = $file['value'];
-				} elseif ($file['tag']=='VERSION') {
-					$updversions[] = $file['value'];
-				} elseif ($file['tag']=='FILE') {
-					$updpackagefiles[] = $file['value'];
-				}
-			endforeach;
-			// set update field visible
-			$packageupdate = false;
-			foreach ($updpackages as $key => $package):
-				if (array_key_exists($package, $packages)):
-					if ($updversions[$key]!=$packages[$package]['version']):
-						$packageupdate = true;
-					endif;
-				else:
-					$packageupdate = true;
-				endif;
-			endforeach;
-			
-			// end of package finder 
-
-            // update section
-			if ($newversion!==false || $upddbstruc['wsp']!==false || $packageupdate!==false): 
-				$_SESSION['opentabs']['updatenewmod'] = 'display: block;';
-				?>
-			<form method="post" enctype="multipart/form-data" id="formmodupnew">
-			<fieldset class="text" id="fieldset_updatenewmod">
-				<legend><?php echo returnIntLang('system updatewsp'); ?> <?php echo legendOpenerCloser('updatenewmod'); ?></legend>
-				<div id="updatenewmod">
-					<?php if(in_array("".$_SESSION['wspvars']['wspbasedir']."/data/include/globalvars.inc.php",$newmodul)): 
-						echo "<p>".returnIntLang('system globalvars update avaiable please install first')."</p>";
-					endif; 
-					if(!(in_array("".$_SESSION['wspvars']['wspbasedir']."/data/include/globalvars.inc.php",$newmodul))):
-						if (sizeof($newmodul)>0):
-							echo "<ul class=\"tablelist\">";
-							?>
-							<li class="tablecell head four"><?php echo returnIntLang('str filename'); ?></li>
-							<li class="tablecell head two"><?php echo returnIntLang('system instversion'); ?></li>
-							<li class="tablecell head two"><?php echo returnIntLang('system updversion'); ?></li>
-							<?php
-							for($i=0;$i<sizeof($newmodul);$i++):
-								echo "<li class=\"tablecell four\">".$newmodul[$i]."</li>";
-								echo "<li class=\"tablecell two\">".$newmodulversionact[$i]."</li>";
-								echo "<li class=\"tablecell two\">".$newmodulversionnew[$i]."</li>";
-							endfor;
-							echo "</ul>";
-						endif;
-					endif;
-					
-					$datverpfad = str_replace("//", "/", str_replace("//", "/", $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/updatedateien.php"));
-					$datverdat = fopen($datverpfad,'w');
-					
-                    if ($datverdat) {
-                        if (in_array("".$_SESSION['wspvars']['wspbasedir']."/data/include/globalvars.inc.php",$newmodul)):
-                            fwrite($datverdat, "1\r\n");
-                            fwrite($datverdat, $_SESSION['wspvars']['wspbasedir']."/data/include/globalvars.inc.php");
-                        else:
-                            fwrite($datverdat, sizeof($newmodul)."\r\n");
-                            for($i=0;$i<sizeof($newmodul);$i++):
-                                fwrite($datverdat, $newmodul[$i]."\r\n");
-                            endfor;
-                        endif;
-                        fclose($datverdat);
-                    }
-                    
-                    if (is_array($delfiles) && count($delfiles)>0):
-                        $delverpfad = str_replace("//", "/", str_replace("//", "/", str_replace("//", "/", $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/deletefiles.php")));
-                        $delverdat = fopen($delverpfad,'w');
-                        fwrite($delverdat, count($delfiles)."\r\n");
-						for($i=0;$i<count($delfiles);$i++):
-							fwrite($delverdat, $delfiles[$i]."\r\n");
-						endfor;
-                        fclose($delverdat);
-					endif;
-                    
-					if ($packageupdate): echo "<p>".returnIntLang('system packageupdate avaiable', true)."</p>"; endif;
-
-					foreach ($updpackages as $key => $package):
-						if (array_key_exists($package, $packages)):
-							if ($updversions[$key]!=$packages[$package]['version']):
-								echo "<input type=\"hidden\" name=\"package[]\" value=\"".$package."\" />";
-							endif;
-						else:
-							echo "<input type=\"hidden\" name=\"package[]\" value=\"".$package."\" />";
-						endif;
-					endforeach;
-					
-					?>
-					<fieldset class="options innerfieldset">
-						<p><input type="hidden" name="wspupdate" id="wspupdate" value="wspupdate" /><a href="#" onclick="document.getElementById('formmodupnew').submit(); return true;" class="greenfield"><?php echo returnIntLang('system updatewsp'); ?></a></p>
-					</fieldset>
-				</div>
-			</fieldset>
-			</form>
-			<span id="dbdetails" style="display: none;">
-			<fieldset class="text">
-				<legend>DB-Update</legend>
-				<?php echo $dbchanges; ?>
-			</fieldset>
-			</span>
-			<?php else:
-				echo '<fieldset class="text" id="fieldset_updatenewmod">';
-				echo '<legend>'.returnIntLang('str websitepreview').' '.legendOpenerCloser('updatenewmod').'</legend>';
-				echo '<div id="updatenewmod">';
-				echo '<p>'.returnIntLang('system actualwsp').'</p>';
-				echo '</div>';
-				echo '</fieldset>';
-				// if a false positive update was submitted we set this information to false
-				$_SESSION['wspvars']['updatesystem'] = false;
-				// update database for last check
-				$lastupdate_sql = "UPDATE `wspproperties` SET `varvalue` = '".time()."' WHERE `varname` = 'lastupdate'";
-				$lastupdate_res = doSQL($lastupdate_sql);
-				echo '<script> $(\'#m_10 span\').hide(); $(\'#m_10_3 span\').hide(); </script>';
-			endif; ?>
-    
-		<?php if (isset($plugin_num) && $plugin_num>0):
-			for ($pres=0; $pres<$plugin_num; $pres++):
-				if (is_file($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.$wspvars['wspbasedir']."/plugins/".trim($plugin_res['set'][$pres]['pluginfolder'])."/data/include/globalvars.inc.php")):
-					?>
-					<fieldset class="text" id="fieldset_plugin_<?php echo trim($plugin_res['set'][$pres]['guid']); ?>">
-						<legend><?php echo returnIntLang('system updateplugin1'); ?> <?php echo trim($plugin_res['set'][$pres]['pluginname']); ?> <?php echo returnIntLang('system updateplugin2'); ?> <?php echo legendOpenerCloser('plugin_'.trim($plugin_res['set'][$pres]['guid'])); ?></legend>
-						<div id="plugin_<?php echo trim($plugin_res['set'][$pres]['guid']); ?>">
-							<?php
-							
-							unset($pluginvars);
-                            
-							require($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.$wspvars['wspbasedir']."/plugins/".trim($plugin_res['set'][$pres]['pluginfolder'])."/data/include/globalvars.inc.php");
-							if (trim($plugin_res['set'][$pres]['guid'])!=$pluginvars['guid']):
-								echo "Die Versionen stimmen nicht &uuml;berein. Bitte installieren Sie das aktuelle Plugin, bevor Sie den automatischen Updateservice nutzen.";
-							else:
-								
-                                // begin getting data from update server
-                                $values = false;
-                                $xmldata = '';
-                                $defaults = array( 
-                                    CURLOPT_URL => $pluginvars[$pluginvars['guid']]['updatefiles'].'/versions.php?key='.$_SESSION['wspvars']['wspkey'].'&url='.$_SESSION['wspvars']['workspaceurl'].'&system='.$_SESSION['wspvars']['wspversion'], 
-                                    CURLOPT_HEADER => 0, 
-                                    CURLOPT_RETURNTRANSFER => TRUE, 
-                                    CURLOPT_TIMEOUT => 4 
-                                );
-                                $ch = curl_init();
-                                curl_setopt_array($ch, $defaults);    
-                                if( ! $xmldata = curl_exec($ch)) { trigger_error(curl_error($ch)); } 
-                                curl_close($ch);
-                                $xml = xml_parser_create();
-                                xml_parse_into_struct($xml, $xmldata, $values, $index);
-                                // end getting data from update server
-                            
-								$devversions = array();
-								$devdates = array();
-								$devfiles = array();
-								$devdata = array();
-								$d = 0;
-								
-								foreach ($values as $file):
-									if ($file['tag']=='FILENAME' && array_key_exists('value', $file)):
-										$devfiles[] = $file['value'];
-										$devdata[$d]['filename'] = $file['value'];
-									elseif ($file['tag']=='DATE' && array_key_exists('value', $file)):
-										$devdates[] = $file['value'];
-										$devdata[$d]['date'] = $file['value'];
-									elseif ($file['tag']=='VERSION' && array_key_exists('value', $file)):
-										$devversions[] = $file['value'];
-										$devdata[$d]['version'] = $file['value'];
-									elseif ($file['tag']=='DESC' && array_key_exists('value', $file)):
-										$devdescs[] = $file['value'];
-										$devdata[$d]['desc'] = $file['value'];
-									endif;
-									$d++;
-								endforeach;
-								
-								$id = 0;
-								$x= 0;
-								$newversion = false;
-								$newmodul = array();
-								
-								if ($devfiles[0]!="error"):
-									foreach ($pluginvars[$pluginvars['guid']]['files'] as $file):
-										
-										$version = '';
-										$lastchange = '';
-										$aFRows = '';
-										
-										if (strstr($file, '[plugin]')):
-											if (is_file($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.$_SESSION['wspvars']['wspbasedir'].'/plugins/'.str_replace('[plugin]', $pluginvars[$pluginvars['guid']]['plugindir'], $file))):
-												$aFRows = file($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.$_SESSION['wspvars']['wspbasedir'].'/plugins/'.str_replace('[plugin]', $pluginvars[$pluginvars['guid']]['plugindir'], $file));
-//												echo "plugin: ".$file;
-											endif;
-										elseif(strstr($file, '[wsp]')):
-											if (is_file($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.str_replace('[wsp]', $_SESSION['wspvars']['wspbasedir'], $file))):
-												$aFRows = file($_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.str_replace('[wsp]', $_SESSION['wspvars']['wspbasedir'], $file));
-//												echo "wsp: ".$file;
-											endif;
-										else:
-											if (is_file(str_replace("//", "/", $_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.$file))):
-												$aFRows = file(str_replace("//", "/", $_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd'].'/'.$file));
-											endif;
-										endif;
-										
-										if (is_array($aFRows)):
-											foreach ($aFRows as $value):
-												$value = trim($value);
-												if (!(strpos($value, '@version')===false)):
-													$version = trim(substr($value, strpos($value, '@version')+8));
-												endif;
-												if (!(strpos($value, '@lastchange')===false)):
-													$lastchange = trim(substr($value, strpos($value, '@lastchange')+12));
-												endif;
-												if (!(strpos($value, '*/')===false)):
-													break;
-												endif;
-											endforeach;
-										endif;
-										
-										$devpos = intval(array_search($file, $devfiles));
-										if ($devpos===false):
-											$devversion = '';
-											$devdate = '';
-										else:
-											if (array_key_exists($devpos, $devversions)): $devversion = $devversions[$devpos]; else: $devversion = 1; endif;
-											if (array_key_exists($devpos, $devdates)): $devdate = $devdates[$devpos]; else: $devdate = date('Y-m-d', (time()-86400)); endif;
-											if (compVersion($version, $devversion)):
-												$newversion = true;
-												$diffversion = true;
-												$newmodulversionact[$x] = $version;
-												$newmodulversionnew[$x] = $devversion;
-												$newmoduldateact[$x] = "-";
-												$newmoduldatenew[$x] = $devdate;
-												$newmodul[$x] = str_replace("[plugin]", $pluginvars[$pluginvars['guid']]['plugindir'], $file);
-												$newmodulpath[$x] = str_replace("//", "/", str_replace("//", "/", str_replace("[plugin]", "/".$_SESSION['wspvars']['wspbasedir']."/plugins/".$pluginvars[($pluginvars['guid'])]['plugindir']."/", $file)));
-												$newmoduldesc[$x] = $newmodul[$x];
-												if (isset($devdesc) && trim($devdesc)!=""):
-													$newmoduldesc[$x] = $devdesc;
-												endif;
-												$x++;
-											elseif (compVersion($devversion, $version)):
-												$diffversion = true;
-											endif;
-											array_splice($devversions, $devpos, 1);
-											array_splice($devdates, $devpos, 1);
-											array_splice($devfiles, $devpos, 1);
-										endif;
-										$id++;
-									endforeach;
-									
-									if (count($devfiles)>0):
-										foreach ($devfiles as $devpos => $file):
-											$devversion = $devversions[$devpos];
-											$devdate = $devdates[$devpos];
-											$id++;
-										endforeach;
-									endif;
-									
-									// unset all wsp-table-based vars
-									$own_tablename = array();
-									$dev_tablename = array();
-									
-									$upddbstruc[trim($pluginvars['guid'])] = false;
-                                    // begin getting data from update server
-                                    $values = false;
-                                    $xmldata = '';
-                                    $defaults = array( 
-                                        CURLOPT_URL => $pluginvars[$pluginvars['guid']]['updatefiles'].'/xml/database.xml', 
-                                        CURLOPT_HEADER => 0, 
-                                        CURLOPT_RETURNTRANSFER => TRUE, 
-                                        CURLOPT_TIMEOUT => 4 
-                                    );
-                                    $ch = curl_init();
-                                    curl_setopt_array($ch, $defaults);    
-                                    if( ! $xmldata = curl_exec($ch)) { trigger_error(curl_error($ch)); } 
-                                    curl_close($ch);
-                                    $xml = xml_parser_create();
-                                    xml_parse_into_struct($xml, $xmldata, $values, $index);
-                                    // end getting data from update server
-                            
-									$devtable = array();
-									foreach ($values as $tags):
-										if ($tags['tag']=='TABLENAME'):
-											$dev_tablename[] = $tags['value'];
-											foreach ($values as $tags2):
-												if ($tags2['tag']=='TABLENAME'):
-													$dev_tablenametemp=$tags2['value'];
-												endif;
-												if ($dev_tablenametemp==$tags['value']):
-													if($tags2['tag']=='FIELD'){
-														$devtable[$tags['value']]['field'][]=$tags2['value'];
-													}
-													if($tags2['tag']=='TYPE'){
-														$devtable[$tags['value']]['type'][]=$tags2['value'];
-													}
-													if($tags2['tag']=='NULL'):
-														$devtable[$tags['value']]['null'][]=$tags2['value'];
-													endif;
-													if($tags2['tag']=='KEY'):
-														if (array_key_exists('value', $tags2)):
-															$devtable[$tags['value']]['key'][]=$tags2['value'];
-														else:
-															$devtable[$tags['value']]['key'][]='';
-														endif;
-													endif;
-													if($tags2['tag']=='DEFAULT'):
-														if (array_key_exists('value', $tags2)):
-															$devtable[$tags['value']]['default'][]=$tags2['value'];
-														else:
-															$devtable[$tags['value']]['default'][]='';
-														endif;
-													endif;
-													if($tags2['tag']=='EXTRAS'):
-														if (array_key_exists('value', $tags2)):
-															$devtable[$tags['value']]['extras'][]=$tags2['value'];
-														else:
-															$devtable[$tags['value']]['extras'][]='';
-														endif;
-													endif;
-												endif;
-											endforeach;
-										endif;
-									endforeach;
-									
-									$owntable = array();
-									for($i=0;$i<sizeof($pluginvars[$pluginvars['guid']]['tables']);$i++) {
-										$sql = "DESCRIBE `".$pluginvars[$pluginvars['guid']]['tables'][$i]."`";
-										$res = doSQL($sql);
-										if ($res['res']) {
-											$own_tablename[$i]=$pluginvars[$pluginvars['guid']]['tables'][$i];
-											foreach ($res['set'] AS $rsk => $rsv) {
-												$owntable[$own_tablename[$i]]['field'][] = trim($rsv['Field']);
-												$owntable[$own_tablename[$i]]['type'][] = trim($rsv['Type']);
-												$owntable[$own_tablename[$i]]['null'][] = trim($rsv['Null']);
-												$owntable[$own_tablename[$i]]['key'][] = trim($rsv['Key']);
-												$owntable[$own_tablename[$i]]['default'][] = trim($rsv['Default']);
-												$owntable[$own_tablename[$i]]['extras'][] = trim($rsv['Extra']);
-                                            }
-                                        }
-                                    }
-									
-									flush();flush();flush();
-									ob_flush(); ob_flush(); ob_flush();
-
-									$changes = checkDatabaseNew($owntable, $devtable);
-									
-									if (isset($_SESSION['wspvars']['devstat']) && $_SESSION['wspvars']['devstat']):
-										echo "<fieldset><legend>plugin db changes</legend><pre>";
-										var_export($changes);
-										echo "</pre></fieldset>";
-									endif;
-									
-									if (is_array($changes) && count($changes)>0):
-										$_SESSION['dbchange'][($pluginvars['guid'])] = $changes;
-									else:
-										unset($_SESSION['dbchange'][($pluginvars['guid'])]);
-									endif;
-									
-									flush();flush();flush();
-									ob_flush(); ob_flush(); ob_flush();
-								else:
-									unset($_SESSION['dbchange'][($pluginvars['guid'])]);
-								endif;
-							endif;
-							
-							if ($newversion || isset($_SESSION['dbchange'][($pluginvars['guid'])])):
-								// show update files and/or update button only if updates found
-								?>
-								<form method="post" enctype="multipart/form-data" name="form<?php echo $pluginvars['guid']; ?>update" id="form<?php echo $pluginvars['guid']; ?>update">
-								<table class="tablelist">
-									<?php
-									if (sizeof($newmodul)>0):
-										echo "<tr>";
-										echo "<td class=\"tablecell head four\">".returnIntLang('str filename', true)."</td>";
-										echo "<td class=\"tablecell head two\">".returnIntLang('system instversion', true)."</td>";
-										echo "<td class=\"tablecell head two\">".returnIntLang('system updversion', true)."</td>";
-										echo "</tr>";
-										for($i=0;$i<sizeof($newmodul);$i++):
-											echo "<tr>";
-											echo "<td class=\"tablecell four\"><input type=\"checkbox\" name=\"updatefile[]\" id=\"pluginfile_".$pluginvars['guid']."_".$i."\" value=\"".$newmodulpath[$i]."\" checked=\"checked\" /><input type=\"hidden\" name=\"updatefile[]\" value=\"".$newmodulpath[$i]."\" />".$newmoduldesc[$i]."</td>";
-											echo "<td class=\"tablecell one\">".$newmodulversionact[$i]."</td>";
-											echo "<td class=\"tablecell one\">".$newmoduldateact[$i]."</td>";
-											echo "<td class=\"tablecell one\">";
-											if ($newmodulversionnew[$i]=='NEW'):
-												echo "<span class=\"bubblemessage green\">".returnIntLang('str new', false)."</span>";
-											else:
-												echo $newmodulversionnew[$i];
-											endif;
-											echo "</td>";
-											echo "<td class=\"tablecell one\">".$newmoduldatenew[$i]."</td>";
-										endfor;
-									endif;
-									
-									?>
-								</table>
-								<fieldset class="options innerfieldset"><p><input type="hidden" name="pluginupdaten" id="plugin_<?php echo $pluginvars['guid']; ?>_updaten" value="<?php echo $pluginvars['guid']; ?>" /><a onclick="document.getElementById('form<?php echo $pluginvars['guid']; ?>update').submit(); return true;" class="greenfield" style="cursor: pointer;"><?php echo returnIntLang('system update plugin'); ?></a></p></fieldset>
-								</form>
-								<script language="JavaScript1.2" type="text/javascript">
-								<!--
-								
-								document.getElementById('plugin_<?php echo trim($plugin_res['set'][$pres]['guid']); ?>').style.display = 'block';
-										
-								// -->
-								</script>
-							<?php else: ?>
-								<p><?php echo returnIntLang('system plugin up to date'); ?></p>
-							<?php endif; ?>
-						</div>
-					</fieldset>
-					<?php
-				endif;
-			endfor;
-		endif;
-	endif;
-endif; ?>
+            </script>
+        </div>
+    </div>
 </div>
+
+<script language="JavaScript" type="text/javascript">
+<!--
+    
+$(document).ready(function() {
+    
+    $('.dropify').dropify();
+    
+    var drFolder = $('#dropify-uploadsystem').dropify({messages: { default: 'Upload ZIP' }});
+    
+    drFolder.on('dropify.afterReady', function(event, element) {
+        $('#uploadsystem_zip .submitter').show();
+        });
+    drFolder.on('dropify.afterClear', function(event, element) {
+        $('#uploadsystem_zip .submitter').hide();
+        });
+    
+    });
+    
+// -->
+</script>
+
 <?php require ("./data/include/footer.inc.php"); ?>
-<!-- EOF -->

@@ -1,0 +1,8 @@
+data/include/dbaccess.inc.php
+data/include/rootphrase.inc.php
+data/include/ftpaccess.inc.php
+data/include/wspconf.inc.php
+updater.php
+versions.php
+wspsetup.php
+testfile-wsp.txt

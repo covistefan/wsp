@@ -30,7 +30,6 @@
 /* states and images */
 .ui-icon { display: block; text-indent: -99999px; overflow: hidden; background-repeat: no-repeat; }
 
-
 /* Misc visuals
 ----------------------------------*/
 
@@ -47,15 +46,14 @@
  *
  * http://docs.jquery.com/UI/Theming/API
  *
- * To view and modify this theme, visit http://jqueryui.com/themeroller/?ffDefault=\\'Lucida%20Grande\\',%20lucida,%20verdana,%20sans-serif;&fwDefault=bold&fsDefault=12px&cornerRadius=4px&bgColorHeader=cbd6dc&bgTextureHeader=02_glass.png&bgImgOpacityHeader=50&borderColorHeader=354e65&fcHeader=000000&iconColorHeader=354e65&bgColorContent=ffffff&bgTextureContent=01_flat.png&bgImgOpacityContent=75&borderColorContent=dddddd&fcContent=000&iconColorContent=354e65&bgColorDefault=f6f6f6&bgTextureDefault=03_highlight_soft.png&bgImgOpacityDefault=100&borderColorDefault=dddddd&fcDefault=354e65&iconColorDefault=354e65&bgColorHover=354e65&bgTextureHover=02_glass.png&bgImgOpacityHover=25&borderColorHover=354e65&fcHover=ffffff&iconColorHover=ffffff&bgColorActive=ffffff&bgTextureActive=02_glass.png&bgImgOpacityActive=65&borderColorActive=dddddd&fcActive=354e65&iconColorActive=454545&bgColorHighlight=ffffff&bgTextureHighlight=01_flat.png&bgImgOpacityHighlight=55&borderColorHighlight=354e65&fcHighlight=000000&iconColorHighlight=354e65&bgColorError=ffffff&bgTextureError=01_flat.png&bgImgOpacityError=55&borderColorError=950f15&fcError=222222&iconColorError=950f15&bgColorOverlay=eeeeee&bgTextureOverlay=07_diagonals_small.png&bgImgOpacityOverlay=0&opacityOverlay=80&bgColorShadow=aaaaaa&bgTextureShadow=01_flat.png&bgImgOpacityShadow=0&opacityShadow=60&thicknessShadow=4px&offsetTopShadow=-4px&offsetLeftShadow=-4px&cornerRadiusShadow=0px
  */
 
 
 /* Component containers
 ----------------------------------*/
-.ui-widget { font-family: \\\\\\\\\\\\\\\'Lucida Grande\\\\\\\\\\\\\\\', lucida, verdana, sans-serif;; font-size: 12px; }
-.ui-widget .ui-widget { font-size: 1em; }
-.ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button { font-family: \\\\\\\\\\\\\\\'Lucida Grande\\\\\\\\\\\\\\\', lucida, verdana, sans-serif;; font-size: 1em; }
+.ui-widget {}
+.ui-widget .ui-widget {}
+.ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button {}
 .ui-widget-content { border: 1px solid #dddddd; background: #ffffff url(images/ui-bg_flat_75_ffffff_40x100.png) 50% 50% repeat-x; color: #000; }
 .ui-widget-content a { color: #000; }
 .ui-widget-header { border: 1px solid #354e65; background: #cbd6dc url(images/ui-bg_glass_50_cbd6dc_1x400.png) 50% 50% repeat-x; color: #000000; font-weight: bold; }
@@ -63,7 +61,7 @@
 
 /* Interaction states
 ----------------------------------*/
-.ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default { border: 1px solid #dddddd; background: #f6f6f6 url(images/ui-bg_highlight-soft_100_f6f6f6_1x100.png) 50% 50% repeat-x; font-weight: bold; color: #354e65; }
+.ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default {}
 .ui-state-default a, .ui-state-default a:link, .ui-state-default a:visited { color: #354e65; text-decoration: none; }
 .ui-state-hover, .ui-widget-content .ui-state-hover, .ui-widget-header .ui-state-hover, .ui-state-focus, .ui-widget-content .ui-state-focus, .ui-widget-header .ui-state-focus { border: 1px solid #354e65; background: #354e65 url(images/ui-bg_glass_25_354e65_1x400.png) 50% 50% repeat-x; font-weight: bold; color: #ffffff; }
 .ui-state-hover a, .ui-state-hover a:hover { color: #ffffff; text-decoration: none; }

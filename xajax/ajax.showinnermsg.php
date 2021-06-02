@@ -3,7 +3,7 @@
  * @author stefan@covi.de
  * @copyright (c) 2018, Common Visions Media.Agentur (COVI)
  * @since 6.0
- * @version 6.8
+ * @version 7.0
  * @lastchange 2018-09-14
  */
 session_start();

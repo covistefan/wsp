@@ -3,7 +3,7 @@
  * functions, managing media folders
  * @author stefan@covi.de
  * @since 3.1
- * @version 6.7.2
+ * @version 7.0
  * @lastchange 2019-01-25
  */
 

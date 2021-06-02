@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @copyright (c) 2019, Common Visions Media.Agentur (COVI)
  * @since 6.0
- * @version 6.8.1
+ * @version 7.0
  * @lastchange 2019-01-24
  */
 if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!=''):

@@ -3,7 +3,7 @@
 *
 * @author stefan@covi.de
 * @since 3.1
-* @version 3.2.3
+* @version 7.0
 * @lastchange 2007-08-10
 */
 

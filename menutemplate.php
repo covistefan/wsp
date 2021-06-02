@@ -3,7 +3,7 @@
  * Templates bearbeiten
  * @author stefan@covi.de
  * @since 3.2.4
- * @version 6.8
+ * @version 7.0
  * @lastchange 2019-01-22
  */
 

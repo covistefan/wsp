@@ -3,7 +3,7 @@
  * edit menupoints details
  * @author stefan@covi.de
  * @since 3.1
- * @version 6.10.1
+ * @version 7.0
  * @lastchange 2021-03-03
  */
 

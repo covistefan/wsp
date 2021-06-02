@@ -3,7 +3,7 @@
  * aufbau des dynamischen menues fuer modulare menueeintraege
  * @author stefan@covi.de
  * @since 3.1
- * @version 6.7
+ * @version 7.0
  * @lastchange 2018-09-18
  */
 

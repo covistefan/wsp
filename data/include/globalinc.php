@@ -3,7 +3,7 @@
 * @author stefan@covi.de
 * @copyright (c) 2008, Common Visions Media.Agentur (COVI)
 * @since 3.1
-* @version 3.4
+* @version 7.0
 * @lastchange 2008-08-06
 */
 

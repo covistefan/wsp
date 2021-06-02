@@ -3,333 +3,277 @@
  * Allgemeine parser-functions
  * @author stefan@covi.de
  * @since 3.1
- * @version 6.10.1
- * @lastchange 2021-03-02
+ * @version 7.0
+ * @lastchange 2019-02-04
  */
-
-/*
- * 2021-03-02
- * 6.10
- * removed parsing of contents if header location is set
- * removed sitekeys param
- */
-
-if (!(function_exists('createPath'))) { function createPath() {} }
 
 if (!(function_exists('getHeadVar'))) {
-	function getHeadVar($mid, $publishlang, $preview = false, $metascript = array()) {
-	// get site based data for building a head
-	$globalhead_sql = "SELECT * FROM `wspproperties`";
-	$globalhead_res = doSQL($globalhead_sql);
-	if ($globalhead_res['num']>0) {
-		$globalheaddata = array();
-		foreach ($globalhead_res['set'] AS $ghresk => $ghresv) {
-			$globalheaddata[trim($ghresv['varname'])] = $ghresv['varvalue'];
-		}
-	}
-	$siteurl = $globalheaddata['siteurl'];
-	$sitetitle = $globalheaddata['sitetitle'];
-	$siterobots = $globalheaddata['siterobots'];
-	$sitekeys = $globalheaddata['sitekeys'];
-	$sitedesc = $globalheaddata['sitedesc'];
-	$sitecopy = $globalheaddata['sitecopy'];
-	$siteauthor = $globalheaddata['siteauthor'];
-	$googleverify = $globalheaddata['googleverify'];
-	$revisit = $globalheaddata['revisit'];
-	$codepage = $globalheaddata['codepage'];
-	$doctype = $globalheaddata['doctype'];
-	$googlemaps = $globalheaddata['googlemaps'];
-	$usetracking = $globalheaddata['use_tracking'];
-	$usesession = $globalheaddata['use_session'];
-	$langinfo = $globalheaddata['languages'];
-	// get page based data
-	$pagehead_sql = "SELECT `pagetitle`, `pagekeys`, `pagedesc`, `pagecopy` FROM `pageproperties` WHERE `mid` = ".intval($mid);
-	$pagehead_res = doSQL($pagehead_sql);
-	if ($pagehead_res['num']>0):
-		if (trim($pagehead_res['set'][0]["pagetitle"])!=""):
-			$sitetitle = trim($pagehead_res['set'][0]["pagetitle"]);
-		endif;
-		if (trim($pagehead_res['set'][0]["pagekeys"])!=""):
-			$sitekeys = trim($pagehead_res['set'][0]["pagekeys"]).",".$sitekeys;
-		endif;
-		if (trim($pagehead_res['set'][0]["pagedesc"])!=""):
-			$sitedesc = trim($pagehead_res['set'][0]["pagedesc"]);
-		endif;
-	endif;
-	// grep all data to mid
-	$middata_sql = "SELECT * FROM `menu` WHERE `mid` = ".intval($mid);
-	$middata_res = doSQL($middata_sql);
-	// get information of displaying page contents (of hidden menupoints)
-	$visibility = 0;
-	$lockpage = 0;
-	// first get visibility status of page
-	if ($middata_res['num']>0):
-        $middata = $middata_res['set'][0];
-    endif;
-    // append information to vars
-    if ($middata_res['num']>0):
-		$visibility = intval($middata['visibility']);
-		$lockpage = intval($middata['lockpage']);
-		$denylang = unserializeBroken(trim($middata['denylang']));
-		if (is_array($denylang) && in_array($publishlang, $denylang)):
-			$visibility = 0;
-		endif;
-	endif;
-	// now get content handler
-	$hiddenmenu = intval($globalheaddata['hiddenmenu']);
-	$nocontentmenu = intval($globalheaddata['nocontentmenu']);
-	if ($hiddenmenu==2):
-		$contentvisibility = intval($nocontentmenu);
-	endif;
-	// compare menu and content visibility
-	if ($visibility==0):
-		// ?? WHAT HERE
-	endif;
-	
-	$headvar = "";
-    $onlyheader = false;
+    function getHeadVar($mid, $publishlang, $preview = false, $metascript = array()) {
+        // get site based data for building a head
+        $globalheaddata = getWSPProperties();
+        $siteurl = isset($globalheaddata['siteurl'])?$globalheaddata['siteurl']:$_SERVER['HTTP_HOST'];
+        $sitetitle = isset($globalheaddata['sitetitle'])?$globalheaddata['sitetitle']:$_SERVER['HTTP_HOST'];
+        $siterobots = isset($globalheaddata['siterobots'])?$globalheaddata['siterobots']:'all';
+        $sitekeys = isset($globalheaddata['sitekeys'])?$globalheaddata['sitekeys']:'';
+        $sitedesc = isset($globalheaddata['sitedesc'])?$globalheaddata['sitedesc']:'';
+        $sitecopy = isset($globalheaddata['sitecopy'])?$globalheaddata['sitecopy']:'WSP7';
+        $siteauthor = isset($globalheaddata['siteauthor'])?$globalheaddata['siteauthor']:'WSP7';
+        $googleverify = isset($globalheaddata['googleverify'])?$globalheaddata['googleverify']:'';
+        $revisit = isset($globalheaddata['revisit'])?$globalheaddata['revisit']:14;
+        $doctype = $globalheaddata['doctype'];
+        $langinfo = $globalheaddata['languages'];
+        // get page based data
+        $pagehead_sql = "SELECT `pagetitle`, `pagekeys`, `pagedesc`, `pagecopy` FROM `pageproperties` WHERE `mid` = ".intval($mid);
+        $pagehead_res = doSQL($pagehead_sql);
+        if ($pagehead_res['num']>0):
+            if (trim($pagehead_res['set'][0]["pagetitle"])!=""):
+                $sitetitle = trim($pagehead_res['set'][0]["pagetitle"]);
+            endif;
+            if (trim($pagehead_res['set'][0]["pagekeys"])!=""):
+                $sitekeys = trim($pagehead_res['set'][0]["pagekeys"]).",".$sitekeys;
+            endif;
+            if (trim($pagehead_res['set'][0]["pagedesc"])!=""):
+                $sitedesc = trim($pagehead_res['set'][0]["pagedesc"]);
+            endif;
+        endif;
+        // grep all data to mid
+        $middata_sql = "SELECT * FROM `menu` WHERE `mid` = ".intval($mid);
+        $middata_res = doSQL($middata_sql);
+        // get information of displaying page contents (of hidden menupoints)
+        $visibility = 0;
+        $lockpage = 0;
+        // first get visibility status of page
+        if ($middata_res['num']>0):
+            $middata = $middata_res['set'][0];
+        endif;
+        // append information to vars
+        if ($middata_res['num']>0):
+            $visibility = intval($middata['visibility']);
+            $lockpage = intval($middata['lockpage']);
+            $denylang = unserializeBroken(trim($middata['denylang']));
+            if (is_array($denylang) && in_array($publishlang, $denylang)):
+                $visibility = 0;
+            endif;
+        endif;
+        // now get content handler
+        $hiddenmenu = intval($globalheaddata['hiddenmenu']);
+        $nocontentmenu = intval($globalheaddata['nocontentmenu']);
+        if ($hiddenmenu==2):
+            $contentvisibility = intval($nocontentmenu);
+        endif;
+        // compare menu and content visibility
+        if ($visibility==0):
+            // ?? WHAT HERE
+        endif;
 
-	// if no data can be accessed - return a simple head
-	if ($middata_res['num']==0) {
-		$headvar.= "<!DOCTYPE html>\n";
-		$headvar.= "<html>\n";
-		$headvar.= "<head>\n";
-		$headvar.= "<title>".setUTF8(stripslashes($sitetitle))."</title>\n";
-		$headvar.= "</head>\n";
-	// else - build head
-	} else {
-		// check if contents avaiable
-		$cavail_sql = "SELECT `cid` FROM `content` WHERE `mid` = ".intval($mid)." AND `visibility` != 0 AND `trash` = 0";
-		$cavail_res = doSQL($cavail_sql);
-		$cavail_num = $cavail_res['num'];
-		// if required forwarding to another page 
-		if ($middata['docintern']!='') {
-            if ($preview) {
-                echo "forwarding to: /media/download".$middata['docintern'];
-                die();
-            }
-            $headvar.= "<?php\n\n";
-			$headvar.= "header('location: ".str_replace("//", "/", str_replace("//", "/", "/media/download/".$middata['docintern']))."');\ndie();\n\n";
-			$headvar.= "?>\n";
-			$onlyheader = true;
-		// if required forwarding to another page 
-        } else if (intval($middata['forwarding_id'])>0) {
-			// get php head with forwarding ...
-			$headvar.= "<!DOCTYPE html>\n";
-			$headvar.= "<html>\n";
-			$headvar.= "<head>\n";
-			$headvar.= "<title>".setUTF8(stripslashes($sitetitle))."</title>\n";
-			$headvar.= "</head>\n";
-		// elseif no contents avaiable and forwarding to next active menupoint is selected 
-		} else if (intval($middata['forwarding_id'])==0 && $cavail_num==0 && $preview===false) {
-			// get php head with forwarding ...
-			$headvar.= "<!DOCTYPE html>\n";
-			$headvar.= "<html>\n";
-			$headvar.= "<head>\n";
-			$headvar.= "<title>".setUTF8(stripslashes($sitetitle))."</title>\n";
-			$headvar.= "</head>\n";
-		// else - get used template to find out some required css, js, etc ...
-		} else {
-			$used_template = getTemplateID($mid);
-			if (isset($_REQUEST['previewtpl']) && intval($_REQUEST['previewtpl'])>0) {
-				$used_template = intval($_REQUEST['previewtpl']);
-			}
-			$template_sql = "SELECT * FROM `templates` WHERE `id` = ".intval($used_template);
-			$template_res = doSQL($template_sql);
-			$template_head = '';
-			$template_body = '';
-			$template_iphone_opt = 0;
-			$template_ipad_opt = 0;
-			$template_iphone_viewport = '';
-			$template_ipad_viewport = '';
-			$template_generic_viewport = '';
-			if ($template_res['num']>0) {
-				$template_head = trim($template_res['set'][0]['head']);
-				$template_body = trim($template_res['set'][0]['bodytag']);
-				$template_generic_viewport = trim($template_res['set'][0]['generic_viewport']);
-				$template_framework = unserializeBroken(trim($template_res['set'][0]['framework']));
-				$template_fonts = unserializeBroken(trim($template_res['set'][0]['fonts']));
-			}
-			// doctype
-			if ($doctype=="xhtml1-1") { // XHTML 1.1
-				$headvar.= "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\"";
-				$headvar.= "\n\t\t\t\"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n";
-            } else if ($doctype=="xhtml1strict") { // XHTML 1 Strict
-				$headvar.= "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"";
-				$headvar.= "\n\t\t\t\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n";
-			} else if ($doctype=="xhtml1trans") { // XHTML 1 Transitional
-				$headvar.= "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"";
-				$headvar.= "\n\t\t\t\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n";
-			} else if ($doctype=="html5") { // HTML 5
-				$headvar.= "<!DOCTYPE html>\n";
-			} else if ($doctype=="html4strict") { // HTML 4 Strict
-				$headvar.= "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\"";
-				$headvar.= "\n\t\t\t\"http://www.w3.org/TR/html4/strict.dtd\">\n";
-			} else { // html4trans
-				$headvar.= "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"";
-				$headvar.= "\n\t\t\t\"http://www.w3.org/TR/html4/loose.dtd\">\n";
-			}
-			// language
-			$headvar.= "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"".$publishlang."\" lang=\"".$publishlang."\">\n";	
-			$headvar.= "<head>\n";
-			// 2012-03-01 use only utf8-encoding codepage
-			$headvar.= "<meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />\n";
-			$headvar.= "<!-- content-language: ".$publishlang." -->\n";
-			// meta script top
-			if (isset($metascript) && is_array($metascript) && count($metascript)>0) {
-				$headvar.= "<!-- page generated meta top  -->\n";
-				foreach ($metascript AS $msk => $msv) {
-					if ($msv['pos']==0 && trim($msv['content'])!='') {
-						$headvar.= $msv['content'];
-						$headvar.= "\n";
-					}
-				}
-			}
-			// sitetitle
-			$headvar.= "<title>".setUTF8(stripslashes($sitetitle))."</title>\n";
-			// meta information
-			$headvar .= "<!-- classic meta -->\n";
-			$headvar.= "<meta name=\"description\" content=\"".setUTF8(str_replace("\"", "'", stripslashes($sitedesc)))."\" />\n";
-			// removed keys 2021-03-02
-			// $headvar.= "<meta name=\"keywords\" content=\"".setUTF8(str_replace("\"", "'", stripslashes($sitekeys)))."\" />\n";
-			if (trim($siteauthor)!="") {
-				$headvar.= "<meta name=\"author\" content=\"".setUTF8(str_replace("\"", "'", stripslashes($siteauthor)))."\" />\n";
-			} else {
-				$headvar.= "<meta name=\"author\" content=\"".setUTF8(str_replace("\"", "'", stripslashes($_SESSION['wspvars']['realname'])))."\" />\n";
-			}
-			$headvar.= "<meta name=\"generator\" content=\"".setUTF8($_SESSION['wspvars']['wsplongname'])."\" />\n";
-			$headvar.= "<meta name=\"robots\" content=\"".$siterobots."\" />\n";
-			// revisit
-			if ($revisit!="") {
-				$headvar .= "<meta name=\"revisit-after\" content=\"".$revisit."\" />\n";
-			}
-			$headvar .= "<!-- setup mobile + desktop classes -->\n";
-			$headvar .= "<style type='text/css'><!--\n";
-			$headvar .= ".mobile {display: none;} @media only screen and (max-width: 400px){ .mobile {display: inherit;} .desktop {display: none;} }\n";
-			$headvar .= "--></style>\n";
-			$headvar.= "<meta name=\"version\" content=\"".date('Y.m.d.H.i.s')."\" />\n";
-			// googleverify
-			if ($googleverify!='') {
-				$headvar .= "<!-- google webmaster tools site verification -->\n";
-				$headvar .= "<meta name=\"verify-v1\" content=\"".$googleverify."\">\n";
-				$headvar .= "<meta name=\"google-site-verification\" content=\"".$googleverify."\">\n";
-			}
-			// predefined frameworks
-			if (is_array($template_framework)) {
-				$headvar .= "<!-- wsp integrated frameworks -->\n";
-				foreach ($template_framework AS $tfwk => $tfwv) {
-					if ($tfwk=='jquery' && $tfwv==1) {
-						$headvar .= "<script src=\"/data/script/jquery/jquery-3.3.1.js\" type=\"text/javascript\"></script>\n";
-					}
-					if ($tfwk=='jquerygoogle' && $tfwv==1) {
-						$headvar .= "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js\"></script>\n";
-					}
-                    if ($tfwk=='bootstrap' && $tfwv==1) {
-                        $headvar .= "<link rel='stylesheet' href='/media/layout/bootstrap/bootstrap.css'>\n";
-                        $headvar .= "<script src='/data/script/bootstrap/bootstrap.js'></script>\n";
-                    }
-					if ($tfwk=='covifuncs' && $tfwv==1) {
-						$headvar .= "<script src=\"/data/script/covifuncs.js\" type=\"text/javascript\"></script>\n";
-					}
+        $headvar = "";
+
+        // if no data can be accessed - return a simple head
+        if ($middata_res['num']==0) {
+            $headvar.= "<!DOCTYPE html>\n";
+            $headvar.= "<html>\n";
+            $headvar.= "<head>\n";
+            $headvar.= "<title>".setUTF8(stripslashes($sitetitle))."</title>\n";
+            $headvar.= "</head>\n";
+        // else - build head
+        } else {
+            // check if contents avaiable
+            $cavail_sql = "SELECT `cid` FROM `content` WHERE `mid` = ".intval($mid)." AND `visibility` != 0 AND `trash` = 0";
+            $cavail_res = doSQL($cavail_sql);
+            $cavail_num = $cavail_res['num'];
+            // if required forwarding to another page 
+            if ($middata['docintern']!='') {
+                if ($preview) {
+                    echo "forwarding to: /media/download".$middata['docintern'];
+                    die();
                 }
-            }
-			// predefined fonts
-			if (is_array($template_fonts)) {
-				$headvar .= "<!-- wsp integrated fonts -->\n";
-				if (isset($template_fonts['source']) && $template_fonts['source']=='google' && isset($template_fonts['list']) && $template_fonts['list']!='') {
-					$headvar .= "<link href=\"//fonts.googleapis.com/css?family=".trim($template_fonts['list'])."\" rel=\"stylesheet\" type=\"text/css\">\n";
-				}
-			}
-			// js from template
-            $jscript_sql = "SELECT `javascript_id` FROM `r_temp_jscript` WHERE `templates_id` = ".intval($used_template)." ORDER BY `id`";
-			$jscript_res = doSQL($jscript_sql);
-			if ($jscript_res['num']>0) {
-				$headvar .= "<!-- template js-files -->\n";
-				foreach ($jscript_res['set'] AS $jsresk => $jsresv) {
-					$javascript_sql = "SELECT * FROM `javascript` WHERE `id` = ".intval($jsresv['javascript_id']);
-					$javascript_res = doSQL($javascript_sql);
-					if ($javascript_res['num']>0) {
-						if (trim($javascript_res['set'][0]['file'])!='') {
-							// just files
-							$headvar .= "<script src=\"/data/script/".trim($javascript_res['set'][0]['file']).".js\" type=\"text/javascript\"></script>\n";
-						} else {
-							$jscript = unserializeBroken(trim($javascript_res['set'][0]['scriptcode']));
-							// handling js-folders!!!
-							if (is_array($jscript)) { 
-                                foreach ($jscript AS $jk => $jv) {
-                                    $headvar .= str_replace("//", "/", str_replace("//", "/", "<script src=\"/data/script/".trim($javascript_res['set'][0]['cfolder'])."/".trim($jv)."\" type=\"text/javascript\"></script>\n"));
-                                }
-                            }
+                $headvar.= "<?php\n\n";
+                $headvar.= "header('location: ".str_replace("//", "/", str_replace("//", "/", "/media/download/".$middata['docintern']))."');\ndie();\n\n";
+                $headvar.= "?>\n";
+            // if required forwarding to another page 
+            } else if (intval($middata['forwarding_id'])>0) {
+                // get php head with forwarding ...
+                $headvar.= "<!DOCTYPE html>\n";
+                $headvar.= "<html>\n";
+                $headvar.= "<head>\n";
+                $headvar.= "<title>".setUTF8(stripslashes($sitetitle))."</title>\n";
+                $headvar.= "</head>\n";
+            // elseif no contents avaiable and forwarding to next active menupoint is selected 
+            } else if (intval($middata['forwarding_id'])==0 && $cavail_num==0 && $preview===false) {
+                // get php head with forwarding ...
+                $headvar.= "<!DOCTYPE html>\n";
+                $headvar.= "<html>\n";
+                $headvar.= "<head>\n";
+                $headvar.= "<title>".setUTF8(stripslashes($sitetitle))."</title>\n";
+                $headvar.= "</head>\n";
+            // else - get used template to find out some required css, js, etc ...
+            } else {
+                $used_template = getTemplateID($mid);
+                if (isset($_REQUEST['previewtpl']) && intval($_REQUEST['previewtpl'])>0) {
+                    $used_template = intval($_REQUEST['previewtpl']);
+                }
+                $template_sql = "SELECT * FROM `templates` WHERE `id` = ".intval($used_template);
+                $template_res = doSQL($template_sql);
+                $template_head = '';
+                $template_body = '';
+                $template_iphone_opt = 0;
+                $template_ipad_opt = 0;
+                $template_iphone_viewport = '';
+                $template_ipad_viewport = '';
+                $template_generic_viewport = '';
+                if ($template_res['num']>0) {
+                    $template_head = trim($template_res['set'][0]['head']);
+                    $template_body = trim($template_res['set'][0]['bodytag']);
+                    $template_generic_viewport = trim($template_res['set'][0]['generic_viewport']);
+                    $template_framework = unserializeBroken(trim($template_res['set'][0]['framework']));
+                    $template_fonts = unserializeBroken(trim($template_res['set'][0]['fonts']));
+                }
+                // doctype
+                if ($doctype=="xhtml1-1") { // XHTML 1.1
+                    $headvar.= "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\"";
+                    $headvar.= "\n\t\t\t\"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n";
+                } else if ($doctype=="xhtml1strict") { // XHTML 1 Strict
+                    $headvar.= "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"";
+                    $headvar.= "\n\t\t\t\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n";
+                } else if ($doctype=="xhtml1trans") { // XHTML 1 Transitional
+                    $headvar.= "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"";
+                    $headvar.= "\n\t\t\t\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n";
+                } else if ($doctype=="html5") { // HTML 5
+                    $headvar.= "<!DOCTYPE html>\n";
+                } else if ($doctype=="html4strict") { // HTML 4 Strict
+                    $headvar.= "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\"";
+                    $headvar.= "\n\t\t\t\"http://www.w3.org/TR/html4/strict.dtd\">\n";
+                } else { // html4trans
+                    $headvar.= "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"";
+                    $headvar.= "\n\t\t\t\"http://www.w3.org/TR/html4/loose.dtd\">\n";
+                }
+                // language
+                $headvar.= "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"".$publishlang."\" lang=\"".$publishlang."\">\n";	
+                $headvar.= "<head>\n";
+                // 2012-03-01 use only utf8-encoding codepage
+                $headvar.= "<meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />\n";
+                $headvar.= "<!-- content-language: ".$publishlang." -->\n";
+                // meta script top
+                if (isset($metascript) && is_array($metascript) && count($metascript)>0) {
+                    $headvar.= "<!-- page generated meta top  -->\n";
+                    foreach ($metascript AS $msk => $msv) {
+                        if ($msv['pos']==0 && trim($msv['content'])!='') {
+                            $headvar.= $msv['content'];
+                            $headvar.= "\n";
                         }
                     }
-				}
-			}
-			// js addon from menu
-			if (trim($middata['addscript'])!='') {
-				$addjs = unserializeBroken(trim($middata['addscript']));
-				if (is_array($addjs) && count($addjs)>0) {
-					$headvar .= "<!-- page based js-files -->\n";
-					foreach ($addjs AS $jk => $jv) {
-						$javascript_sql = "SELECT * FROM `javascript` WHERE `id` = ".intval($jv);
-						$javascript_res = doSQL($javascript_sql);
-						if ($javascript_res['num']>0) {
+                }
+                // sitetitle
+                $headvar.= "<title>".setUTF8(stripslashes($sitetitle))."</title>\n";
+                // meta information
+                $headvar .= "<!-- classic meta -->\n";
+                $headvar.= "<meta name=\"description\" content=\"".setUTF8(str_replace("\"", "'", stripslashes($sitedesc)))."\" />\n";
+                $headvar.= "<meta name=\"keywords\" content=\"".setUTF8(str_replace("\"", "'", stripslashes($sitekeys)))."\" />\n";
+                if (trim($siteauthor)!="") {
+                    $headvar.= "<meta name=\"author\" content=\"".setUTF8(str_replace("\"", "'", stripslashes($siteauthor)))."\" />\n";
+                } else {
+                    $headvar.= "<meta name=\"author\" content=\"".setUTF8(str_replace("\"", "'", stripslashes($_SESSION['wspvars']['realname'])))."\" />\n";
+                }
+                $headvar.= "<meta name=\"generator\" content=\"".WSP_LONGVERSION."\" />\n";
+                $headvar.= "<meta name=\"robots\" content=\"".$siterobots."\" />\n";
+                // revisit
+                if ($revisit!="") {
+                    $headvar .= "<meta name=\"revisit-after\" content=\"".$revisit."\" />\n";
+                }
+                $headvar .= "<!-- setup mobile + desktop classes -->\n";
+                $headvar .= "<style type='text/css'><!--\n";
+                $headvar .= ".mobile {display: none;} @media only screen and (max-width: 400px){ .mobile {display: inherit;} .desktop {display: none;} }\n";
+                $headvar .= "--></style>\n";
+                $headvar.= "<meta name=\"version\" content=\"".date('Y.m.d.H.i.s')."\" />\n";
+                // googleverify
+                if ($googleverify!='') {
+                    $headvar .= "<!-- google webmaster tools site verification -->\n";
+                    $headvar .= "<meta name=\"verify-v1\" content=\"".$googleverify."\">\n";
+                    $headvar .= "<meta name=\"google-site-verification\" content=\"".$googleverify."\">\n";
+                }
+                // predefined frameworks
+                if (is_array($template_framework)) {
+                    $headvar .= "<!-- wsp integrated frameworks -->\n";
+                    foreach ($template_framework AS $tfwk => $tfwv) {
+                        if ($tfwk=='jquery' && $tfwv==1) {
+                            $headvar .= "<script src=\"/data/script/jquery/jquery-3.3.1.js\" type=\"text/javascript\"></script>\n";
+                        }
+                        if ($tfwk=='jquerygoogle' && $tfwv==1) {
+                            $headvar .= "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js\"></script>\n";
+                        }
+                        if ($tfwk=='covifuncs' && $tfwv==1) {
+                            $headvar .= "<script src=\"/data/script/covifuncs.js\" type=\"text/javascript\"></script>\n";
+                        }
+                    }
+                }
+                // predefined fonts
+                if (is_array($template_fonts)) {
+                    $headvar .= "<!-- wsp integrated fonts -->\n";
+                    if (isset($template_fonts['source']) && $template_fonts['source']=='google' && isset($template_fonts['list']) && $template_fonts['list']!='') {
+                        $headvar .= "<link href=\"//fonts.googleapis.com/css?family=".trim($template_fonts['list'])."\" rel=\"stylesheet\" type=\"text/css\">\n";
+                    }
+                }
+                // js from template
+                $jscript_sql = "SELECT `javascript_id` FROM `r_temp_jscript` WHERE `templates_id` = ".intval($used_template)." ORDER BY `id`";
+                $jscript_res = doSQL($jscript_sql);
+                if ($jscript_res['num']>0) {
+                    $headvar .= "<!-- template js-files -->\n";
+                    foreach ($jscript_res['set'] AS $jsresk => $jsresv) {
+                        $javascript_sql = "SELECT * FROM `javascript` WHERE `id` = ".intval($jsresv['javascript_id']);
+                        $javascript_res = doSQL($javascript_sql);
+                        if ($javascript_res['num']>0) {
                             if (trim($javascript_res['set'][0]['file'])!='') {
                                 // just files
                                 $headvar .= "<script src=\"/data/script/".trim($javascript_res['set'][0]['file']).".js\" type=\"text/javascript\"></script>\n";
-                            }
-                            else {
+                            } else {
                                 $jscript = unserializeBroken(trim($javascript_res['set'][0]['scriptcode']));
                                 // handling js-folders!!!
-                                foreach ($jscript AS $jk => $jv) {
-                                    $headvar .= str_replace("//", "/", str_replace("//", "/", "<script src=\"/data/script/".trim($javascript_res['set'][0]['cfolder'])."/".trim($jv)."\" type=\"text/javascript\"></script>\n"));
+                                if (is_array($jscript)) { 
+                                    foreach ($jscript AS $jk => $jv) {
+                                        $headvar .= str_replace("//", "/", str_replace("//", "/", "<script src=\"/data/script/".trim($javascript_res['set'][0]['cfolder'])."/".trim($jv)."\" type=\"text/javascript\"></script>\n"));
+                                    }
                                 }
                             }
                         }
-					}
-				}
-			}
-			// css from template
-			$css_sql = "SELECT `stylesheets_id` FROM `r_temp_styles` WHERE `templates_id` = ".intval($used_template)." ORDER BY `id`";
-			$css_res = doSQL($css_sql);
-			if ($css_res['num']>0) {
-				$headvar .= "<!-- template css-files -->\n";
-				foreach ($css_res['set'] AS $csresk => $csresv) {
-					$style_sql = "SELECT * FROM `stylesheets` WHERE `id` = ".intval($csresv['stylesheets_id']);
-					$style_res = doSQL($style_sql);
-					if ($style_res['num']>0) {
-						if (trim($style_res['set'][0]['file'])!='') {
-							// just files
-							if (trim($style_res['set'][0]['browser'])=="all" || trim($style_res['set'][0]['browser'])=="") {
-								$headvar .= "<link rel=\"stylesheet\" href='/media/layout/".trim($style_res['set'][0]['file']).".css' media=\"".trim($style_res['set'][0]['media'])."\" type=\"text/css\" />\n";
-                            } else {
-								$headvar .= "<!--[if ".trim($style_res['set'][0]['browser'])."]>\n";
-								$headvar .= "<link rel=\"stylesheet\" href='/media/layout/".trim($style_res['set'][0]['file']).".css' media=\"".trim($style_res['set'][0]['media'])."\" type=\"text/css\" />\n";
-								$headvar .= "<![endif]-->\n";
+                    }
+                }
+                // js addon from menu
+                if (trim($middata['addscript'])!='') {
+                    $addjs = unserializeBroken(trim($middata['addscript']));
+                    if (is_array($addjs) && count($addjs)>0) {
+                        $headvar .= "<!-- page based js-files -->\n";
+                        foreach ($addjs AS $jk => $jv) {
+                            $javascript_sql = "SELECT * FROM `javascript` WHERE `id` = ".intval($jv);
+                            $javascript_res = doSQL($javascript_sql);
+                            if ($javascript_res['num']>0) {
+                                if (trim($javascript_res['set'][0]['file'])!='') {
+                                    // just files
+                                    $headvar .= "<script src=\"/data/script/".trim($javascript_res['set'][0]['file']).".js\" type=\"text/javascript\"></script>\n";
+                                }
+                                else {
+                                    $jscript = unserializeBroken(trim($javascript_res['set'][0]['scriptcode']));
+                                    // handling js-folders!!!
+                                    foreach ($jscript AS $jk => $jv) {
+                                        $headvar .= str_replace("//", "/", str_replace("//", "/", "<script src=\"/data/script/".trim($javascript_res['set'][0]['cfolder'])."/".trim($jv)."\" type=\"text/javascript\"></script>\n"));
+                                    }
+                                }
                             }
                         }
-                        else {
-							// handling css-folders!!!
-							$styles = unserializeBroken(trim($style_res['set'][0]['stylesheet']));
-							foreach ($styles AS $sk => $sv) {
-								$headvar .= str_replace("//", "/", str_replace("//", "/", "<link rel=\"stylesheet\" href='/media/layout/".trim($style_res['set'][0]['cfolder'])."/".trim($sv)."' type='text/css' />\n"));
-							}
-                        }
                     }
-				}
-			}
-			// css addon from menu
-			if (trim($middata['addcss'])!='') {
-				$addcss = unserializeBroken(trim($middata['addcss']));
-				if (is_array($addcss) && count($addcss)>0) {
-					$headvar .= "<!-- page based css-files -->\n";
-					foreach ($addcss AS $ck => $cv) {
-						$style_sql = "SELECT * FROM `stylesheets` WHERE `id` = ".intval($cv);
-						$style_res = doSQL($style_sql);
+                }
+                // css from template
+                $css_sql = "SELECT `stylesheets_id` FROM `r_temp_styles` WHERE `templates_id` = ".intval($used_template)." ORDER BY `id`";
+                $css_res = doSQL($css_sql);
+                if ($css_res['num']>0) {
+                    $headvar .= "<!-- template css-files -->\n";
+                    foreach ($css_res['set'] AS $csresk => $csresv) {
+                        $style_sql = "SELECT * FROM `stylesheets` WHERE `id` = ".intval($csresv['stylesheets_id']);
+                        $style_res = doSQL($style_sql);
                         if ($style_res['num']>0) {
                             if (trim($style_res['set'][0]['file'])!='') {
                                 // just files
                                 if (trim($style_res['set'][0]['browser'])=="all" || trim($style_res['set'][0]['browser'])=="") {
-                                    $headvar .= "<link rel=\"stylesheet\" href='/media/layout/".trim($style_res['set'][0]['file']).".css'   media=\"".trim($style_res['set'][0]['media'])."\" type=\"text/css\" />\n";
+                                    $headvar .= "<link rel=\"stylesheet\" href='/media/layout/".trim($style_res['set'][0]['file']).".css' media=\"".trim($style_res['set'][0]['media'])."\" type=\"text/css\" />\n";
                                 } else {
                                     $headvar .= "<!--[if ".trim($style_res['set'][0]['browser'])."]>\n";
                                     $headvar .= "<link rel=\"stylesheet\" href='/media/layout/".trim($style_res['set'][0]['file']).".css' media=\"".trim($style_res['set'][0]['media'])."\" type=\"text/css\" />\n";
@@ -343,161 +287,189 @@ if (!(function_exists('getHeadVar'))) {
                                     $headvar .= str_replace("//", "/", str_replace("//", "/", "<link rel=\"stylesheet\" href='/media/layout/".trim($style_res['set'][0]['cfolder'])."/".trim($sv)."' type='text/css' />\n"));
                                 }
                             }
-						}
+                        }
                     }
                 }
-            }
-			// rss
-			$rss_sql = "SELECT `rss_id` FROM `r_temp_rss` WHERE `templates_id` = ".intval($used_template)." LIMIT 0,1";
-			$rss_res = doSQL($rss_sql);
-			if ($rss_res['num']>0) {
-				$rssfile_sql = "SELECT * FROM `rssdata` WHERE `id` = ".intval($rss_res['set'][0]['rss_id']);
-				$rssfile_res = doSQL($rssfile_sql);
-				if ($rssfile_res['num']>0) {
-					$headvar .= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS-Datei\" href=\"/media/rss/".trim($rssfile_res['set'][0]['rssfilename'])."\">\n";
-                }
-			}
-			// favicon
-			if (is_file($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/media/screen/favicon.ico")) {
-				$headvar .= "<!-- icons -->\n";
-				$headvar .= "<link rel=\"shortcut icon\" href=\"/media/screen/favicon.ico\" />\n";
-			}
-			// iOS properties
-			if (is_file($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/media/screen/iphone_favicon.png")) {
-				$headvar .= "<link rel=\"apple-touch-icon\" href=\"/media/screen/iphone_favicon.png\" />\n";
-			}
-			// viewport properties
-			if ($template_generic_viewport!='') {
-				$headvar .= "<meta name=\"viewport\" content=\"".$template_generic_viewport."\" />\n";
-			}
-			// opengraph properties
-			// opengraph screenshot
-			$headvar .= "<!-- og meta -->\n";
-			if (is_file($_SERVER['DOCUMENT_ROOT']."/media/screen/fbscreenshot.png")) {
-				$headvar .= "<meta property=\"og:image\" content=\"http://".$siteurl."/media/screen/fbscreenshot.png\" />\n";
-            }
-			// facebook title
-			$headvar .= "<meta property=\"og:title\" content=\"".str_replace("\"", "'", stripslashes(trim($sitetitle)))."\" />\n"; //'
-			// facebook url
-			$headvar .= "<meta property=\"og:url\" content=\"".$_SERVER['REQUEST_SCHEME']."://".$siteurl."\" />\n";
-			// facebook page type
-			$headvar .= "<meta property=\"og:type\" content=\"website\" />\n";
-			// template based head extensions
-			if ($template_head!="") {
-				$headvar .= "<!-- template head data -->\n";
-				$headvar .= stripslashes($template_head)."\n";
-            }
-			// meta script bottom
-			if (isset($metascript) && is_array($metascript) && count($metascript)>0) {
-				$headvar.= "<!-- page generated meta bottom -->\n";
-				foreach ($metascript AS $msk => $msv):
-					if ($msv['pos']==1 && trim($msv['content'])!=''):
-						$headvar.= $msv['content'];
-						$headvar.= "\n";
-					endif;
-				endforeach;
-            }
-			$analytics_sql = "SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'analyticsprop'";
-			$analytics_res = doResultSQL($analytics_sql);
-            if ($analytics_res===false) {
-                // analytics fallback
-                $analytics_sql = "SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'googleanalytics'";
-                $analytics_res = doSQL($analytics_sql);
-                if ($analytics_res['num']>0 && !($preview)) {
-                    if (trim($analytics_res['set'][0]['varvalue'])!="") {
-                        $headvar.= "<!-- analytics setup -->\n".stripslashes(trim($analytics_res['set'][0]['varvalue']))."\n";
+                // css addon from menu
+                if (trim($middata['addcss'])!='') {
+                    $addcss = unserializeBroken(trim($middata['addcss']));
+                    if (is_array($addcss) && count($addcss)>0) {
+                        $headvar .= "<!-- page based css-files -->\n";
+                        foreach ($addcss AS $ck => $cv) {
+                            $style_sql = "SELECT * FROM `stylesheets` WHERE `id` = ".intval($cv);
+                            $style_res = doSQL($style_sql);
+                            if ($style_res['num']>0) {
+                                if (trim($style_res['set'][0]['file'])!='') {
+                                    // just files
+                                    if (trim($style_res['set'][0]['browser'])=="all" || trim($style_res['set'][0]['browser'])=="") {
+                                        $headvar .= "<link rel=\"stylesheet\" href='/media/layout/".trim($style_res['set'][0]['file']).".css'   media=\"".trim($style_res['set'][0]['media'])."\" type=\"text/css\" />\n";
+                                    } else {
+                                        $headvar .= "<!--[if ".trim($style_res['set'][0]['browser'])."]>\n";
+                                        $headvar .= "<link rel=\"stylesheet\" href='/media/layout/".trim($style_res['set'][0]['file']).".css' media=\"".trim($style_res['set'][0]['media'])."\" type=\"text/css\" />\n";
+                                        $headvar .= "<![endif]-->\n";
+                                    }
+                                }
+                                else {
+                                    // handling css-folders!!!
+                                    $styles = unserializeBroken(trim($style_res['set'][0]['stylesheet']));
+                                    foreach ($styles AS $sk => $sv) {
+                                        $headvar .= str_replace("//", "/", str_replace("//", "/", "<link rel=\"stylesheet\" href='/media/layout/".trim($style_res['set'][0]['cfolder'])."/".trim($sv)."' type='text/css' />\n"));
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-            }
-            $headvar .= "</head>\n";
-            // analytics functions
-            $analytics_sql = "SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'analyticsprop'";
-			$analytics_res = doResultSQL($analytics_sql);
-            if ($analytics_res!==false && !($preview)) {
-                if (trim($analytics_res)!="") {
-                    $headvar .= "<!-- google analytics -->\n";
-                    $headvar .= "<script>\n";
-                    $headvar .= "var gaProperty = '".trim($analytics_res)."';\n";
-                    $headvar .= "var disableStr = 'ga-disable-' + gaProperty;\n";
-                    $headvar .= "if (document.cookie.indexOf(disableStr + '=true') > -1) {\n";
-                    $headvar .= "  window[disableStr] = true;\n";
-                    $headvar .= "}\n";
-                    $headvar .= "function gaOptout() {\n";
-                    $headvar .= "  document.cookie = disableStr + '=true; expires=Thu, 31 Dec ".date('Y', mktime(1,1,1,1,1,(date(Y)+99)))." 23:59:59 UTC; path=/';\n";
-                    $headvar .= "  window[disableStr] = true;\n";
-                    $headvar .= "}\n";
-                    $headvar .= "</script>\n";
-                    $headvar .= "<!-- Global Site Tag (gtag.js) - Google Analytics -->\n";
-                    $headvar .= "<script async src='https://www.googletagmanager.com/gtag/js?id=".trim($analytics_res)."'></script>\n";
-                    $headvar .= "<script>\n";
-                    $headvar .= "window.dataLayer = window.dataLayer || [];\n";
-                    $headvar .= "function gtag(){dataLayer.push(arguments);}\n";
-                    $headvar .= "gtag('js', new Date());\n";
-                    $headvar .= "gtag('config', '".trim($analytics_res)."', { 'anonymize_ip': true });\n";
-                    $headvar .= "</script>\n";
+                // rss
+                $rss_sql = "SELECT `rss_id` FROM `r_temp_rss` WHERE `templates_id` = ".intval($used_template)." LIMIT 0,1";
+                $rss_res = doSQL($rss_sql);
+                if ($rss_res['num']>0) {
+                    $rssfile_sql = "SELECT * FROM `rssdata` WHERE `id` = ".intval($rss_res['set'][0]['rss_id']);
+                    $rssfile_res = doSQL($rssfile_sql);
+                    if ($rssfile_res['num']>0) {
+                        $headvar .= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS-Datei\" href=\"/media/rss/".trim($rssfile_res['set'][0]['rssfilename'])."\">\n";
+                    }
                 }
+                // favicon
+                if (is_file(DOCUMENT_ROOT."/".WSP_DIR."/media/screen/favicon.ico")) {
+                    $headvar .= "<!-- icons -->\n";
+                    $headvar .= "<link rel=\"shortcut icon\" href=\"/media/screen/favicon.ico\" />\n";
+                }
+                // iOS properties
+                if (is_file(DOCUMENT_ROOT."/".WSP_DIR."/media/screen/iphone_favicon.png")) {
+                    $headvar .= "<link rel=\"apple-touch-icon\" href=\"/media/screen/iphone_favicon.png\" />\n";
+                }
+                // viewport properties
+                if ($template_generic_viewport!='') {
+                    $headvar .= "<meta name=\"viewport\" content=\"".$template_generic_viewport."\" />\n";
+                }
+                // opengraph properties
+                // opengraph screenshot
+                $headvar .= "<!-- og meta -->\n";
+                if (is_file(DOCUMENT_ROOT."/media/screen/fbscreenshot.png")) {
+                    $headvar .= "<meta property=\"og:image\" content=\"http://".$siteurl."/media/screen/fbscreenshot.png\" />\n";
+                }
+                // facebook title
+                $headvar .= "<meta property=\"og:title\" content=\"".str_replace("\"", "'", stripslashes(trim($sitetitle)))."\" />\n"; //'
+                // facebook url
+                $headvar .= "<meta property=\"og:url\" content=\"//".$siteurl."\" />\n";
+                // facebook page type
+                $headvar .= "<meta property=\"og:type\" content=\"website\" />\n";
+                // template based head extensions
+                if ($template_head!="") {
+                    $headvar .= "<!-- template head data -->\n";
+                    $headvar .= stripslashes($template_head)."\n";
+                }
+                // meta script bottom
+                if (isset($metascript) && is_array($metascript) && count($metascript)>0) {
+                    $headvar.= "<!-- page generated meta bottom -->\n";
+                    foreach ($metascript AS $msk => $msv):
+                        if ($msv['pos']==1 && trim($msv['content'])!=''):
+                            $headvar.= $msv['content'];
+                            $headvar.= "\n";
+                        endif;
+                    endforeach;
+                }
+                $analytics_sql = "SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'analyticsprop'";
+                $analytics_res = doResultSQL($analytics_sql);
+                if ($analytics_res===false) {
+                    // analytics fallback
+                    $analytics_sql = "SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'googleanalytics'";
+                    $analytics_res = doSQL($analytics_sql);
+                    if ($analytics_res['num']>0 && !($preview)) {
+                        if (trim($analytics_res['set'][0]['varvalue'])!="") {
+                            $headvar.= "<!-- analytics setup -->\n".stripslashes(trim($analytics_res['set'][0]['varvalue']))."\n";
+                        }
+                    }
+                }
+                $headvar .= "</head>\n";
+                // analytics functions
+                $analytics_sql = "SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'analyticsprop'";
+                $analytics_res = doResultSQL($analytics_sql);
+                if ($analytics_res!==false && !($preview)) {
+                    if (trim($analytics_res)!="") {
+                        $headvar .= "<!-- google analytics -->\n";
+                        $headvar .= "<script>\n";
+                        $headvar .= "var gaProperty = '".trim($analytics_res)."';\n";
+                        $headvar .= "var disableStr = 'ga-disable-' + gaProperty;\n";
+                        $headvar .= "if (document.cookie.indexOf(disableStr + '=true') > -1) {\n";
+                        $headvar .= "  window[disableStr] = true;\n";
+                        $headvar .= "}\n";
+                        $headvar .= "function gaOptout() {\n";
+                        $headvar .= "  document.cookie = disableStr + '=true; expires=Thu, 31 Dec ".date('Y', mktime(1,1,1,1,1,(date(Y)+99)))." 23:59:59 UTC; path=/';\n";
+                        $headvar .= "  window[disableStr] = true;\n";
+                        $headvar .= "}\n";
+                        $headvar .= "</script>\n";
+                        $headvar .= "<!-- Global Site Tag (gtag.js) - Google Analytics -->\n";
+                        $headvar .= "<script async src='https://www.googletagmanager.com/gtag/js?id=".trim($analytics_res)."'></script>\n";
+                        $headvar .= "<script>\n";
+                        $headvar .= "window.dataLayer = window.dataLayer || [];\n";
+                        $headvar .= "function gtag(){dataLayer.push(arguments);}\n";
+                        $headvar .= "gtag('js', new Date());\n";
+                        $headvar .= "gtag('config', '".trim($analytics_res)."', { 'anonymize_ip': true });\n";
+                        $headvar .= "</script>\n";
+                    }
+                }
+                // do js-based location reload if forwarding is active in any way ..
+                $headvar .= "<body";
+                if ($template_body!="") {
+                    $headvar .= " ".$bodytag;
+                }
+                $headvar .= ">\n";
             }
-            // do js-based location reload if forwarding is active in any way ..
-			$headvar .= "<body";
-			if ($template_body!="") {
-				$headvar .= " ".$bodytag;
-            }
-			$headvar .= ">\n";
         }
-    }
-	return array($headvar, $onlyheader);
-	}
+        return $headvar;
+        }
 }
 
 // close pages
 if (!(function_exists('getFootVar'))) {
-	function getFootVar() {
-   		$footervar = '';
-    	$footervar.= "</body>\n</html>\n<!-- content published with wsp -->";
-		return $footervar;
+function getFootVar() {
+    $footervar = '';
+    $footervar.= "</body>\n</html>\n";
+	return $footervar;
 	}	// getFootVar()
 }
 
-function getContentvars($buf) {
+if (!(function_exists('getContentvars'))) {
+function getContentvars($buf, $templateID = 0) {
+    if (intval($templateID)>0) {
+        $templatevars = getTemplateVars($templateID);
+    }
 	$cnt = array();
 	$pos = strpos($buf, '[%CONTENTVAR%]');
-	if (!($pos===false)):
-		$cnt[1] = "[%CONTENTVAR%]";
-	endif;
-	for ($cvar=1; $cvar<20; $cvar++):
-		$pos = strpos($buf, "[%CONTENTVAR:".$cvar."%]");
-		if (!($pos===false)):
-			$cnt[($cvar+1)] = "[%CONTENTVAR:".$cvar."%]";
-		endif;
-	endfor;	
-	return $cnt;
-}
-	
-function getGlobalContentvars($buf) {
-	$cnt = array();
-	$gcid_sql = "SELECT MIN(id) AS min, MAX(id) AS max FROM `globalcontent`";
-	$gcid_res = doSQL($gcid_sql);
-	if ($gcid_res['num']>0):
-		for ($cvar=intval($gcid_res['set'][0]['min']); $cvar<=intval($gcid_res['set'][0]['max']); $cvar++):
-			$pos = strpos($buf, "[%GLOBALCONTENT:".$cvar."%]");
-			if (!($pos===false)):
-				$cnt[$cvar] = "[%GLOBALCONTENT:".$cvar."%]";
-			endif;
-		endfor;
-	endif;
+	if (!($pos===false)) { $cnt[0] = "[%CONTENTVAR%]"; }
+	if (isset($templatevars['contentareas']) && is_array($templatevars['contentareas'])) {
+        foreach ($templatevars['contentareas'] AS $tvck => $tvsv) {
+            if ($tvsv!=0) { $cnt[$tvsv] = "[%CONTENTVAR:".$tvsv."%]"; }
+        }
+    } 
+    else {
+        for ($cvar=1; $cvar<20; $cvar++) {
+            $pos = strpos($buf, "[%CONTENTVAR:".$cvar."%]");
+            if (!($pos===false)) {
+                $cnt[$cvar] = "[%CONTENTVAR:".$cvar."%]";
+            }
+        }
+    }
 	return $cnt;
 	}
+}
 
-// create missing FTP-directories
-if (!(function_exists('createFTPPath'))) {
-	function createFTPPath($ftphandle, $path) {
-		$path = substr($path, 1);
-		$aPath = explode('/', $path);
-		$path = $_SESSION['wspvars']['ftpbasedir'];
-		foreach ($aPath as $value) {
-			$path .= "/".$value;
-			@ftp_mkdir($ftphandle, $path);
-		}
+if (!(function_exists('getGlobalContentvars'))) {
+    function getGlobalContentvars($buf) {
+        $cnt = array();
+        $gcid_sql = "SELECT MIN(id) AS min, MAX(id) AS max FROM `globalcontent`";
+        $gcid_res = doSQL($gcid_sql);
+        if ($gcid_res['num']>0) {
+            for ($cvar=intval($gcid_res['set'][0]['min']); $cvar<=intval($gcid_res['set'][0]['max']); $cvar++) {
+                $pos = strpos($buf, "[%GLOBALCONTENT:".$cvar."%]");
+                if (!($pos===false)) {
+                    $cnt[$cvar] = "[%GLOBALCONTENT:".$cvar."%]";
+                }
+            }
+        }
+        return $cnt;
 	}
 }
 
@@ -508,99 +480,165 @@ if (!(function_exists('createFTPPath'))) {
  * @param integer $contentID
  * @return string
  */
-function getShowtimeString($contentID) {	
-	if ($contentID>0):
-		$st_sql = "SELECT c.`showday`, c.`showtime` FROM `content` c WHERE c.`cid` = ".intval($contentID);
-		$st_res = doSQL($st_sql);
-		if($st_res['num']>0):
-			$cDay = intval($st_res['set'][0]["showday"]);
-			$cTime = unserializeBroken(trim($st_res['set'][0]["showtime"]));
-			if($cDay>0 && (is_array($cTime) && count($cTime)>0)):
-				// weekday and time are set
-				// create timeset
-				$datesArray = array();
-				foreach ($cTime AS $ck => $cv):
-					$datesArray[] = "(time()>=".$cv[0]." AND time()<=".$cv[1].")";
-				endforeach;
-				$timesString = "(".implode(" OR ", $datesArray).")";
-				// create dayset
-				$wda = array(1,2,3,4,5,6,0);
-				for ($sd=6;$sd>=0;$sd--):
-					if ($cDay-pow(2,$sd)>=0):
-						$weekday[] = $wda[$sd];
-						$cDay = $cDay-(pow(2,$sd));
-					endif;
-				endfor;
-				foreach ($weekday AS $key => $value):
-					$daysArray[] = "(date(\"w\")==".$value.")";
-				endforeach;
-				$daysString = "(".implode(" OR ", $daysArray).")";
-				$showtimeString= "<"."?"."php if(" . $timesString . " AND " . $daysString . "): "."?".">";
-			elseif($cDay>0 && !(is_array($cTime) && count($cTime)>1)):
-				// only weekday set
-				$wda = array(1,2,3,4,5,6,0);
-				for ($sd=6;$sd>=0;$sd--):
-					if ($cDay-pow(2,$sd)>=0):
-						$weekday[] = $wda[$sd];
-						$cDay = $cDay-(pow(2,$sd));
-					endif;
-				endfor;
-				foreach ($weekday AS $key => $value): $daysArray[] = "(date(\"w\")==".$value.")"; endforeach;
-				$daysString = implode(" OR ", $daysArray);
-				$showtimeString= "<"."?"."php if(".$daysString."): "."?".">";
-			elseif($cDay==0 && (is_array($cTime) && count($cTime)>0)):
-				// only time set
-				$datesArray = array();
-				foreach ($cTime AS $ck => $cv):
-					$datesArray[] = "(time()>=".$cv[0]." AND time()<=".$cv[1].")";
-				endforeach;
-				$showtimeString= "<"."?"."php if(".implode(" OR ", $datesArray)."): "."?".">";
-			else:
-				// nothing set - why ever
-				$showtimeString= "";
-			endif;
-		else:
-			$showtimeString = "";
-		endif;
-	else:
-		$showtimeString = "";
-	endif;
-	return $showtimeString;
-}	// getShowtimeString()
+if (!(function_exists('getShowtimeString'))) {
+    function getShowtimeString($contentID) {	
+        if ($contentID>0):
+            $st_sql = "SELECT c.`showday`, c.`showtime` FROM `content` c WHERE c.`cid` = ".intval($contentID);
+            $st_res = doSQL($st_sql);
+            if($st_res['num']>0):
+                $cDay = intval($st_res['set'][0]["showday"]);
+                $cTime = unserializeBroken(trim($st_res['set'][0]["showtime"]));
+                if($cDay>0 && (is_array($cTime) && count($cTime)>0)):
+                    // weekday and time are set
+                    // create timeset
+                    $datesArray = array();
+                    foreach ($cTime AS $ck => $cv):
+                        $datesArray[] = "(time()>=".$cv[0]." AND time()<=".$cv[1].")";
+                    endforeach;
+                    $timesString = "(".implode(" OR ", $datesArray).")";
+                    // create dayset
+                    $wda = array(1,2,3,4,5,6,0);
+                    for ($sd=6;$sd>=0;$sd--):
+                        if ($cDay-pow(2,$sd)>=0):
+                            $weekday[] = $wda[$sd];
+                            $cDay = $cDay-(pow(2,$sd));
+                        endif;
+                    endfor;
+                    foreach ($weekday AS $key => $value):
+                        $daysArray[] = "(date(\"w\")==".$value.")";
+                    endforeach;
+                    $daysString = "(".implode(" OR ", $daysArray).")";
+                    $showtimeString= "<"."?"."php if(" . $timesString . " AND " . $daysString . "): "."?".">";
+                elseif($cDay>0 && !(is_array($cTime) && count($cTime)>1)):
+                    // only weekday set
+                    $wda = array(1,2,3,4,5,6,0);
+                    for ($sd=6;$sd>=0;$sd--):
+                        if ($cDay-pow(2,$sd)>=0):
+                            $weekday[] = $wda[$sd];
+                            $cDay = $cDay-(pow(2,$sd));
+                        endif;
+                    endfor;
+                    foreach ($weekday AS $key => $value): $daysArray[] = "(date(\"w\")==".$value.")"; endforeach;
+                    $daysString = implode(" OR ", $daysArray);
+                    $showtimeString= "<"."?"."php if(".$daysString."): "."?".">";
+                elseif($cDay==0 && (is_array($cTime) && count($cTime)>0)):
+                    // only time set
+                    $datesArray = array();
+                    foreach ($cTime AS $ck => $cv):
+                        $datesArray[] = "(time()>=".$cv[0]." AND time()<=".$cv[1].")";
+                    endforeach;
+                    $showtimeString= "<"."?"."php if(".implode(" OR ", $datesArray)."): "."?".">";
+                else:
+                    // nothing set - why ever
+                    $showtimeString= "";
+                endif;
+            else:
+                $showtimeString = "";
+            endif;
+        else:
+            $showtimeString = "";
+        endif;
+        return $showtimeString;
+    }	// getShowtimeString()
+}
 
+if (!(function_exists('publishStructure'))) {
+    function publishStructure($templateID) {
 
-function publishStructure($templateID) {
-    
-	// throw error because below is nothing happening
-    addWSPMsg('errormsg', 'publisher function "publishStructure" failed publishing menu');
-    
-    // select used template 
-	$template_sql = "SELECT * FROM `templates` WHERE `id` = ".intval($templateID);
-	$template_res = doSQL($template_sql);
-    if ($template_res['num']>0) {
-		foreach ($template_res['set'] AS $trsk => $trsv) {
-			// remove all tags etc, trim, strip slashes from template
-            $templatecode = trim(htmlentities(strip_tags(stripslashes(trim($trsv['template'])))));
-			$regsearch = "'\[%MENUVAR [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}%\]'";
-			preg_match_all($regsearch, $templatecode, $mtplmatches);
-			if (is_array($mtplmatches[0])) {
-				$mtplmatches = array_unique($mtplmatches[0]);
-				foreach ($mtplmatches AS $umvalue) {
-					$menuguid = substr(trim($umvalue), 10, -2);
-					$menu_sql = "SELECT `parser`, `code`, `startlevel` FROM `templates_menu` WHERE `guid` = '".trim($menuguid)."' AND `code` != ''";
-					$menu_res = doSQL($menu_sql);
-					if ($menu_res['num']>0) {
-                        // ??????
-//						echo trim($menuguid)." gefunden<br />";
+        // throw error because below is nothing happening
+        addWSPMsg('errormsg', 'publisher function "publishStructure" failed publishing menu');
+
+        // select used template 
+        $template_sql = "SELECT * FROM `templates` WHERE `id` = ".intval($templateID);
+        $template_res = doSQL($template_sql);
+        if ($template_res['num']>0) {
+            foreach ($template_res['set'] AS $trsk => $trsv) {
+                // remove all tags etc, trim, strip slashes from template
+                $templatecode = trim(htmlentities(strip_tags(stripslashes(trim($trsv['template'])))));
+                $regsearch = "'\[%MENUVAR [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}%\]'";
+                preg_match_all($regsearch, $templatecode, $mtplmatches);
+                if (is_array($mtplmatches[0])) {
+                    $mtplmatches = array_unique($mtplmatches[0]);
+                    foreach ($mtplmatches AS $umvalue) {
+                        $menuguid = substr(trim($umvalue), 10, -2);
+                        $menu_sql = "SELECT `parser`, `code`, `startlevel` FROM `templates_menu` WHERE `guid` = '".trim($menuguid)."' AND `code` != ''";
+                        $menu_res = doSQL($menu_sql);
+                        if ($menu_res['num']>0) {
+                            // ??????
+    //						echo trim($menuguid)." gefunden<br />";
+                        }
                     }
-				}
-			}
+                }
+            }
         }
     }
 }
 
-/* publish selected pages */
-function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = false) {
+if (!(function_exists('publishMenu'))) {
+    function publishMenu($pubid, $mode = 'publish', $lang = 'de', $newendmenu = false, $rename = false) {
+        /* grab menupoint information */
+        $mid_sql = "SELECT * FROM `menu` WHERE `mid` = ".intval($pubid);
+        $mid_res = doSQL($mid_sql);
+        if ($mid_res['num']>0):
+            // get template info
+            $used_template = getTemplateID(intval($pubid));
+            if (isset($_REQUEST['previewtpl']) && intval($_REQUEST['previewtpl'])>0):
+                $used_template = intval($_REQUEST['previewtpl']);
+            endif;
+            $template_sql = "SELECT * FROM `templates` WHERE `id` = ".intval($used_template);
+            $template_res = doSQL($template_sql);
+            if ($template_res['num']>0):
+                $parsetime = microtime(true);
+                $templatecode = stripslashes(trim($template_res['set'][0]['template']));
+
+                $tmpbuf = $templatecode;
+                // replace all wsp<6 menuvars with wsp>=6 menuvar style
+                $tmpbuf = str_replace("[%MENUVAR ", "[%MENUVAR:", $tmpbuf);
+                // run through tmpbuf to find all menu variables and convert var to content with menu data
+                $tmpbuf = createMenu($tmpbuf, intval($mid_res['set'][0]['mid']), $lang, false);
+                // update db entry
+
+                // if change stat 7 then rename file 
+                if ($rename):
+                    renameFile(intval($mid_res['set'][0]['mid']), $lang);
+                endif;
+
+                // set calculated contentchanged stat
+                $cchange = 0;
+                if (getChangeStat(intval($mid_res['set'][0]['mid']))==0): $cchange = 0; endif;
+                if (getChangeStat(intval($mid_res['set'][0]['mid']))==1): $cchange = 1; endif;
+                if (getChangeStat(intval($mid_res['set'][0]['mid']))==2): $cchange = 2; endif;
+                if (getChangeStat(intval($mid_res['set'][0]['mid']))==3): $cchange = 0; endif;
+                if (getChangeStat(intval($mid_res['set'][0]['mid']))==4): $cchange = 0; endif;
+                if (getChangeStat(intval($mid_res['set'][0]['mid']))==5): $cchange = 1; endif;
+                if (getChangeStat(intval($mid_res['set'][0]['mid']))==6): $cchange = 2; endif;
+
+                doSQL("UPDATE `menu` SET `contentchanged` = ".$cchange." WHERE `mid` = ".intval($mid_res['set'][0]['mid']));
+                $returnstat = true;
+
+                if($newendmenu):
+                    $drop_res = doSQL("DROP TABLE IF EXISTS `end_menu`");
+                    $create_res = doSQL("CREATE TABLE `end_menu` LIKE `menu`");
+                    if (!($create_res['res'])) { addWSPMsg('errormsg', 'publisher creation of end menu table failed'); }
+                    $insert_res = doSQL("INSERT INTO `end_menu` SELECT * FROM `menu`");
+                    if (!($insert_res['res'])) { addWSPMsg('errormsg', 'publisher adding data to end menu table failed'); }
+                endif;
+
+            else:
+                $returnstat = "notemplatefound";
+                addWSPMsg('errormsg', "<em>Fehler 2.".$used_template."</em>: Template zu Punkt \"".trim($mid_res['set'][0]['description'])."\" nicht gefunden.");
+            endif;
+        else:
+            $returnstat = "nomenufound";
+            addWSPMsg('errormsg', "<em>Fehler 1.".$pubid."</em>: Men&uuml;punkt nicht gefunden.");
+        endif;
+        return $returnstat;
+        }
+}
+
+// publish selected page(s)
+if (!(function_exists('publishSites'))) {
+function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = false, $ftp = false) {
 	/* $mode => publishing possibilities */
 	/* 'publish' publishs menu AND contents */ /* ??????? */
 	/* 'structure' should read existing file from structure and replace menu parts with new menu */
@@ -615,20 +653,21 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
 	$metascript = array();
 	$content = array();
 	$globalcontent = array();
+    $opencontainer = false;
 	$ccarray = array(0 => 'section', 1 => 'div', 2 => 'span', 3 => 'li');
 	// grep parsedir information
-	$parsedir = intval(doResultSQL("SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'parsedirectories'"));
+	$parsedir = intval(getWSPProperties('parsedirectories'));
 	// bind content view to menu visibility
-	$bindcontentview = intval(doResultSQL("SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'bindcontentview'"));
+	$bindcontentview = intval(getWSPProperties('bindcontentview'));
 	// how to handle contents that are connected to hidden menupoints
-	$hiddenmenu = intval(doResultSQL("SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'hiddenmenu'"));
+	$hiddenmenu = intval(getWSPProperties('hiddenmenu'));
 	// how to handle pages without contents
-	$nocontentmenu = intval(doResultSQL("SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'nocontentmenu'"));
-	
-	/* grab menupoint information */
+	$nocontentmenu = intval(getWSPProperties('nocontentmenu'));
+
+    /* grab menupoint information */
 	$mid_sql = "SELECT * FROM `menu` WHERE `mid` = ".intval($pubid);
 	$mid_res = doSQL($mid_sql);
-	if ($mid_res['num']>0) {
+	if ($mid_res['num']>0):
 		$midvisibility = 1;
 		$lockpage = intval($mid_res['set'][0]['lockpage']);
 		$denylang = unserializeBroken(trim($mid_res['set'][0]['denylang']));
@@ -638,24 +677,18 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
 			$midvisibility = 0;
 		endif;
         // do only connect to ftp if preview is off
-        if ($mode!='preview') {
-			if (isset($_SESSION['wspvars']['directwriting']) && $_SESSION['wspvars']['directwriting']===true) {
-				$usedirect = true;
-			} else {
-				$ftp = ((isset($_SESSION['wspvars']['ftpssl']) && $_SESSION['wspvars']['ftpssl']===true)?ftp_ssl_connect($_SESSION['wspvars']['ftphost'], intval($_SESSION['wspvars']['ftpport'])):ftp_connect($_SESSION['wspvars']['ftphost'], intval($_SESSION['wspvars']['ftpport']))); if ($ftp!==false) {if (!ftp_login($ftp, $_SESSION['wspvars']['ftpuser'], $_SESSION['wspvars']['ftppass'])) { $ftp = false; }} if (isset($_SESSION['wspvars']['ftppasv']) && $ftp!==false) { ftp_pasv($ftp, $_SESSION['wspvars']['ftppasv']); }
-			}
+        if ($ftp===false && $mode!='preview') {
+            $ftp = doFTP();
         }
-		if ($mode=='preview' || $ftp || $usedirect) {
-			// get data from selfvars
+		if ($ftp!==false || $mode=='preview'):
+			
+            // get data for selfvars
 			$selfvardata = array();
 			$selfvar_sql = "SELECT `id`, `name`, `selfvar` FROM `selfvars`";
 			$selfvar_res = doSQL($selfvar_sql);
 			if ($selfvar_res['num']>0) {
 				foreach ($selfvar_res['set'] AS $svresk => $svresv) {
 					$vardata = trim($svresv['selfvar']);
-					if (stristr($vardata, 92.92) || stristr($vardata, 92.34)) {
-						$vardata = stripslashes($vardata);
-					}
 					if ($_SESSION['wspvars']['stripslashes']>0) {
 						for ($strip=0; $strip<$_SESSION['wspvars']['stripslashes']; $strip++):
 							$vardata = stripslashes($vardata);
@@ -665,19 +698,19 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
 					$selfvardata[strtoupper(trim($svresv['name']))] = $vardata;
                 }
 			}
-			// get template info
+            
+			// get menupoint template info
 			$used_template = getTemplateID($pubid);
-			if (isset($_REQUEST['previewtpl']) && intval($_REQUEST['previewtpl'])>0) {
+            // set menupoint template id for preview if requested
+			if (isset($_REQUEST['previewtpl']) && intval($_REQUEST['previewtpl'])>0 && $mode=='preview') {
 				$used_template = intval($_REQUEST['previewtpl']);
 			}
-			if (isset($_REQUEST['previewtpl']) && intval($_REQUEST['previewtpl'])>0) {
-				$used_template = intval($_REQUEST['previewtpl']);
-			}
+
             // get template data from db
 			$template_sql = "SELECT * FROM `templates` WHERE `id` = ".intval($used_template);
 			$template_res = doSQL($template_sql);
 			if ($template_res['num']>0) {
-				$parsetime = microtime();
+				$parsetime = microtime(true);
 				$templatecode = stripslashes(trim($template_res['set'][0]['template']));
 				$bodytagcode = stripslashes(trim($template_res['set'][0]['bodytag']));
 				// check for forwarding
@@ -697,72 +730,79 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
 				// get is index flag
 				$isindex = intval($mid_res['set'][0]['isindex']);
 				// get contents
-				$content_sql = "SELECT * FROM `content` WHERE `content_lang` = '".escapeSQL($lang)."' AND `mid` = ".intval($mid_res['set'][0]['mid'])." AND `visibility` > 0 AND `trash` = 0 ORDER BY `position` ASC";
+				$content_sql = "SELECT * FROM `content` WHERE `content_lang` = '".escapeSQL($lang)."' AND `mid` = ".intval($mid_res['set'][0]['mid'])." AND `visibility` > 0 AND `trash` = 0 ORDER BY `content_area` ASC, `position` ASC";
 				$content_res = doSQL($content_sql);
                 $content_num = $content_res['num'];
 				// setting real content num to get later info of existing contents
 				$realcontent_num = $content_res['num'];
 				
 				if ($bindcontentview==1) {
-					// set content num to 0 if visibility of content IS NOT locked to menupoint and menupoint is hidden 
-					if ($midvisibility==0 && intval($mid_res['set'][0]['lockpage'])==0) {
-                        $content_num = 0; 
-                    }
+					// if bind contentview is set, the visibility of contents shall match the menupoint visibility
+                    // set content num to 0 if visibility of content IS NOT locked to menupoint and menupoint is hidden 
+					if ($midvisibility==0 && intval($mid_res['set'][0]['lockpage'])==0): $content_num = 0; endif;
                 }
 				else {
 					// set content num to 0 if visibility of content IS locked to menupoint and menupoint is hidden 
-					if ($midvisibility==0 && intval($mid_res['set'][0]['lockpage'])==1) {
-                        $content_num = 0; 
-                    }
-                    // set content num to 0 if menupoint is dynamic
-                    if (intval($mid_res['set'][0]['editable'])==9) {
-                        $content_num = 0;
-                    }
+					if ($midvisibility==0 && intval($mid_res['set'][0]['lockpage'])==1): $content_num = 0; endif;
 				}
 
 				// if viewable contents for the page are avaiable and no forwarding is defined
 				if ($content_num>0 && $forwardPage==0 && $internPage==0 && $externPage==0) {
 					// run every content element to fetch data
                     foreach ($content_res['set'] AS $coresk => $coresv) {
-						// check for existing contents or use global content
+                        // check for existing contents or use global content
 						$interpreter = '';
 						$contentvalue = '';
-						if (intval($coresv['globalcontent_id'])!=0):
+						if (intval($coresv['globalcontent_id'])>0) {
 							$gc_sql = "SELECT * FROM `globalcontent` WHERE `id` = ".intval($coresv['globalcontent_id'])." LIMIT 0,1";
 							$gc_res = doSQL($gc_sql);
-							if ($gc_res['num']>0):
-								$contentvalue = trim($gc_res['set'][0]['valuefield']);
+							if ($gc_res['num']>0) {
+								$contentvalue = trim($gc_res['set'][0]['valuefields']);
 								$interpreter = trim($gc_res['set'][0]['interpreter_guid']);
-							endif;
-						else:
+							}
+                        }
+						else {
 							$contentvalue = trim($coresv['valuefields']);
 							$interpreter = trim($coresv['interpreter_guid']);
-						endif;
-						if (!(array_key_exists(intval($coresv['content_area']), $content))): $content[intval($coresv['content_area'])] = ''; endif;
-						// check visibility options
-						if ($mode!='preview'):
+						}
+                        
+                        // setting up empty content area to prevent php warning messages
+						if (!(array_key_exists(intval($coresv['content_area']), $content))) {
+                            $content[intval($coresv['content_area'])] = '';
+                        }
+                        
+                        // check visibility options
+						if ($mode!='preview') {
 							// parse limited visibility to content
-							if(intval($coresv['visibility'])==2):
+							if (intval($coresv['visibility'])==2) {
 								// show only without logged in user
-								$content[intval($coresv['content_area'])].= "<"."?"."php if(array_key_exists('wsppage', \$_SESSION) && array_key_exists('userlogin', \$_SESSION['wsppage']) && \$_SESSION['wsppage']['userlogin']===false): "."?".">";	
-							elseif(intval($coresv['visibility'])==3):
+								$content[intval($coresv['content_area'])].= "<"."?"."php if(array_key_exists('wsppage', \$_SESSION) && array_key_exists('userlogin', \$_SESSION['wsppage']) && \$_SESSION['wsppage']['userlogin']===false): "."?".">";
+                            }
+							else if (intval($coresv['visibility'])==3) {
 								// show only for logged in user
 								$content[intval($coresv['content_area'])].= "<"."?"."php if(array_key_exists('wsppage', \$_SESSION) && array_key_exists('userlogin', \$_SESSION['wsppage']) && \$_SESSION['wsppage']['userlogin']===true): "."?".">";
-							elseif(intval($coresv['visibility'])==4):
+                            }
+                            else if (intval($coresv['visibility'])==4) {
 								// show only for selected logged in user
 								$logincontrol = unserializeBroken($coresv['logincontrol']);
-								if (is_array($logincontrol) && count($logincontrol)>0):
+								if (is_array($logincontrol) && count($logincontrol)>0) {
 									$loginLink = "<"."?"."php if(array_key_exists('wsppage', \$_SESSION) && array_key_exists('userlogin', \$_SESSION['wsppage']) && \$_SESSION['wsppage']['userlogin']===true ";
 									$UID = array();
 									foreach ($logincontrol AS $lk => $lv):
-										$UID[] = "\$_SESSION['wsppage']['uservalue']==".$lv;
+										$UID[] = "\$_SESSION['wsppage']['uservalue']=='".$lv."'";
 									endforeach;
 									$loginLink.= " AND (".implode(" OR ", $UID).")";
 									$loginLink.= "): "."?".">";
-								endif;
-								$content[intval($coresv['content_area'])].= $loginLink;
-							endif;
-						else:
+								} 
+                                // if system tried to find some webusers, but couldn't fetch them »
+                                // give access to all logged in users 
+                                else {
+                                    $loginLink = "<"."?"."php if(array_key_exists('wsppage', \$_SESSION) && array_key_exists('userlogin', \$_SESSION['wsppage']) && \$_SESSION['wsppage']['userlogin']===true): "."?".">";
+                                }
+                                $content[intval($coresv['content_area'])].= $loginLink;
+                            }
+                        }
+						else {
 							// display limited visibility to preview
 							if(intval($coresv['visibility'])==2):
 								// show only without logged in user
@@ -774,16 +814,17 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
 								// show only for selected logged in user
 								$content[intval($coresv['content_area'])].= "<section style=\"background: darkseagreen;\">";
 							endif;
-						endif;
+						}
 						
 						// lookup for time based visibiliy
-						if ($mode!='preview'):
+						if ($mode!='preview') {
 							$content[intval($coresv['content_area'])].= getShowtimeString(intval($coresv['cid']));
-						elseif ($mode=='preview'):
-							if (getShowtimeString(intval($coresv['cid']))!=''):
+                        }
+						else {
+							if (getShowtimeString(intval($coresv['cid']))!='') {
 								$content[intval($coresv['content_area'])].= "<section style='background: rgba(207,225,230,0.5)' title='timebased'>";
-							endif;
-						endif;
+							}
+						}
 						
 						// lookup for container 
 						// lookup for container class
@@ -801,59 +842,78 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
 						endif;
 						// build container
                         // 4 = NO CONTAINER
-						// 5 = COMBINE WITH ELEMENT BEFORE
-                        if (intval($coresv['container'])!=4 && intval($coresv['container'])!=5): 
+						// 5 = COMBINE WITH ELEMENT BEFORE SO HERE nothing happens
+                        if (intval($coresv['container'])!=4 && intval($coresv['container'])!=5) {
 							$content[intval($coresv['content_area'])].= "<".$ccarray[intval($coresv['container'])]." id=\"".$containerid."\" ".$containerclass.">";
-						endif;
-						
+						}
+
                         // lookup for interpreter and parsefile
 						$interpreter_sql = "SELECT `parsefile` FROM `interpreter` WHERE `guid` = '".escapeSQL(trim($interpreter))."'";
 						$interpreter_res = doSQL($interpreter_sql);
 						if ($interpreter_res['num']>0):
 							// lookup for parsefile
-							if (trim($interpreter_res['set'][0]['parsefile'])!='' && is_file($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/interpreter/".trim($interpreter_res['set'][0]['parsefile']))):
-								require $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/interpreter/".trim($interpreter_res['set'][0]['parsefile']);
+							if (trim($interpreter_res['set'][0]['parsefile'])!='' && is_file(DOCUMENT_ROOT."/".WSP_DIR."/data/interpreter/".trim($interpreter_res['set'][0]['parsefile']))):
+								require DOCUMENT_ROOT."/".WSP_DIR."/data/interpreter/".trim($interpreter_res['set'][0]['parsefile']);
 								$parser = new $interpreterClass();
 							endif;
+                            // detect classes functions and required argument set
+                            $me = array();
+                            $rf = new ReflectionClass($interpreterClass);
+                            //run through all methods.
+                            foreach ($rf->getMethods() as $method) {
+                                $me[$method->name] = array();
+                                //run through all parameters of the method.
+                                foreach ($method->getParameters() as $parameter) {
+                                    $me[$method->name][$parameter->getName()] = $parameter->getType();
+                                }
+                            }
+                            unset($rf);
 							// bring data to files php header ...
-							if (intval(method_exists($parser,'getHeader'))==1) {
-								$header .= $parser->getHeader($contentvalue, intval($mid_res['set'][0]['mid']), intval($coresv['cid']), trim($lang));
-                                if (intval(method_exists($parser,'closeInterpreterDB'))==1) {
-                                    $parser->closeInterpreterDB();
-                                }
-							}
+							if (intval(method_exists($interpreterClass,'getHeader'))==1):
+								$header .= $parser->getHeader(trim($contentvalue), intval($mid_res['set'][0]['mid']), intval($coresv['cid']), $lang);
+                                if (method_exists($interpreterClass, 'closeInterpreterDB')) { $parser->closeInterpreterDB(); }
+							endif;
 							// bring function calls to body tag
-							if (intval(method_exists($parser,'getBodyFunction'))==1) {
+							if (intval(method_exists($interpreterClass,'getBodyFunction'))==1):
 								$bodyfunc .= $parser->getBodyFunction(trim($contentvalue), intval($mid_res['set'][0]['mid']), intval($coresv['cid']));
-                                if (intval(method_exists($parser,'closeInterpreterDB'))==1) {
-                                    $parser->closeInterpreterDB();
-                                }
-                            }
+                                if (method_exists($interpreterClass, 'closeInterpreterDB')) { $parser->closeInterpreterDB(); }
+							endif;
 							// bring data to files head ...
-							if (intval(method_exists($parser,'getMetaScript'))==1) {
-								$metascript[] = $parser->getMetaScript($contentvalue, intval($mid_res['set'][0]['mid']), intval($coresv['cid']), $lang);
-                                if (intval(method_exists($parser,'closeInterpreterDB'))==1) {
-                                    $parser->closeInterpreterDB();
-                                }
-                            }
+							if (intval(method_exists($interpreterClass,'getMetaScript'))==1):
+								$metascript[] = $parser->getMetaScript(trim($contentvalue), intval($mid_res['set'][0]['mid']), intval($coresv['cid']), $lang);
+                                if (method_exists($interpreterClass, 'closeInterpreterDB')) { $parser->closeInterpreterDB(); }
+							endif;
 							// finally parse real content
-							if (intval(method_exists($parser,'getContent'))==1) {
+							if (intval(method_exists($interpreterClass,'getContent'))==1):
 								// returning content from parser class
-								$content[intval($coresv['content_area'])].= $parser->getContent(trim($contentvalue), intval($mid_res['set'][0]['mid']), intval($coresv['cid']), $lang);
-                                if (intval(method_exists($parser,'closeInterpreterDB'))==1) {
-                                    $parser->closeInterpreterDB();
-                                }
-                            };
+								$content[intval($coresv['content_area'])].= $parser->getContent(unserializeBroken(trim($contentvalue)), intval($mid_res['set'][0]['mid']), intval($coresv['cid']), $lang);
+                                if (method_exists($interpreterClass, 'closeInterpreterDB')) { $parser->closeInterpreterDB(); }
+							endif;
 						elseif ($interpreter=='genericwysiwyg'):
 							// if generic wysiwyg was used ... 
 							$genericcontent = unserializeBroken($contentvalue);
 							$content[intval($coresv['content_area'])].= trim($genericcontent['content']);
 						endif;
-    
+                        
     					// close container
-						if (intval($coresv['container'])!=4):
-							$content[intval($coresv['content_area'])].= "</".$ccarray[intval($coresv['container'])].">";	
-						endif;
+                        // if next element exists and next element shall be connected with THIS element
+                        if (isset($content_res['set'][($coresk+1)]) && isset($content_res['set'][($coresk+1)]['container']) && intval($content_res['set'][($coresk+1)]['container'])==5) {
+                            // if this is the first element of connected elements
+                            if ($opencontainer===false) {
+                                $opencontainer = intval($coresv['container']);
+                            }
+                        }
+                        // if this is the LAST element in list of connected elements
+                        else if ($opencontainer!==false) {
+                            if ($opencontainer!=4 && $opencontainer!=5) {
+                                $content[intval($coresv['content_area'])].= "</".$ccarray[intval($opencontainer)].">";
+                                $opencontainer = false;
+                            }
+                        }
+                        else if (intval($coresv['container'])!=4 && intval($coresv['container'])!=5 ) {
+							$content[intval($coresv['content_area'])].= "</".$ccarray[intval($coresv['container'])].">";
+                            $opencontainer = false;
+                        }
     
 						// close time based visibility
 						if ($mode!='preview'):
@@ -880,23 +940,26 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
 					}
 				} else {
 					// no viewable contents or some forwarding was defined
-					if ($internPage>0) {
-						if (intval($_SESSION['wspvars']['publisherdata']['parsedirectories'])==1 || $parsedir==1):
-							$metapath = returnPath($internPage, 1, '', $lang);
+					if (intval($internPage)>0) {
+                        $pathdata = fileNamePath(intval($internPage),0,0,0);
+                        if (intval($_SESSION['wspvars']['publisherdata']['parsedirectories'])==1 || $parsedir==1):
+							$metapath = $pathdata['path'];
 						else:
-							$metapath = returnPath($internPage, 2, '', $lang);
+							$metapath = $pathdata['file'];
 						endif;
 					} else if ($externPage!="") {
 						$metapath = trim($externPage);
 						// check for http ???
 					} else {
-						if ($forwardPage > 0) {
-							if (intval($_SESSION['wspvars']['publisherdata']['parsedirectories'])==1 || $parsedir==1):
-								$metapath = returnPath($forwardPage, 1, '', $lang);
-							else:
-								$metapath = returnPath($forwardPage, 2, '', $lang);
-							endif;
-						} else {
+						if (intval($forwardPage)>0) {
+                            $pathdata = fileNamePath(intval($forwardPage),0,0,0);
+							if (intval($_SESSION['wspvars']['publisherdata']['parsedirectories'])==1 || $parsedir==1) {
+                                $metapath = $pathdata['path'];
+                            }
+						    else {
+                                $metapath = $pathdata['file'];
+                            }
+                        } else {
 							// find first menupoint WITH contents as sub from mid
 							$subfwd = returnIDRoot(intval($pubid));
 							if (is_array($subfwd) && count($subfwd)>0):
@@ -910,12 +973,14 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
                                     endif;
 								endforeach;
 							endif;
-                            if ($forwardPage>0) {
-								if ((isset($_SESSION['wspvars']['publisherdata']['parsedirectories']) && intval($_SESSION['wspvars']['publisherdata']['parsedirectories'])==1) || $parsedir==1) {
-									$metapath = returnPath($forwardPage, 1, '', $lang);
-                                } else {
-									$metapath = returnPath($forwardPage, 2, '', $lang);
-								}
+                            if (intval($forwardPage)>0) {
+                                $pathdata = fileNamePath(intval($forwardPage),0,0,0);
+								if (intval($_SESSION['wspvars']['publisherdata']['parsedirectories'])==1 || $parsedir==1) {
+                                    $metapath = $pathdata['path'];
+                                }
+                                else {
+                                    $metapath = $pathdata['file'];
+                                }
 							}
 						}
 					}
@@ -940,27 +1005,40 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
 					$interpreter_res = doSQL($interpreter_sql);
 					if ($interpreter_res['num']>0):
 						// lookup for parsefile
-						if (trim($interpreter_res['set'][0]['parsefile'])!='' && is_file($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/interpreter/".trim($interpreter_res['set'][0]['parsefile']))):
-							require $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/interpreter/".trim($interpreter_res['set'][0]['parsefile']);
+						if (trim($interpreter_res['set'][0]['parsefile'])!='' && is_file(DOCUMENT_ROOT."/".WSP_DIR."/".$_SESSION['wspvars']['wspbasedir']."/data/interpreter/".trim($interpreter_res['set'][0]['parsefile']))):
+							require DOCUMENT_ROOT."/".WSP_DIR."/".$_SESSION['wspvars']['wspbasedir']."/data/interpreter/".trim($interpreter_res['set'][0]['parsefile']);
 							$parser = new $interpreterClass();
 						endif;
-						// bring data from Interpreter to files php header ...
-						if (intval(method_exists($parser,'getHeader'))==1):
-							$header .= $parser->getHeader(trim($contentvalue), intval($mid_res['set'][0]['mid']));
+                        // detect classes functions and required argument set
+                        $me = array();
+                        $rf = new ReflectionClass($interpreterClass);
+                        //run through all methods.
+                        foreach ($rf->getMethods() as $method) {
+                            $me[$method->name] = array();
+                            //run through all parameters of the method.
+                            foreach ($method->getParameters() as $parameter) {
+                                $me[$method->name][$parameter->getName()] = $parameter->getType();
+                            }
+                        }
+                        unset($rf);
+                        
+                        // bring data from Interpreter to files php header ...
+						if (intval(method_exists($interpreterClass,'getHeader'))==1):
+						    $header .= $parser->getHeader(trim($contentvalue), intval($mid_res['set'][0]['mid']), 0, $lang);
                             $parser->closeInterpreterDB();
 						endif;
 						// bring function calls to body tag
-						if (intval(method_exists($parser,'getBodyFunction'))==1):
+						if (intval(method_exists($interpreterClass,'getBodyFunction'))==1):
 							$bodyfunc .= $parser->getBodyFunction(trim($contentvalue), intval($mid_res['set'][0]['mid']));
                             $parser->closeInterpreterDB();
 						endif;
 						// bring data to files head ...
-						if (intval(method_exists($parser,'getMetaScript'))==1):
+						if (intval(method_exists($interpreterClass,'getMetaScript'))==1):
 							$metascript[] = $parser->getMetaScript(trim($contentvalue), intval($mid_res['set'][0]['mid']), 0, $lang);
                             $parser->closeInterpreterDB();
 						endif;
 						// finally parse real content
-						if (intval(method_exists($parser,'getContent'))==1):
+						if (intval(method_exists($interpreterClass,'getContent'))==1):
 							// returning content from parser class
 							$globalcontent[intval($key)] = $parser->getContent(trim($contentvalue), intval($mid_res['set'][0]['mid']), 0, $lang);
 							$globalcontent[intval($key)] = returnLinkedText($globalcontent[intval($key)]);
@@ -975,24 +1053,15 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
 				
                 // built final file data
 				$tmpbuf = '';
-				$onlyheader = false;
 				// get some PHP header variables, if defined
-				if ($_SESSION['wspvars']['usesession']==1) {
-					$phpheader = "if(PHP_VERSION_ID < 70300) {\n";
-					$phpheader.= "\tsession_set_cookie_params( 86400, '/; samesite=lax', \$_SERVER['HTTP_HOST'], true, true);\n";
-					$phpheader.= "} else {\n";
-					$phpheader.= "\tsession_set_cookie_params(['lifetime' => 86400, 'path' => '/', 'domain' => \$_SERVER['HTTP_HOST'], 'secure' => true, 'httponly' => true, 'samesite' => 'lax']);\n";
-					$phpheader.= "}\n";
-					$phpheader.= "session_start();\n";
-				}
+				$phpheader = "session_start();\n";
 				
 				// get URL or VARIABLE based forwarding BEFORE doing other forwarding actions 
-				$urlforward = '';
-				$varforward = '';
 				if ($isindex==1 && intval($mid_res['set'][0]['connected'])==0 && $mode!="preview") {
 					// get URL based forwarding
 					$urlforward_sql = "SELECT `varvalue` FROM `wspproperties` WHERE `varname` LIKE 'url_forward_%'";
 					$urlforward_res = doSQL($urlforward_sql);
+					$urlforward = '';
 					if ($urlforward_res['num']>0) {
 						$urlforward.= "/"."* ".$urlforward_res['num']." url based forwardings *"."/\n";
 						foreach ($urlforward_res['set'] AS $ufresk => $ufresv) {
@@ -1023,6 +1092,7 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
 					// get VARIABLE based forwarding
 					$varforward_sql = "SELECT `varvalue` FROM `wspproperties` WHERE `varname` LIKE 'var_forward_%'";
 					$varforward_res = doSQL($varforward_sql);
+					$varforward = '';
 					if ($varforward_res['num']>0) {
 						$varforward.= "/"."* ".$varforward_num." var based forwardings *"."/\n";
 						foreach ($varforward_res['set'] AS $vfresk => $vfresv) {
@@ -1055,10 +1125,6 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
 				
 				// use php based header forwarding, if $metapath not empty
 				if (trim($metapath)!='' && $mode!="preview"):
-					$onlyheader = true;
-					if (trim($urlforward.$varforward)=='') {
-						$phpheader = '';
-					}
 					$phpheader.= "header(\"HTTP/1.1 302 Found\");\n";
 					$phpheader.= "header(\"location: ".$metapath."\");\n";
 					$phpheader.= "die();\n";
@@ -1067,285 +1133,230 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
 				else:
 					$_SESSION['previewforward'] = '';
 				endif;
+                $phpheader.= "\n";
 				// use globalvars include
-				if ($onlyheader===false) {
-					$phpheader.= str_replace("//", "/", str_replace("//", "/", "@include \$_SERVER['DOCUMENT_ROOT'].'/".$_SESSION['wspvars']['wspbasediradd']."/data/include/global.inc.php';\n"));
-					// output parsedirectories property for dynamic link creation on page
-					if (isset($_SESSION['wspvars']['publisherdata']['parsedirectories'])):
-						$phpheader.= "\$wspvars['pagelinks'] = ".intval($_SESSION['wspvars']['publisherdata']['parsedirectories']).";\n";
-						$phpheader.= "\$_SESSION['wsppage']['pagelinks'] = ".intval($_SESSION['wspvars']['publisherdata']['parsedirectories']).";\n";
-					else:
-						$phpheader.= "\$wspvars['pagelinks'] = 0;\n";
-						$phpheader.= "\$_SESSION['wsppage']['pagelinks'] = 0;\n";
-					endif;
-					// output pagelang in file to use with localiced modules and contents
-					$phpheader.= "\$wspvars['pagelang'] = '".trim($lang)."';\n";
-					$phpheader.= "\$_SESSION['wsppage']['pagelang'] = '".trim($lang)."';\n";
-					// output mid in file
-					$phpheader.= "\$wspvars['mid'] = ".intval($pubid).";\n";
-					$phpheader.= "\$_SESSION['wsppage']['mid'] = ".intval($pubid).";\n";
-					// output mid tree in file
-					$phpheader.= "\$wspvars['midtree'] = unserializeBroken(\"".serialize(returnIDTree($pubid))."\");\n";
-					$phpheader.= "\$_SESSION['wsppage']['midtree'] = unserializeBroken(\"".serialize(returnIDTree($pubid))."\");\n";
-					
-					// if menupoint should not be visible by day/time restriction or login ..
-					if (intval($mid_res['set'][0]['login'])==1 && !($mode=="preview")) {
-						$phpheader.= "if(!(array_key_exists('wsppage', \$_SESSION)) || (array_key_exists('wsppage', \$_SESSION) && !(array_key_exists('userlogin', \$_SESSION['wsppage']))) || (array_key_exists('wsppage', \$_SESSION) && array_key_exists('userlogin', \$_SESSION['wsppage']) && \$_SESSION['wsppage']['userlogin']!=true)): die('<em>Die Inhalte dieser Seite sind nicht mehr vorhanden oder der Zugang ist gesperrt. Wenn Sie sicher sind, dass hier ein Inhalt zu sehen sein sollte, kontaktieren Sie bitte unserer Webmaster.<br />This page is out of date or accessing this page is restricted. If you see this on a page you were awaiting contents for sure, please contact our webmaster.</em>'); endif;\n";
-					}
-
-					if ($content_num==0 && $content_num!=$realcontent_num):
-						// the contents where hidden by lockpage preference
-						if ($hiddenmenu==2 && $nocontentmenu==0):
-							$phpheader.= "if(!(array_key_exists('wsppage', \$_SESSION)) || (array_key_exists('wsppage', \$_SESSION) && !(array_key_exists('userlogin', \$_SESSION['wsppage']))) || (array_key_exists('wsppage', \$_SESSION) && array_key_exists('userlogin', \$_SESSION['wsppage']) && \$_SESSION['wsppage']['userlogin']!=true)): die('<em>Die Inhalte dieser Seite sind nicht mehr vorhanden oder der Zugang ist gesperrt. Wenn Sie sicher sind, dass hier ein Inhalt zu sehen sein sollte, kontaktieren Sie bitte unserer Webmaster.<br />This page is out of date or accessing this page is restricted. If you see this on a page you were awaiting contents for sure, please contact our webmaster.</em>'); endif;\n";
-						endif;
-					elseif ($content_num==0):
-						// there were really NO contents ;)
-						if ($nocontentmenu==0):
-							$phpheader.= "if(!(array_key_exists('wsppage', \$_SESSION)) || (array_key_exists('wsppage', \$_SESSION) && !(array_key_exists('userlogin', \$_SESSION['wsppage']))) || (array_key_exists('wsppage', \$_SESSION) && array_key_exists('userlogin', \$_SESSION['wsppage']) && \$_SESSION['wsppage']['userlogin']!=true)): die('<em>Die Inhalte dieser Seite sind nicht mehr vorhanden oder der Zugang ist gesperrt. Wenn Sie sicher sind, dass hier ein Inhalt zu sehen sein sollte, kontaktieren Sie bitte unserer Webmaster.<br />This page is out of date or accessing this page is restricted. If you see this on a page you were awaiting contents for sure, please contact our webmaster.</em>'); endif;\n";
-						endif;
-					endif;
-
-					// clean paths used in php header
-					if ($header!=""):
-						$phpheader .= $header;
-					endif;
-					if ($phpheader!=""):
-						$tmpbuf .= '<'.'?'.'php'."\n".$phpheader.'?'.'>';
-					endif;
-					unset($header);
-					
-					// create normalized header with title and metainformation
-					if ($mode=="preview"):
-						$headvar = getHeadVar(intval($mid_res['set'][0]['mid']), $lang, true, $metascript);
-						$tmpbuf .= is_array($headvar)?$headvar[0]:$headvar;
-					else:
-						$headvar = getHeadVar(intval($mid_res['set'][0]['mid']), $lang, false, $metascript);
-						if (is_array($headvar)) {
-							$tmpbuf .= $headvar[0];
-							$onlyheader = $headvar[1];
-						} else {
-							$tmpbuf .= $headvar;
-						}
-					endif;
-					
-					// publish the rest of the file only if no explizit forwarding was detected
-					if ($onlyheader===false) {
-						// if menupoint should not be visible by day/time restriction or login ..
-						if (intval($mid_res['set'][0]['login'])==1 && !($mode=="preview")):
-							// just dont insert templatecode for locked files or files that will not show anything ;)
-							$tmpbuf .= "<!-- the content of this page is hidden and shall not be shown to anyone. if this text appears, something went wrong in php header -->";
-						else:
-							// inserting templatecode to file IF contents OR frame shall be displayed
-							$tmpbuf .= $templatecode;
-						endif;
-						
-						// create footer
-						$tmpbuf .= getFootVar();
-					
-						// replace selfvars with its contents
-						foreach ($selfvardata as $key => $value) {
-							if ($_SESSION['wspvars']['stripslashes']>0):
-								for ($strip=0; $strip<$_SESSION['wspvars']['stripslashes']; $strip++):
-									$value = stripslashes($value);
-								endfor;
-							endif;
-							$tmpbuf = str_replace("[%".$key."%]", $value, $tmpbuf);
-						}
-						
-						// find and replace global contents used in template with its contents ...
-						foreach ($globalcontentvars AS $key => $value):
-							if (array_key_exists($key, $globalcontent)):
-								$tmpbuf = str_replace($value, $globalcontent[$key], $tmpbuf);
-							else:
-								// replace empty globalcontent vars with ... EMPTY string 
-								$tmpbuf = str_replace($value, '', $tmpbuf);
-							endif;
-						endforeach;
-						
-						// find all content vars in file code
-						$contentvars = getContentvars($tmpbuf, intval($mid_res['set'][0]['mid']));
-						// replace wsp-content-vars with its contents
-						foreach ($contentvars AS $key => $value) {
-							// replace empty content vars on forwarding pages with a link
-							if(trim($metapath)!='' && $mode=="preview" && trim($content[$key])==''):
-								$content[$key] = returnIntLang('preview this page has no contents and is automatically forwarding to')." <a href='?previewid=".intval($forwardPage)."&previewlang=".$lang."'>".returnPath($forwardPage, 1, '', $lang)."</a>";
-							endif;
-							if (array_key_exists($key, $content)):
-								$tmpbuf = str_replace($value, $content[$key], $tmpbuf);
-							else:
-								// replace empty content vars with ... EMPTY string 
-								$tmpbuf = str_replace($value, '', $tmpbuf);
-							endif;
-						}
-						
-						// replace language placeholder
-						$languages = unserializeBroken($_SESSION['wspvars']['sitelanguages']);
-						$langbuf = "";
-						if (isset($_SESSION['wspvars']['publisherdata']['showlang']) && $_SESSION['wspvars']['publisherdata']['showlang']=="text") {
-							if (count($languages['languages']['shortcut'])>0) {
-								$langbuf.= "<ul class=\"langlist\">";
-								foreach ($languages['languages']['shortcut'] AS $lkey => $lvalue):
-									$l_sql = "SELECT `cid` FROM `content` WHERE `mid` = ".intval($mid_res['set'][0]['mid'])." AND `content_lang` = '".$languages['languages']['shortcut'][$lkey]."'";
-									$l_res = doSQL($l_sql);
-									if ($l_res['num']>0):
-										$langbuf.= "<li class=\"langitem ".$languages['languages']['shortcut'][$lkey]." ";
-										if ($languages['languages']['shortcut'][$lkey]==$lang):
-											$langbuf.= " activelang ";
-										else:
-											$langbuf.= " inactivelang ";
-										endif;
-										$langbuf.= "\">";
-										$langbuf.= "<a href=\"";
-										if ($mode=="preview"):
-											$langlink = "?previewid=".intval($mid_res['set'][0]['mid'])."&previewlang=".$languages['languages']['shortcut'][$lkey];
-										else:
-											if (intval($_SESSION['wspvars']['publisherdata']['parsedirectories'])==1 || $parsedir==1):
-												if (intval($mid_res['set'][0]['isindex'])==1):
-													if (intval($mid_res['set'][0]['level'])==1):
-														$langlink = str_replace("//", "/", str_replace("//", "/", returnPath(intval($mid_res['set'][0]['mid']), 0, '', $languages['languages']['shortcut'][$lkey])."/"));
-													else:
-														$langlink = str_replace("//", "/", str_replace("//", "/", returnPath(intval($mid_res['set'][0]['mid']), 1, '', $languages['languages']['shortcut'][$lkey])."/"));
-													endif;
-												else:
-													$langlink = str_replace("//", "/", str_replace("//", "/", returnPath(intval($mid_res['set'][0]['mid']), 1, '', $languages['languages']['shortcut'][$lkey])."/"));
-												endif;
-											else:
-												if (intval($mid_res['set'][0]['isindex'])==1 && intval($mid_res['set'][0]['level'])==1):
-													$langlink = str_replace("//", "/", str_replace("//", "/", returnPath(intval($mid_res['set'][0]['mid']), 0, '', $languages['languages']['shortcut'][$lkey])."/index.php"));
-												else:
-													$langlink = str_replace("//", "/", str_replace("//", "/", returnPath(intval($mid_res['set'][0]['mid']), 2, '', $languages['languages']['shortcut'][$lkey])));
-												endif;
-											endif;
-										endif;
-										$langbuf.= $langlink."\"";
-										if ($languages['languages']['shortcut'][$lkey]==$lang):
-											$langbuf.= " class=\"activelang\"";
-										else:
-											$langbuf.= " class=\"inactivelang\"";
-										endif;
-										$langbuf.= ">";
-										$langbuf.= $languages['languages']['longname'][$lkey];
-										$langbuf.= "</a>";
-										$langbuf.= "</li>";
-									endif;
-								endforeach;
-								$langbuf.= "</ul>";
-							}
-						}
-						else if (isset($_SESSION['wspvars']['publisherdata']['showlang']) && $_SESSION['wspvars']['publisherdata']['showlang']=="icon") {
-							if (count($languages['languages']['shortcut'])>0) {
-								$langbuf.= "<ul class=\"langlist\">";
-								foreach ($languages['languages']['shortcut'] AS $lkey => $lvalue):
-									$l_sql = "SELECT `cid` FROM `content` WHERE `mid` = ".intval($mid_res['set'][0]['mid'])." AND `content_lang` = '".$languages['languages']['shortcut'][$lkey]."'";
-									$l_res = doSQL($l_sql);
-									if ($l_res['num']>0):
-										$langbuf.= "<li class=\"langitem ".$languages['languages']['shortcut'][$lkey]." ";
-										if ($languages['languages']['shortcut'][$lkey]==$lang):
-											$langbuf.= " activelang ";
-										else:
-											$langbuf.= " inactivelang ";
-										endif;
-										$langbuf.= "\">";
-										if ($languages['languages']['shortcut'][$lkey]=="de"):
-											$langbuf.= "<a href=\"";
-											$langlink = "/";
-										else:
-											$langbuf.= "<a href=\"";
-											$langlink = "/".$languages['languages']['shortcut'][$lkey]."/";
-										endif;
-										$langlink.= returnPath(intval($mid_res['set'][0]['mid']), 2);
-										$langbuf.= $langlink."\"";
-										if ($languages['languages']['shortcut'][$lkey]==$lang):
-											$langbuf.= " class=\"activelang\"";
-										else:
-											$langbuf.= " class=\"inactivelang\"";
-										endif;
-										
-										$langbuf.= " title=\"".$languages['languages']['longname'][$lkey]."\"";
-										$langbuf.= ">";
-										$langbuf.= "<img src=\"/media/screen/lang/".$languages['languages']['shortcut'][$lkey].".png\" border=\"0\" alt=\"".$languages['languages']['longname'][$lkey]."\">";
-										$langbuf.= "</a>";
-										$langbuf.= "</li>";
-									endif;
-								endforeach;
-								$langbuf.= "</ul>";
-							}
-						}
-						else if (isset($_SESSION['wspvars']['publisherdata']['showlang']) && $_SESSION['wspvars']['publisherdata']['showlang']=="dropdown") {
-							if (count($languages['languages']['shortcut'])>0) {
-								$langbuf.= "<form name=\"switchpagelang\" id=\"switchpagelang\" method=\"post\"><select name=\"choosepagelang\" id=\"choosepagelang\" onchange=\"document.getElementById('switchpagelang').action = document.getElementById('choosepagelang').value; document.getElementById('switchpagelang').submit();\">";
-								foreach ($languages['languages']['shortcut'] AS $lkey => $lvalue):
-									$l_sql = "SELECT `cid` FROM `content` WHERE `mid` = ".intval($mid_res['set'][0]['mid'])." AND `content_lang` = '".$languages['languages']['shortcut'][$lkey]."'";
-									$l_res = doSQL($l_sql);
-									if ($l_res['num']>0):
-										if ($languages['languages']['shortcut'][$lkey]=="de"):
-											$langlink = "/";
-										else:
-											$langlink = "/".$languages['languages']['shortcut'][$lkey]."/";
-										endif;
-										$langlink.= returnPath(intval($mid_res['set'][0]['mid']), 2);
-										$langbuf.= "<option value=\"".$langlink."\"";
-										if ($languages['languages']['shortcut'][$lkey]==$lang):
-											$langbuf.= " selected=\"selected\"";
-										endif;
-										$langbuf.= ">";
-										$langbuf.= $languages['languages']['longname'][$lkey];
-										$langbuf.= "</option>";
-									endif;
-								endforeach;
-								$langbuf.= "</select></form>";
-							}
-						}
-
-						if ((isset($_SESSION['wspvars']['publisherdata']['setoutputlang']) && $_SESSION['wspvars']['publisherdata']['setoutputlang']=='page') && count($languages['languages']['shortcut'])>1):
-							$tmpbuf = str_replace("[%LANGUAGE%]", $langbuf, $tmpbuf);
-						else:
-							$tmpbuf = str_replace("[%LANGUAGE%]", '', $tmpbuf);
-						endif;
-						
-						// replacing known wsp vars with values 
-						// pagename
-						$pagename = trim($mid_res['set'][0]['description']);
-						$pagenamelng = unserializeBroken(trim($mid_res['set'][0]['langdescription']));
-						if (is_array($pagenamelng) && array_key_exists($lang, $pagenamelng)): $pagename = $pagenamelng[$lang]; endif;
-						$tmpbuf = str_replace("[%PAGENAME%]", $pagename, $tmpbuf);
-						$tmpbuf = str_replace("[%LASTPUBLISHED%]", date("Y-m-d H:i:s"), $tmpbuf);
-						$tmpbuf = str_replace("[%PUBLISHTIME%]", sprintf("%0.6f ms", (floatval(microtime())-floatval(isset($parsetime)?$parsetime:0))), $tmpbuf);
-						$tmpbuf = str_replace("[%FILEPATH%]", returnPath(intval($mid_res['set'][0]['mid']), 2, '', $lang), $tmpbuf);
-						$tmpbuf = str_replace("[%FILEAUTHOR%]", stripslashes($_SESSION['wspvars']['realname']), $tmpbuf);
-						// content vars supported by WSP
-						$tmpbuf = str_replace("[%GAOPTOUT%]", ' <a onclick="gaOptout();" style="cursor: pointer;">Disable Google Analytics</a>', $tmpbuf);
-						
-						// create menus and links
-						// replace all wsp<6 menuvars with wsp>=6 menuvar style
-						$tmpbuf = str_replace("[%MENUVAR ", "[%MENUVAR:", $tmpbuf);
-						// create menus
-						// run through tmpbuf to find all menu variables and convert var to content with menu data
-						if ($mode=="preview"):
-							$tmpbuf = createMenu($tmpbuf, intval($mid_res['set'][0]['mid']), $lang, true);
-						else:
-							$tmpbuf = createMenu($tmpbuf, intval($mid_res['set'][0]['mid']), $lang, false);
-						endif;
-			
-						// replacing every known shortcut var with it's link
-						$shortcut_sql = "SELECT `mid`, `linktoshortcut` FROM `menu` WHERE `linktoshortcut` != '' AND `trash` = 0";
-						$shortcut_res = doSQL($shortcut_sql);
-						if ($shortcut_res['num']>0) {
-							foreach ($shortcut_res['set'] AS $scresk => $scresv) {
-								if ($mode=='preview'):
-									$shortcut = buildMenu(array(array('TYPE' => 'SHORTCUT', 'MENU.SHOW' => intval($scresv['mid']))), 0, intval($scresv['mid']), intval($scresv['mid']), $lang, 0, 1, false, true);
-								else:
-									$shortcut = buildMenu(array(array('TYPE' => 'SHORTCUT', 'MENU.SHOW' => intval($scresv['mid']))), 0, intval($scresv['mid']), intval($scresv['mid']), $lang, 0, 1, false, false);
-								endif;
-								$tmpbuf = str_replace("[%".strtoupper(trim($scresv['linktoshortcut']))."%]", $shortcut['menucode'], $tmpbuf);
-							}
-						}
-					}
-				} 
-				else {
-					$tmpbuf.= '<'.'?'.'php'."\n".$phpheader."\n".'?'.'>';
+                $phpheader.= "DEFINE('MID', ".intval($pubid).");\n";
+                $phpheader.= "\n";
+				// use globalvars include
+                $phpheader.= str_replace("//", "/", str_replace("//", "/", "@include \$_SERVER['DOCUMENT_ROOT'].'/data/include/global.inc.php';\n"));
+				// output parsedirectories property for dynamic link creation on page
+				if (isset($_SESSION['wspvars']['publisherdata']['parsedirectories'])):
+					$phpheader.= "\$_SESSION['wsppage']['pagelinks'] = ".intval($_SESSION['wspvars']['publisherdata']['parsedirectories']).";\n";
+				else:
+					$phpheader.= "\$_SESSION['wsppage']['pagelinks'] = 0;\n";
+				endif;
+				// output pagelang in file to use with localiced modules and contents
+				$phpheader.= "\$_SESSION['wsppage']['pagelang'] = '".trim($lang)."';\n";
+				// output mid in file
+				$phpheader.= "\$_SESSION['wsppage']['mid'] = ".intval($pubid).";\n";
+                // output mid tree in file
+				$phpheader.= "\$_SESSION['wsppage']['midtree'] = unserializeBroken(\"".serialize(returnIDTree($pubid))."\");\n";
+				
+				// if menupoint should not be visible by day/time restriction or login ..
+				if (intval($mid_res['set'][0]['login'])==1 && !($mode=="preview")) {
+					$phpheader.= "if(!(array_key_exists('wsppage', \$_SESSION)) || (array_key_exists('wsppage', \$_SESSION) && !(array_key_exists('userlogin', \$_SESSION['wsppage']))) || (array_key_exists('wsppage', \$_SESSION) && array_key_exists('userlogin', \$_SESSION['wsppage']) && \$_SESSION['wsppage']['userlogin']!=true)): die('<em>Die Inhalte dieser Seite sind nicht mehr vorhanden oder der Zugang ist gesperrt. Wenn Sie sicher sind, dass hier ein Inhalt zu sehen sein sollte, kontaktieren Sie bitte unserer Webmaster.<br />This page is out of date or accessing this page is restricted. If you see this on a page you were awaiting contents for sure, please contact our webmaster.</em>'); endif;\n";
 				}
 
+				if ($content_num==0 && $content_num!=$realcontent_num):
+					// the contents where hidden by lockpage preference
+					if ($hiddenmenu==2 && $nocontentmenu==0):
+						$phpheader.= "if(!(array_key_exists('wsppage', \$_SESSION)) || (array_key_exists('wsppage', \$_SESSION) && !(array_key_exists('userlogin', \$_SESSION['wsppage']))) || (array_key_exists('wsppage', \$_SESSION) && array_key_exists('userlogin', \$_SESSION['wsppage']) && \$_SESSION['wsppage']['userlogin']!=true)): die('<em>Die Inhalte dieser Seite sind nicht mehr vorhanden oder der Zugang ist gesperrt. Wenn Sie sicher sind, dass hier ein Inhalt zu sehen sein sollte, kontaktieren Sie bitte unserer Webmaster.<br />This page is out of date or accessing this page is restricted. If you see this on a page you were awaiting contents for sure, please contact our webmaster.</em>'); endif;\n";
+					endif;
+				elseif ($content_num==0):
+					// there were really NO contents ;)
+					if ($nocontentmenu==0):
+						$phpheader.= "if(!(array_key_exists('wsppage', \$_SESSION)) || (array_key_exists('wsppage', \$_SESSION) && !(array_key_exists('userlogin', \$_SESSION['wsppage']))) || (array_key_exists('wsppage', \$_SESSION) && array_key_exists('userlogin', \$_SESSION['wsppage']) && \$_SESSION['wsppage']['userlogin']!=true)): die('<em>Die Inhalte dieser Seite sind nicht mehr vorhanden oder der Zugang ist gesperrt. Wenn Sie sicher sind, dass hier ein Inhalt zu sehen sein sollte, kontaktieren Sie bitte unserer Webmaster.<br />This page is out of date or accessing this page is restricted. If you see this on a page you were awaiting contents for sure, please contact our webmaster.</em>'); endif;\n";
+					endif;
+				endif;
+
+				// clean paths used in php header
+				if ($header!=""):
+					$phpheader .= $header;
+				endif;
+				if ($phpheader!=""):
+					$tmpbuf .= '<'.'?'.'php'."\n".$phpheader.'?'.'>';
+				endif;
+				unset($header);
+		          
+				// create normalized header with title and metainformation
+				if ($mode=="preview"):
+					$tmpbuf .= getHeadVar(intval($mid_res['set'][0]['mid']), $lang, true, $metascript);
+				else:
+					$tmpbuf .= getHeadVar(intval($mid_res['set'][0]['mid']), $lang, false, $metascript);
+				endif;
+				
+				// if menupoint should not be visible by day/time restriction or login ..
+				if (intval($mid_res['set'][0]['login'])==1 && !($mode=="preview")):
+					// just dont insert templatecode for locked files or files that will not show anything ;)
+					$tmpbuf .= "<!-- the content of this page is hidden and shall not be shown to anyone. if this text appears, something went wrong in php header -->";
+				else:
+					// inserting templatecode to file IF contents OR frame shall be displayed
+					$tmpbuf .= $templatecode;
+				endif;
+				
+				// create footer
+				$tmpbuf .= getFootVar();
+				
+				// replace selfvars with its contents
+				foreach ($selfvardata as $key => $value) {
+					if ($_SESSION['wspvars']['stripslashes']>0):
+						for ($strip=0; $strip<$_SESSION['wspvars']['stripslashes']; $strip++):
+							$value = stripslashes($value);
+						endfor;
+					endif;
+					$tmpbuf = str_replace("[%".$key."%]", $value, $tmpbuf);
+				}
+				
+				// find and replace global contents used in template with its contents ...
+				foreach ($globalcontentvars AS $key => $value):
+					if (array_key_exists($key, $globalcontent)):
+						$tmpbuf = str_replace($value, $globalcontent[$key], $tmpbuf);
+					else:
+						// replace empty globalcontent vars with ... EMPTY string 
+						$tmpbuf = str_replace($value, '', $tmpbuf);
+					endif;
+				endforeach;
+				
+				// find all content vars in file code
+				$contentvars = getContentvars($tmpbuf, intval($used_template));
+                
+				// replace wsp-content-vars with its contents
+				foreach ($contentvars AS $key => $value) {
+                    // replace empty content vars on forwarding pages with a link
+					if(trim($metapath)!='' && $mode=="preview" && trim($content[$key])==''):
+                        $content[$key] = returnIntLang('preview this page has no contents and is automatically forwarding to')." <a href='?previewid=".intval($forwardPage)."&previewlang=".$lang."'>".returnPath($forwardPage, 1, '', $lang)."</a>";
+                    endif;
+                    if (array_key_exists($key, $content)):
+						$tmpbuf = str_replace($value, $content[$key], $tmpbuf);
+					else:
+						// replace empty content vars with ... EMPTY string 
+						$tmpbuf = str_replace($value, '', $tmpbuf);
+					endif;
+				}
+				
+				// replace language placeholder
+				$languages = $_SESSION['wspvars']['sitelanguages'];
+				$langbuf = "";
+                if (count($languages['shortcut'])>0) {
+                    $l_num = 0;
+                    // check, if there are language alternatives
+                    foreach ($languages['shortcut'] AS $lkey => $lvalue) {
+                        // if language select should be linked to content avaiability
+                        if (isset($_SESSION['wspvars']['publisherdata']['setoutputlang']) && $_SESSION['wspvars']['publisherdata']['setoutputlang']=='content') {
+                            $l_sql = "SELECT `cid` FROM `content` WHERE `mid` = ".intval($mid_res['set'][0]['mid'])." AND `content_lang` = '".$lvalue."' AND `trash` = 0";
+                            $l_res = doSQL($l_sql);
+                            if ($l_res['num']>0) { $l_num++; }
+                        } 
+                        // else language select is bind to menupoint
+                        else {
+                            $l_sql = "SELECT `mid` FROM `menu` WHERE `mid` = ".intval($mid_res['set'][0]['mid'])." AND `trash` = 0";
+                            $l_res = doSQL($l_sql);
+                            if ($l_res['num']>0) { $l_num++; }
+                        }
+                    }
+                    if ($l_num>1) {
+                        if (isset($_SESSION['wspvars']['publisherdata']['showlang']) && $_SESSION['wspvars']['publisherdata']['showlang']=="dropdown") {
+                            $langbuf.= "<form name='switchpagelang' id='switchpagelang' method='post' target='_top'><select name='choosepagelang' id='choosepagelang' onchange=\"document.getElementById('switchpagelang').action = document.getElementById('choosepagelang').value; document.getElementById('switchpagelang').submit();\">";
+                        }
+                        else {
+                            $langbuf.= "<ul class=\"langlist\">";
+                        }
+                        foreach ($languages['shortcut'] AS $lkey => $lvalue) {
+                            if ($l_res['num']>0) {
+                                if ($mode=="preview") {
+                                    $langlink = "/".WSP_DIR."/showpreview.php?previewid=".intval($mid_res['set'][0]['mid'])."&previewlang=".$languages['shortcut'][$lkey];
+                                }
+                                else {
+                                    $pathdata = fileNamePath(intval($mid_res['set'][0]['mid']), 0, 0, 0);
+                                    if (intval($_SESSION['wspvars']['publisherdata']['parsedirectories'])==1 || $parsedir==1) {
+                                        $langlink = cleanPath('/'.(($languages['shortcut'][$lkey]!=WSP_LANG)?$languages['shortcut'][$lkey]:'').'/'.$pathdata['path']);
+                                    }
+                                    else {
+                                        $langlink = cleanPath('/'.(($languages['shortcut'][$lkey]!=WSP_LANG)?$languages['shortcut'][$lkey]:'').'/'.$pathdata['file']);
+                                    }
+                                }
+                                if (isset($_SESSION['wspvars']['publisherdata']['showlang']) && $_SESSION['wspvars']['publisherdata']['showlang']=="dropdown") {
+                                    $langbuf.= "<option value=\"".$langlink."\"";
+                                    if ($languages['shortcut'][$lkey]==$lang) {
+                                        $langbuf.= " selected=\"selected\"";
+                                    }
+                                    $langbuf.= ">";
+                                    $langbuf.= $languages['longname'][$lkey];
+                                    $langbuf.= "</option>";
+                                }
+                                else {
+                                    $langbuf.= "<li class=\"langitem ".$languages['shortcut'][$lkey]." ";
+                                    $langbuf.= ($languages['shortcut'][$lkey]==$lang)?" activelang ":" inactivelang ";
+                                    $langbuf.= "\">";
+                                    $langbuf.= "<a href=\"";
+                                    $langbuf.= $langlink."\"";
+                                    $langbuf.= ($languages['shortcut'][$lkey]==$lang)?" class='activelang' ":" class='inactivelang' ";
+                                    if ($mode=="preview") { $langbuf.= " target='_top' "; }
+                                    $langbuf.= ">";
+                                    if (isset($_SESSION['wspvars']['publisherdata']['showlang']) && $_SESSION['wspvars']['publisherdata']['showlang']=="icon") {
+                                        $langbuf.= '<img src="/media/screen/lang/'.$lvalue.'.png" alt="'.$lvalue.'" title="'.$languages['longname'][$lkey].'" />';
+                                    }
+                                    else {
+                                        $langbuf.= $languages['longname'][$lkey];
+                                    }
+                                    $langbuf.= "</a>";
+                                    $langbuf.= "</li>";
+                                }
+                            }
+                        }
+                    }
+                    if (isset($_SESSION['wspvars']['publisherdata']['showlang']) && $_SESSION['wspvars']['publisherdata']['showlang']=="dropdown") {
+                        $langbuf.= "</select></form>";
+                    }
+                    else {
+                        $langbuf.= "</ul>";
+                    }
+                }
+
+				if (count($languages['shortcut'])>1):
+					$tmpbuf = str_replace("[%LANGUAGE%]", $langbuf, $tmpbuf);
+				else:
+					$tmpbuf = str_replace("[%LANGUAGE%]", '', $tmpbuf);
+				endif;
+				
+				// replacing known wsp vars with values 
+				// pagename
+				$pagename = trim($mid_res['set'][0]['description']);
+				$pagenamelng = unserializeBroken(trim($mid_res['set'][0]['langdescription']));
+				if (is_array($pagenamelng) && array_key_exists($lang, $pagenamelng)): $pagename = $pagenamelng[$lang]; endif;
+				$tmpbuf = str_replace("[%PAGENAME%]", $pagename, $tmpbuf);
+				$tmpbuf = str_replace("[%LASTPUBLISHED%]", date("Y-m-d H:i:s"), $tmpbuf);
+				$tmpbuf = str_replace("[%PUBLISHTIME%]", sprintf("%0.6f ms", (microtime(true)-$parsetime)), $tmpbuf);
+				$tmpbuf = str_replace("[%FILEPATH%]", fileNamePath(intval($mid_res['set'][0]['mid'])), $tmpbuf);
+				$tmpbuf = str_replace("[%FILEAUTHOR%]", (isset($_SESSION['wspvars']['realname'])?stripslashes($_SESSION['wspvars']['realname']):'unknown'), $tmpbuf);
+				// content vars supported by WSP
+                $tmpbuf = str_replace("[%GAOPTOUT%]", ' <a onclick="gaOptout();" style="cursor: pointer;">Disable Google Analytics</a>', $tmpbuf);
+                
+                // create menus and links
+                // replace all wsp<6 menuvars with wsp>=6 menuvar style
+				$tmpbuf = str_replace("[%MENUVAR ", "[%MENUVAR:", $tmpbuf);
+				// create menus
+				// run through tmpbuf to find all menu variables and convert var to content with menu data
+				if ($mode=="preview"):
+					$tmpbuf = createMenu($tmpbuf, intval($mid_res['set'][0]['mid']), $lang, true);
+				else:
+					$tmpbuf = createMenu($tmpbuf, intval($mid_res['set'][0]['mid']), $lang, false);
+				endif;
+    
+				// replacing every known shortcut var with it's link
+				$shortcut_sql = "SELECT `mid`, `linktoshortcut` FROM `menu` WHERE `linktoshortcut` != '' AND `trash` = 0";
+				$shortcut_res = doSQL($shortcut_sql);
+				if ($shortcut_res['num']>0) {
+					foreach ($shortcut_res['set'] AS $scresk => $scresv) {
+						if ($mode=='preview'):
+							$shortcut = buildMenu(array(array('TYPE' => 'SHORTCUT', 'MENU.SHOW' => intval($scresv['mid']))), 0, intval($scresv['mid']), intval($scresv['mid']), $lang, 0, 1, true);
+						else:
+							$shortcut = buildMenu(array(array('TYPE' => 'SHORTCUT', 'MENU.SHOW' => intval($scresv['mid']))), 0, intval($scresv['mid']), intval($scresv['mid']), $lang, 0, 1, false);
+						endif;
+						$tmpbuf = str_replace("[%".strtoupper(trim($scresv['linktoshortcut']))."%]", $shortcut['menucode'], $tmpbuf);
+                    }
+				}
+				
 				// replace ALL detected vars with contents or empty strings ...
 				// MISSING!!!!!
                 	
@@ -1353,9 +1364,9 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
 				$tmpbuf = setUTF8($tmpbuf);
 				// FINALLY ............
 				// write output to file
-				if ($mode!="preview" && ($ftp || $usedirect)) {
+				if ($ftp!==false && $mode!="preview") {
 					// define temp directory
-					$tmppath = $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/";
+					$tmppath = cleanPath(DOCUMENT_ROOT."/".WSP_DIR."/tmp/".$_SESSION['wspvars']['usevar']."/");
 					// define temp filename
 					$tmpfile = tempnam($tmppath, 'wsp');
 					// create temporary buffer file with file contents
@@ -1365,150 +1376,92 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
 					// close buffer
 					fclose($fh);
 					// creating final file
-					if (intval($_SESSION['wspvars']['publisherdata']['parsedirectories'])==1 || $parsedir==1) {
+					$pathdata = fileNamePath(intval($mid_res['set'][0]['mid']), 0, 0, 0);
+                    if (intval($_SESSION['wspvars']['publisherdata']['parsedirectories'])==1 || $parsedir==1) {
 						// if setup is to create directories instead of files
-						// create ftp-based path for missing directories
-						// call 1-function because structure is needed down to a directory
-						if ($ftp) {
-							createFTPPath($ftp, returnPath(intval($mid_res['set'][0]['mid']), 1, '', $lang));
-						}
-
-						// creating index.php
-						if (intval($mid_res['set'][0]['isindex'])==1) {
-							// runs only if the file is the index of this directory
-							// first level
-							if (intval($mid_res['set'][0]['level'])==1) {
-								// SET filename to index.php
-								
-								$ftppath = str_replace("//", "/", str_replace("//", "/", returnPath(intval($mid_res['set'][0]['mid']), 0, '', $lang)."/index.php"));
-								// ftp copy function
-								if (!ftp_put($ftp, str_replace("//","/",$_SESSION['wspvars']['ftpbasedir'].$ftppath), $tmpfile, FTP_BINARY)):
-									addWSPMsg('errormsg', "<p>Die Datei \"".$ftppath."\" konnte nicht hochgeladen werden.</p>");
-									$returnstat = false;
-								else:
-									doSQL("UPDATE `menu` SET `contentchanged` = 0 WHERE `mid` = ".intval($mid_res['set'][0]['mid']));
-									$returnstat = true;
-								endif;
-								$ftppath = str_replace("//", "/", str_replace("//", "/", returnPath(intval($mid_res['set'][0]['mid']), 1, '', $lang)."/index.php"));
-								// ftp copy function
-								if (!ftp_put($ftp, str_replace("//","/",$_SESSION['wspvars']['ftpbasedir'].$ftppath), $tmpfile, FTP_BINARY)):
-									addWSPMsg('errormsg', "<p>Die Datei \"".$ftppath."\" konnte nicht hochgeladen werden.</p>");
-									$returnstat = false;
-								else:
-									doSQL("UPDATE `menu` SET `contentchanged` = 0 WHERE `mid` = ".intval($mid_res['set'][0]['mid']));
-									$returnstat = true;
-								endif;
-								// remove old file
-								unlink($tmpfile);
-							} else {
-								// create the 'real' file 
-								$ftppath = str_replace("//", "/", str_replace("//", "/", returnPath(intval($mid_res['set'][0]['mid']), 1, '', $lang)."/index.php"));
-								// ftp copy function
-								if (!ftp_put($ftp, str_replace("//","/",$_SESSION['wspvars']['ftpbasedir'].$ftppath), $tmpfile, FTP_BINARY)):
-									addWSPMsg('errormsg', "<p>Die Datei \"".$ftppath."\" konnte nicht hochgeladen werden.</p>");
-									$returnstat = false;
-								else:
-									doSQL("UPDATE `menu` SET `contentchanged` = 0 WHERE `mid` = ".intval($mid_res['set'][0]['mid']));
-									$returnstat = true;
-								endif;
-								unlink($tmpfile);
-							}
-						} else {
-							// create the content of the forwarding file
-							// define temp filename
-							$fwdfile = tempnam($tmppath, 'fwd');
-							$fwdtmp = fopen($fwdfile, 'r+');
-							fwrite($fwdtmp, '<'.'?'.'php header("location: '.trim($mid_res['set'][0]['filename']).'/"); '.'?'.'>');
-							fclose($fwdtmp);
-							// create path with structure name as directory name and the index.php file to get requested by just the directory call 
-							$ftppath = str_replace("//", "/", str_replace("//", "/", returnPath(intval($mid_res['set'][0]['mid']), 1, '', $lang)."/index.php"));
-							$fwdpath = str_replace("//", "/", str_replace("//", "/", returnPath(intval($mid_res['set'][0]['mid']), 2, '', $lang)));
-							// ftp copy function
-							if ($usedirect) {
-								if (!(copy( $tmpfile , str_replace("//" , "/" , $_SERVER['DOCUMENT_ROOT']."/".$ftppath)))) {
-									addWSPMsg('errormsg', "<p>".returnIntLang('publisher file could not be written directly1', false)." \"".$ftppath."\" ".returnIntLang('publisher file could not be written directly2', false)."</p>");
-									$returnstat = false;
-								}
-								else {
-									doSQL("UPDATE `menu` SET `contentchanged` = 0 WHERE `mid` = ".intval($mid_res['set'][0]['mid']));
-									$returnstat = true;
-									// finally try to write to forwarding file
-									@copy($fwdfile , str_replace("//" , "/" , $_SERVER['DOCUMENT_ROOT']."/".$fwdpath));
-								}
-							}
-							else {
-								if (!ftp_put($ftp, str_replace("//","/",$_SESSION['wspvars']['ftpbasedir'].$ftppath), $tmpfile, FTP_BINARY)):
-									addWSPMsg('errormsg', "<p>".returnIntLang('publisher file could not be created1', false)." \"".$ftppath."\" ".returnIntLang('publisher file could not be created2', false)."</p>");
-									$returnstat = false;
-								else:
-									doSQL("UPDATE `menu` SET `contentchanged` = 0 WHERE `mid` = ".intval($mid_res['set'][0]['mid']));
-									$returnstat = true;
-									// finally try to write to forwarding file
-									@ftp_put($ftp, str_replace("//","/",$_SESSION['wspvars']['ftpbasedir'].$fwdpath), $fwdfile, FTP_BINARY);
-								endif;
-							}
-							unlink($tmpfile);
-						}
+						// create the index.php IN folder
+                        // setup LANGUAGE base folder on top of path if published language is different to base language
+                        if ($lang!=WSP_LANG) {
+                            $dirpath = cleanPath(FTP_BASE.'/'.$lang.'/'.$pathdata['folder']);
+                            $ftppath = cleanPath(FTP_BASE.'/'.$lang.'/'.$pathdata['folderfile']);
+                            $frwdir = cleanPath(FTP_BASE.'/'.$lang.'/'.$pathdata['orig']);
+                            $frwpath = cleanPath('/'.$lang.'/'.$pathdata['folder']);
+                        } else {
+                            $dirpath = cleanPath(FTP_BASE.'/'.$pathdata['folder']);
+                            $ftppath = cleanPath(FTP_BASE.'/'.$pathdata['folderfile']);
+                            $frwdir = cleanPath(FTP_BASE.'/'.$pathdata['orig']);
+                            $frwpath = cleanPath('/'.$pathdata['folder']);
+                        }
+                        // create the folder
+                        $dirreturn = createFolder($dirpath);
+                        if ($dirreturn===false) {
+                            addWSPMsg('errormsg', returnIntLang('publisher directory could not be created1', false)." \"".$dirpath."\" ".returnIntLang('publisher directory could not be created2', false));
+                        }
+                        // copy the INDEX-file
+                        $ftpreturn = @ftp_put($ftp, $ftppath, $tmpfile, FTP_BINARY);
+                        if ($ftpreturn===false) {
+                            addWSPMsg('errormsg', returnIntLang('publisher file could not be created1', false)." \"".$ftppath."\" ".returnIntLang('publisher file could not be created2', false));
+                        }
+                        else {
+                            doSQL("UPDATE `menu` SET `contentchanged` = 0, `lastpublish` = ".time()." WHERE `mid` = ".intval($mid_res['set'][0]['mid']));
+                            $returnstat = true;
+                        }
+                        unlink($tmpfile);
+                        
+                        
+                        // 2019-09-11
+                        
+                        
+                        // create a header location file that points to final file
+                        $tmpfile = tempnam($tmppath, 'frw');
+                        $fh = fopen($tmpfile, "r+");
+                        $frwbuf = '<?php header("location: '.$frwpath.'"); ?>';
+                        fwrite($fh, $frwbuf);
+                        // (over)write an (existing) file ONE directory step UPWARDS with header location
+                        // e.g. folder is /info/privacy/ the file /info/privacy.php will be overwritten with a header location to folder
+                        @ftp_put($ftp, $frwdir, $tmpfile, FTP_BINARY);
+                        // AND, if this file is the index.php of home directory -
+                        // 
+                        if ($pathdata['filefolder']=='' && $pathdata['file']=='/index.php') {
+                            @ftp_put($ftp, cleanPath($frwpath.'/index.php'), $tmpfile, FTP_BINARY);
+                        }
+                        unlink($tmpfile);
+                        
                     } else {
-						// create ftp-based path for missing directories
-						// only call 0-function because the file is located directly to this directory
-						createFTPPath($ftp, returnPath(intval($mid_res['set'][0]['mid']), 0, '', $lang));
-						// if setup is to create files
-						if (intval($mid_res['set'][0]['isindex'])==1 && intval($mid_res['set'][0]['level'])==1) {
-							// FIRST - create a file with regular name
-							$ftppath = str_replace("//", "/", str_replace("//", "/", returnPath(intval($mid_res['set'][0]['mid']), 2, '', $lang)));
-							if ($usedirect) {
-								if (!(copy( $tmpfile , str_replace("//" , "/" , $_SERVER['DOCUMENT_ROOT']."/".$ftppath)))) {
-									addWSPMsg('errormsg', "<p>".returnIntLang('publisher file could not be written directly1', false)." \"".$ftppath."\" ".returnIntLang('publisher file as index', false)." ".returnIntLang('publisher file could not be written directly2', false)."</p>");
-									$returnstat = false;
-								}
-								else {
-									doSQL("UPDATE `menu` SET `contentchanged` = 0 WHERE `mid` = ".intval($mid_res['set'][0]['mid']));
-									$returnstat = true;
-								}
-							}
-							else if (!ftp_put($ftp, str_replace("//","/",$_SESSION['wspvars']['ftpbasedir'].$ftppath), $tmpfile, FTP_BINARY)):
-								addWSPMsg('errormsg', "<p>".returnIntLang('publisher file could not be created1', false)." \"".$ftppath."\" ".returnIntLang('publisher file as index', false)." ".returnIntLang('publisher file could not be created2', false)."</p>");
-							endif;
-							// THIS is the root (index) file, so filename has to be set to index.php for a second round
-							$ftppath = str_replace("//", "/", str_replace("//", "/", returnPath(intval($mid_res['set'][0]['mid']), 0, '', $lang)."/index.php"));
-							// ftp copy function
-							if (!ftp_put($ftp, str_replace("//","/",$_SESSION['wspvars']['ftpbasedir'].$ftppath), $tmpfile, FTP_BINARY)):
-								addWSPMsg('errormsg', "<p>".returnIntLang('publisher file could not be created1', false)." \"".$ftppath."\" ".returnIntLang('publisher file could not be created1', false)."</p>");
-								$returnstat = false;
-							else:
-								doSQL("UPDATE `menu` SET `contentchanged` = 0 WHERE `mid` = ".intval($mid_res['set'][0]['mid']));
-								$returnstat = true;
-							endif;
-							unlink($tmpfile);
-						} else {
-							$ftppath = str_replace("//", "/", str_replace("//", "/", returnPath(intval($mid_res['set'][0]['mid']), 2, '', $lang)));
-							// ftp copy function
-							if (!ftp_put($ftp, str_replace("//","/",$_SESSION['wspvars']['ftpbasedir'].$ftppath), $tmpfile, FTP_BINARY)):
-								addWSPMsg('errormsg', "<p>".returnIntLang('publisher file could not be created1', false)." \"".$ftppath."\" ".returnIntLang('publisher file could not be created1', false)."</p>");
-								$returnstat = false;
-							else:
-								doSQL("UPDATE `menu` SET `contentchanged` = 0 WHERE `mid` = ".intval($mid_res['set'][0]['mid']));
-								$returnstat = true;
-							endif;
-							unlink($tmpfile);
-						}
-					}
-					if ($ftp) {
-						ftp_close($ftp);
-					}
+                        // setup LANGUAGE base folder on top of path if published language is different to base language
+                        if ($lang!=WSP_LANG) {
+                            $dirpath = cleanPath(FTP_BASE.'/'.$lang.'/'.$pathdata['filefolder']);
+                            $ftppath = cleanPath(FTP_BASE.'/'.$lang.'/'.$pathdata['file']);
+                        } else {
+                            $dirpath = cleanPath(FTP_BASE.'/'.$pathdata['filefolder']);
+                            $ftppath = cleanPath(FTP_BASE.'/'.$pathdata['file']);
+                        }
+                        // create the folder
+                        $dirreturn = createFolder($dirpath);
+                        if ($dirreturn===false) {
+                            addWSPMsg('errormsg', returnIntLang('publisher directory could not be created1', false)." \"".$dirpath."\" ".returnIntLang('publisher directory could not be created2', false));
+                        }
+                        // copy the INDEX-file
+                        $ftpreturn = @ftp_put($ftp, $ftppath, $tmpfile, FTP_BINARY);
+                        if ($ftpreturn===false) {
+                            addWSPMsg('errormsg', returnIntLang('publisher file could not be created1', false)." \"".$ftppath."\" ".returnIntLang('publisher file could not be created2', false));
+                        }
+                        else {
+                            doSQL("UPDATE `menu` SET `contentchanged` = 0, `lastpublish` = ".time()." WHERE `mid` = ".intval($mid_res['set'][0]['mid']));
+                            $returnstat = true;
+                        }
+                        unlink($tmpfile);
+                    }
 				}
-			} 
-			else {
+			} else {
 				$returnstat = "notemplatefound";
 				addWSPMsg('errormsg', "<em>Fehler 2.".$used_template."</em>: Template zu Punkt \"".trim($mid_res['set'][0]['description'])."\" nicht gefunden.");
 			}
-		}
-	}
-	else {
+		endif;
+	else:
 		$returnstat = "nomenufound";
 		addWSPMsg('errormsg', "<em>Fehler 1.".$pubid."</em>: Men&uuml;punkt nicht gefunden.");
-	}
+	endif;
 	
 	if ($mode!="preview") {
 		if($newendmenu) {
@@ -1521,7 +1474,7 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
 	}
 	
     if ($mode=="preview") {
-		$tmppath = $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/tmp/".$_SESSION['wspvars']['usevar']."/";
+		$tmppath = cleanPath(DOCUMENT_ROOT."/".WSP_DIR."/tmp/".$_SESSION['wspvars']['usevar']."/");
 		// define temp filename
 		$tmpfile = $tmppath."previewfile.php";
 		$fh = fopen($tmpfile, "w+");
@@ -1531,65 +1484,6 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
 		return $returnstat;
 	}
 }
-
-function publishMenu($pubid, $mode = 'publish', $lang = 'de', $newendmenu = false, $rename = false) {
-	/* grab menupoint information */
-	$mid_sql = "SELECT * FROM `menu` WHERE `mid` = ".intval($pubid);
-	$mid_res = doSQL($mid_sql);
-	if ($mid_res['num']>0):
-		// get template info
-		$used_template = getTemplateID(intval($pubid));
-		if (isset($_REQUEST['previewtpl']) && intval($_REQUEST['previewtpl'])>0):
-			$used_template = intval($_REQUEST['previewtpl']);
-		endif;
-		$template_sql = "SELECT * FROM `templates` WHERE `id` = ".intval($used_template);
-		$template_res = doSQL($template_sql);
-		if ($template_res['num']>0):
-			$parsetime = microtime();
-			$templatecode = stripslashes(trim($template_res['set'][0]['template']));
-			
-			$tmpbuf = $templatecode;
-			// replace all wsp<6 menuvars with wsp>=6 menuvar style
-			$tmpbuf = str_replace("[%MENUVAR ", "[%MENUVAR:", $tmpbuf);
-			// run through tmpbuf to find all menu variables and convert var to content with menu data
-			$tmpbuf = createMenu($tmpbuf, intval($mid_res['set'][0]['mid']), $lang, false);
-			// update db entry
-			
-			// if change stat 7 then rename file 
-			if ($rename):
-				renameFile(intval($mid_res['set'][0]['mid']), $lang);
-			endif;
-			
-			// set calculated contentchanged stat
-			$cchange = 0;
-			if (getChangeStat(intval($mid_res['set'][0]['mid']))==0): $cchange = 0; endif;
-			if (getChangeStat(intval($mid_res['set'][0]['mid']))==1): $cchange = 1; endif;
-			if (getChangeStat(intval($mid_res['set'][0]['mid']))==2): $cchange = 2; endif;
-			if (getChangeStat(intval($mid_res['set'][0]['mid']))==3): $cchange = 0; endif;
-			if (getChangeStat(intval($mid_res['set'][0]['mid']))==4): $cchange = 0; endif;
-			if (getChangeStat(intval($mid_res['set'][0]['mid']))==5): $cchange = 1; endif;
-			if (getChangeStat(intval($mid_res['set'][0]['mid']))==6): $cchange = 2; endif;
-			
-			doSQL("UPDATE `menu` SET `contentchanged` = ".$cchange." WHERE `mid` = ".intval($mid_res['set'][0]['mid']));
-			$returnstat = true;
-			
-			if($newendmenu):
-				$drop_res = doSQL("DROP TABLE IF EXISTS `end_menu`");
-				$create_res = doSQL("CREATE TABLE `end_menu` LIKE `menu`");
-				if (!($create_res['res'])) { addWSPMsg('errormsg', 'publisher creation of end menu table failed'); }
-                $insert_res = doSQL("INSERT INTO `end_menu` SELECT * FROM `menu`");
-                if (!($insert_res['res'])) { addWSPMsg('errormsg', 'publisher adding data to end menu table failed'); }
-            endif;
-
-		else:
-			$returnstat = "notemplatefound";
-            addWSPMsg('errormsg', "<em>Fehler 2.".$used_template."</em>: Template zu Punkt \"".trim($mid_res['set'][0]['description'])."\" nicht gefunden.");
-		endif;
-	else:
-		$returnstat = "nomenufound";
-		addWSPMsg('errormsg', "<em>Fehler 1.".$pubid."</em>: Men&uuml;punkt nicht gefunden.");
-	endif;
-	return $returnstat;
-	}
+}
 
 // EOF ?>

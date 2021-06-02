@@ -2,7 +2,7 @@
 /**
  * ftp-access
  * @since 3.1
- * @version 6.0
+ * @version 7.0
  * @lastchange 2019-08-18
  */
 
