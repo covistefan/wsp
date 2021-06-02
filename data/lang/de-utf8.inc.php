@@ -11,6 +11,103 @@ $lang['de'] = array();
 $_SESSION['wspvars']['locallanguages']['de'] = 'Deutsch';
 
 $lang['de'] = array(
+
+// installer text //
+
+'install steps system' => 'System',
+'install steps admin' => 'Admin',
+'install steps database' => 'Datenbank',
+'install steps ftp' => 'Webserver',
+'install steps smtp' => 'Mailserver (SMTP)',
+'install steps install' => 'Installation',
+
+'install wsp' => 'Installation WSP 7',
+'install steps system desc' => 'Sie werden durch die folgenden Installationsschritte geleitet. Bitte halten Sie die Zugangsdaten zu Datenbank, FTP und ggf. einem Mailaccount bereit. Nachstehend sehen Sie, welche Systemvorraussetzungen für die Installation von WSP 7 erforderlich sind und ob diese erfüllt werden.',
+
+'install using wsp configuration file' => 'Der WSP-Installer hat die Werte der vorhandenen Konfigurationsdatei geladen.',
+'install got no usable installer file' => 'Es konnte keine Installationsdatei gefunden werden.',
+'install could not create admin user' => 'Es konnte kein Admin-Benutzer erstellt werden. Möglicherweise existiert ein Eintrag mit dem Benutzernamen bereits in der Datenbank.',
+'install created admin acccount' => 'Ein Admin-Benutzer wurde erstellt.',
+'install installed or updated all tables' => 'Alle notwendigen Datenbanktabellen wurden erstellt oder aktualisiert.',
+'install table restrictions is missing' => 'Die notwendigen Datenbanktabellen konnten nicht erstellt werden.',
+'install copied all install files' => 'Alle Dateien wurden entpackt.',
+'install configuration file written' => 'Eine neue Konfigurationsdatei wurde erstellt.',
+'install installation succesful' => 'Die Installation von WSP war erfolgreich',
+'install could not upload installer file' => 'Die Installationsdatei konnte nicht hochgeladen werden.',
+'install uploaded file was no zip' => 'Die hochgeladene Datei war keine ZIP-Datei.',
+'install could connect with ftp data' => 'Es konnte eine FTP-Verbindung mit den hinterlegten Daten hergestellt werden.',
+'install could not write server based update file' => 'Die Installationsdatei konnte nicht kopiert werden.',
+'install could not access installer file' => 'Es konnte nicht auf die Installationsdatei zugegriffen werden.',
+
+'install steps system phpmin' => '7.2+',
+'install steps system phpversion' => 'PHP-Version',
+'install steps system mysqlmin' => '5.0+',
+'install steps system mysqlversion' => 'MySQL-Version',
+'install steps system cookies' => 'Cookies',
+'install steps system js' => 'JavaScript',
+'install steps system curl' => 'CURL',
+'install steps system fopen' => 'fopen()',
+'install steps system unzip' => 'unZIP',
+
+'install choose installer language' => 'Installationssprache wählen',
+
+'install steps admin desc' => 'Erstellen Sie hier den ersten Administrator-Account. Mit diesem Account können Sie weitere Benutzer anlegen. Bitte achten Sie insbesondere bei der E-Mail-Adresse auf eine korrekte Schreibweise, da nur über diese Adresse im Notfall eine Wiederherstellung des Systems möglich ist.',
+'install steps admin username' => 'Benutzername',
+'install admin username required' => 'Der Benutzername ist zwingend erforderlich.',
+'install steps admin userpass' => 'Passwort',
+'install admin userpass required' => 'Das Passwort ist zwingend erforderlich.',
+'install steps admin usermail' => 'E-Mail-Adresse',
+'install admin usermail required' => 'Die E-Mail-Adresse ist zwingend erforderlich.',
+
+'install steps database desc' => 'Konfigurieren Sie hier den Datenbankzugriff.',
+'install steps database host' => 'Datenbankserver URI oder IP',
+'install database host required' => 'Der Datenbankserver ist zwingend erforderlich. In den meisten Fällen ist der Datenbankserver auch über \'localhost\' erreichbar.',
+'install steps database name' => 'Datenbankname',
+'install database name required' => 'Der Datenbankname ist zwingend erforderlich.',
+'install steps database user' => 'Datenbank-Benutzer',
+'install database user required' => 'Der Datenbank-Benutzer ist zwingend erforderlich. Wenn Ihr Datenbankserver eine anonyme Authentifizierung erlaubt, tragen Sie bitte \'anonymus\' ein.',
+'install steps database pass' => 'Datenbankpasswort',
+
+'install steps database prefix' => 'Tabellenprefix (<em>beta</em>)',
+
+'install database pass required' => 'Das Datenbank-Passwort ist zwingend erforderlich. Wenn Ihr Datenbankserver eine anonyme Authentifizierung erlaubt, tragen Sie bitte ein * ein.',
+
+'install steps ftp desc' => 'Konfigurieren Sie hier den FTP-Server-Zugriff. WSP ist ein schreibendes System - es benötigt also die Rechte eines FTP-Benutzers, um final die entsprechenden Dateien anlegen zu können.',
+'install steps ftp host' => 'FTP-Server URI oder IP',
+'install ftp host required' => 'Der FTP-Server ist zwingend erforderlich. In vielen Fällen ist der FTP-Server auch über \'localhost\' erreichbar, da WSP direkt auf dem Server arbeitet',
+'install steps ftp user' => 'FTP-Benutzer', 
+'install ftp user required' => 'Der FTP-Benutzer ist zwingend erforderlich.',
+'install steps ftp pass' => 'FTP-Passwort', 
+'install ftp pass required' => 'Das FTP-Passwort ist zwingend erforderlich.',
+'install steps ftp base' => 'FTP-Basedir',
+'install steps ftp base desc' => 'Definieren Sie über das FTP-Basedir, welches Verzeichnis - ausgehend von Ihrem FTP-Login - das Web-Root-Verzeichnis des Webservers für Ihre Internetseite ist. Wenn der hinterlegte FTP-Benutzer sich direkt im Web-Root-Verzeichnis einloggt, reicht ein \'/\'.',
+'install steps ftp port' => 'FTP-Port', 
+'install steps ftp ssl' => 'Verschlüsselte Verbindung?', 
+
+'install steps smtp desc' => 'Konfigurieren Sie hier den Mailserver-Zugriff, wenn Sie HTML-Mails verschicken wollen. Wenn Sie keine Daten hinterlegen, wird die PHP-Funktion mail() benutzt, es kann dann aber sein, das Mails wahrscheinlicher als SPAM deklariert werden.',
+'install steps smtp host' => 'Mailserver URI oder IP',
+'install steps smtp user' => 'Benutzername Mailserver',
+'install steps smtp pass' => 'Passwort Mailserver',
+'install steps smtp port' => 'Port Mailserver',
+'install steps smtp ssl' => 'Verschlüsselte Verbindung?',
+
+
+'install steps do install' => 'Alle Konfigurationsdaten wurden erfasst. Bitte wählen Sie, ob die Installation vom Update-Server erfolgen soll oder Sie eine eigene Installationsdatei hochladen wollen. Im nächsten Schritt werden Ihre Konfigurationsdaten geprüft und WSP wird installiert.', 
+
+'install steps server choose server' => 'Wählen Sie die zu installierende Version',
+'install steps server install full' => 'Letzte Vollversion',
+'install steps server install last' => 'Letzte offizielle Zwischenversion',
+'install steps server install nightly' => 'Nightly Build',
+'install use local zip' => 'Auf Ihrem Webaccount/Server vorhandene Zip-Datei verwenden',
+'install overwrite existing config' => 'Konfigurationsdatei neu erstellen',
+
+'btn next' => 'Weiter',
+'btn back' => 'Zurück',
+'btn doinstall' => 'Installation starten',
+'btn goto login' => 'Zum Login',
+
+// END OF installer text //
+
 // tipps
 'hint newwindow' => 'Ihre Website &ouml;ffnet in einem neuen Fenster',
 'hint nouser' => 'Der gew&auml;hlte Benutzer konnte nicht gefunden werden.',
