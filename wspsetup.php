@@ -129,13 +129,9 @@ else {
     foreach($errorclass AS $ek => $ev) {
         $errorclass[$ek] = 0;
     }
-
-    var_export($errorclass);
-
-    // remove FTP from errorgroups if ignore is checked
+    // remove FTP from errorgroups if ftp_ignore is checked
     if (isset($_POST['ftp_ignore'])) { unset($errorgroup[3]); }
-
-    // run
+    // run the errorgroups to detect missing params
     foreach ($errorgroup AS $egk => $egv) { 
         foreach ($egv AS $ck => $cv) { 
             if (isset($_POST[strtolower($cv)])) {
@@ -153,7 +149,11 @@ else {
     $data['FTP_BASE'] = cleanPath('/'.$data['FTP_BASE'].'/');
     // check some other POST-values
     $datagroup = array('SMTP_HOST','SMTP_NAME','SMTP_USER','SMTP_PASS','SMTP_PORT','SMTP_SSL');
-    foreach ($datagroup AS $dk => $dv) { if (isset($_POST[strtolower($dv)])) { $data[$dv] = trim($_POST[strtolower($dv)]); }}
+    foreach ($datagroup AS $dk => $dv) { 
+        if (isset($_POST[strtolower($dv)])) { 
+            $data[$dv] = filter_var(trim($_POST[strtolower($dv)]), FILTER_SANITIZE_STRING); 
+        }
+    }
     // DO INSTALL
     if (array_sum($errorclass)<0) {
         // usnet older msgs to do output for install messages only 
@@ -926,7 +926,7 @@ else {
                                         <div class="col-md-6">
                                             <p><select name="serversystem" id="serversystem" class="form-control" onchange="showInstall('server')">
                                                 <option value=""><?php echo returnIntLang('install steps server choose server'); ?></option>
-                                                <option value="git"><?php echo returnIntLang('install steps server install git'); ?></option>
+                                                <?php if (is_file(DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/.gitignore')) { ?><option value="git"><?php echo returnIntLang('install steps server install git'); ?></option><?php } ?>
                                                 <option value="full"><?php echo returnIntLang('install steps server install full'); ?></option>
                                                 <!-- <option value="last"><?php echo returnIntLang('install steps server install last'); ?></option> -->
                                                 <option value="nightly"><?php echo returnIntLang('install steps server install nightly'); ?></option>
@@ -975,7 +975,7 @@ else {
 			<div class="clearfix"></div>
 			<footer>
 				<div class="container-fluid">
-					<p class="copyright">© 2019 COVI.DE</p>
+					<p class="copyright">© 2021 COVI.DE</p>
 				</div>
 			</footer>
 		</div>
