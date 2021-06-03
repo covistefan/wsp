@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 3.1.2
  * @version 7.0
- * @lastchange 2021-06-02
+ * @lastchange 2021-06-03
 */
 
 ksort($_SESSION);
@@ -22,9 +22,8 @@ ksort($_SESSION);
     <title>WSP 7.0</title>
     <!-- get bootstrap -->
     <link rel="stylesheet" type="text/css" href="<?php echo cleanPath('/'.WSP_DIR.'/'); ?>media/layout/bootstrap.css" />
-    <!-- get font from google -->
-    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" />
-    <!-- get icon fonts -->
+    <!-- get fonts -->
+    <link rel="stylesheet" type="text/css" href="<?php echo cleanPath('/'.WSP_DIR.'/'); ?>media/layout/fontface.css" />
     <link rel="stylesheet" type="text/css" href="<?php echo cleanPath('/'.WSP_DIR.'/'); ?>media/layout/font-awesome-5-7-2.css" />
     <link rel="stylesheet" type="text/css" href="<?php echo cleanPath('/'.WSP_DIR.'/'); ?>media/layout/themify-icons.css" />
     <!-- extended desktop stylesheets -->
@@ -39,7 +38,7 @@ ksort($_SESSION);
     <link rel="stylesheet" href="<?php echo cleanPath('/'.WSP_DIR.'/'); ?>media/layout/wsp7-nightly.css" media="screen" type="text/css" />
     <?php } ?>
     <!-- self colorize extensions -->
-    <?php if (isset($_SESSION['wspvars']['wspstyle']) && trim($_SESSION['wspvars']['wspstyle'])!="" && is_file(DOCUMENT_ROOT."/".WSP_DIR."/media/layout/".trim($_SESSION['wspvars']['wspstyle']).".css")): echo "<link rel='stylesheet' href='/".WSP_DIR."/media/layout/".trim($_SESSION['wspvars']['wspstyle']).".css' media='screen' type='text/css'>\n"; endif; ?>
+    <?php if (isset($_SESSION['wspvars']['wspstyle']) && trim($_SESSION['wspvars']['wspstyle'])!="" && is_file(DOCUMENT_ROOT.cleanPath('/'.WSP_DIR.'/')."media/layout/".trim($_SESSION['wspvars']['wspstyle']).".css")): echo "<link rel='stylesheet' href='".cleanPath('/'.WSP_DIR.'/')."media/layout/".trim($_SESSION['wspvars']['wspstyle']).".css' media='screen' type='text/css'>\n"; endif; ?>
     <!-- base klorofill stylesheet -->
     <link rel="stylesheet" href="<?php echo cleanPath('/'.WSP_DIR.'/'); ?>media/layout/klorofil.css" />
     <!-- load icons -->
