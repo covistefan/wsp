@@ -2660,12 +2660,12 @@ $lang['de'] = array(
     'tour welcome to websitepreview desc' => 'Hier können Sie sich kurz die notwendigsten Funktionen von WSP 7 in einer Tour erklären lassen.',
 
     'tour the new menu' => 'Das neue Menü',
-    'tour the new menu desc' => 'Das Menü finden Sie jetzt in der linken Spalte.'
+    'tour the new menu desc' => 'Das Menü finden Sie jetzt in der linken Spalte.',
     'tour minimize button' => 'Menü minimieren',
     'tour minimize button desc' => 'Auf kleineren Displays oder wenn Sie einfach mehr Platz zum Arbeiten benötigen, können Sie das Menü über diesen Button ein- und ausklappen',
     'tour widgets' => 'WSP Widgets',
     'tour widgets desc' => 'Die Widgets auf dem Dashboard zeigen notwendige Informationen an. Sie können die Widgets bearbeiten, die Sie angezeigt bekommen möchten.',
-     
+
 
 
 
