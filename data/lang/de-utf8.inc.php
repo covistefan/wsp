@@ -2645,6 +2645,30 @@ $lang['de'] = array(
     'btn back' => 'Zurück',
     'btn doinstall' => 'Installation starten',
     'btn goto login' => 'Zum Login',
+
+    // MESSAGES //
+
+    'use wsp with direct writing' => 'WSP wurde im Direktschreibmodus geladen.',
+
+    // TOUR //
+
+    'str next' => 'Weiter',
+    'str last' => 'Zurück',
+    'str finish' => 'Fertig',
+
+    'tour welcome to websitepreview' => 'WSP 7.0 kurz erklärt',
+    'tour welcome to websitepreview desc' => 'Hier können Sie sich kurz die notwendigsten Funktionen von WSP 7 in einer Tour erklären lassen.',
+
+    'tour the new menu' => 'Das neue Menü',
+    'tour the new menu desc' => 'Das Menü finden Sie jetzt in der linken Spalte.'
+    'tour minimize button' => 'Menü minimieren',
+    'tour minimize button desc' => 'Auf kleineren Displays oder wenn Sie einfach mehr Platz zum Arbeiten benötigen, können Sie das Menü über diesen Button ein- und ausklappen',
+    'tour widgets' => 'WSP Widgets',
+    'tour widgets desc' => 'Die Widgets auf dem Dashboard zeigen notwendige Informationen an. Sie können die Widgets bearbeiten, die Sie angezeigt bekommen möchten.',
+     
+
+
+
 );
 
-?>
+// EOF
