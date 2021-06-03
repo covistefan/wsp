@@ -7,6 +7,13 @@
  * @lastchange 2021-06-03
  */
 
+@header_remove('X-Powered-By');
+@header('X-Content-Type-Options: nosniff');
+@header('X-Frame-Options: ALLOWALL');
+@header('Referrer-Policy: strict-origin-when-cross-origin');
+@header('Content-Security-Policy: default-src * \'unsafe-inline\';');
+@header('Permissions-Policy: accelerometer=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()');
+
 if (phpversion()>5): date_default_timezone_set('Europe/Berlin'); endif;
 
 if (isset($_REQUEST['night']) && $_REQUEST['night']=='off') { $_SESSION['wspvars']['daily'] = true; }
@@ -33,16 +40,19 @@ else:
 	define('DOCUMENT_ROOT', str_replace("//", "/", str_replace("//", "/", $_SERVER['DOCUMENT_ROOT']."/")));
 endif;
 
-if (is_file(str_replace("//", "/", __DIR__."/wspconf.inc.php"))): 
+if (is_file(str_replace("//", "/", __DIR__."/wspconf.inc.php"))) {
 	include(str_replace("//", "/", __DIR__."/wspconf.inc.php"));
 	// set wsp basedir if not set
 	// temp solution -> detection required
-	if (!(defined('WSP_DIR'))): define('WSP_DIR', str_replace("//", "/", str_replace(basename($_SERVER['SCRIPT_URL']), '', $_SERVER['SCRIPT_URL']))); endif;
-else:
-	if (!(defined('WSP_DIR'))): 
-        define('WSP_DIR', str_replace("//", "/", str_replace(basename($_SERVER['SCRIPT_URL']), '', $_SERVER['SCRIPT_URL'])));
-    endif;
-endif;
+	if (!(defined('WSP_DIR'))): define('WSP_DIR', str_replace("//", "/", str_replace(basename($_SERVER['PHP_SELF']), '', $_SERVER['PHP_SELF']))); endif;
+} else {
+	if (!(defined('WSP_DIR'))) {
+        define('WSP_DIR', str_replace("//", "/", str_replace(basename($_SERVER['PHP_SELF']), '', $_SERVER['PHP_SELF'])));
+    }
+	header("location: ".str_replace("//", "/", str_replace("//", "/", "/".WSP_DIR."/wspsetup.php")));
+	die();
+}
+
 if (is_file(str_replace("//", "/", __DIR__."/wsplang.inc.php"))): 
     include(str_replace("//", "/", __DIR__."/wsplang.inc.php")); 
 endif;
