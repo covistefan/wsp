@@ -33,7 +33,7 @@
 <column><field>forwarding_id</field><type>int(10) unsigned</type><null>NO</null><key></key><default>0</default><extras></extras></column>
 <column><field>level</field><type>int(11)</type><null>NO</null><key></key><default>1</default><extras></extras></column>
 <column><field>connected</field><type>int(11)</type><null>NO</null><key></key><default>0</default><extras></extras></column>
-<column><field>filename</field><type>varchar(50)</type><null>NO</null><key>MUL</key><default></default><extras></extras></column>
+<column><field>filename</field><type>varchar(50)</type><null>NO</null><key></key><default></default><extras></extras></column>
 <column><field>contentchanged</field><type>tinyint(4)</type><null>NO</null><key></key><default>1</default><extras></extras></column>
 <column><field>imageakt</field><type>varchar(255)</type><null>NO</null><key></key><default></default><extras></extras></column>
 <column><field>imageclick</field><type>varchar(255)</type><null>NO</null><key></key><default></default><extras></extras></column>
@@ -166,8 +166,8 @@
 <column><field>parsefile</field><type>varchar(30)</type><null>NO</null><key></key><default></default><extras></extras></column>
 <column><field>maxfields</field><type>tinyint(2)</type><null>NO</null><key></key><default>1</default><extras></extras></column>
 <column><field>version</field><type>varchar(20)</type><null>NO</null><key></key><default></default><extras></extras></column>
-<column><field>guid</field><type>varchar(36)</type><null>NO</null><key>MUL</key><default></default><extras></extras></column>
-<column><field>module_guid</field><type>varchar(36)</type><null>NO</null><key>MUL</key><default></default><extras></extras></column>
+<column><field>guid</field><type>varchar(36)</type><null>NO</null><key></key><default></default><extras></extras></column>
+<column><field>module_guid</field><type>varchar(36)</type><null>NO</null><key></key><default></default><extras></extras></column>
 <column><field>bodyfunc</field><type>int(11)</type><null>NO</null><key></key><default>0</default><extras></extras></column>
 <column><field>metascript</field><type>int(11)</type><null>NO</null><key></key><default>0</default><extras></extras></column>
 </table>
@@ -247,8 +247,8 @@
 <table>
 <tablename>r_temp_styles</tablename>
 <column><field>id</field><type>int(10) unsigned</type><null>NO</null><key>PRI</key><default></default><extras>auto_increment</extras></column>
-<column><field>templates_id</field><type>int(10) unsigned</type><null>NO</null><key>MUL</key><default>0</default><extras></extras></column>
-<column><field>stylesheets_id</field><type>int(10) unsigned</type><null>NO</null><key>MUL</key><default>0</default><extras></extras></column>
+<column><field>templates_id</field><type>int(10) unsigned</type><null>NO</null><key></key><default>0</default><extras></extras></column>
+<column><field>stylesheets_id</field><type>int(10) unsigned</type><null>NO</null><key></key><default>0</default><extras></extras></column>
 </table>
 <table>
 <tablename>security</tablename>

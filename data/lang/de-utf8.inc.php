@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 3.1
  * @version 7.0
- * @lastchange 2020-06-30
+ * @lastchange 2021-06-03
  */
 
 $lang['de'] = array();
@@ -73,6 +73,7 @@ $lang['de'] = array(
 'install database pass required' => 'Das Datenbank-Passwort ist zwingend erforderlich. Wenn Ihr Datenbankserver eine anonyme Authentifizierung erlaubt, tragen Sie bitte ein * ein.',
 
 'install steps ftp desc' => 'Konfigurieren Sie hier den FTP-Server-Zugriff. WSP ist ein schreibendes System - es benötigt im Idealfall die Rechte eines FTP-Benutzers, um final die entsprechenden Dateien anlegen zu können. Sie können aber auch die Schreibrechte des Webservers benutzen, wenn Sie sich sicher sind, das dies keine Probleme beim späteren Löschen oder Bearbeiten der Dateien mit sich bringt.',
+'install steps ftp ignore' => 'FTP ignorieren',
 'install steps ftp host' => 'FTP-Server URI oder IP',
 'install ftp host required' => 'Der FTP-Server ist zwingend erforderlich. In vielen Fällen ist der FTP-Server auch über \'localhost\' erreichbar, da WSP direkt auf dem Server arbeitet',
 'install steps ftp user' => 'FTP-Benutzer', 
@@ -85,6 +86,7 @@ $lang['de'] = array(
 'install steps ftp ssl' => 'Verschlüsselte Verbindung?', 
 
 'install steps smtp desc' => 'Konfigurieren Sie hier den Mailserver-Zugriff, wenn Sie HTML-Mails verschicken wollen. Wenn Sie keine Daten hinterlegen, wird die PHP-Funktion mail() benutzt, es kann dann aber sein, das Mails wahrscheinlicher als SPAM deklariert werden.',
+'install steps smtp ignore' => 'SMTP ignorieren',
 'install steps smtp host' => 'Mailserver URI oder IP',
 'install steps smtp user' => 'Benutzername Mailserver',
 'install steps smtp pass' => 'Passwort Mailserver',
@@ -95,11 +97,15 @@ $lang['de'] = array(
 'install steps do install' => 'Alle Konfigurationsdaten wurden erfasst. Bitte wählen Sie, ob die Installation vom Update-Server erfolgen soll oder Sie eine eigene Installationsdatei hochladen wollen. Im nächsten Schritt werden Ihre Konfigurationsdaten geprüft und WSP wird installiert.', 
 
 'install steps server choose server' => 'Wählen Sie die zu installierende Version',
+'install steps server install git' => 'Verwaltung über GIT',
 'install steps server install full' => 'Letzte Vollversion',
 'install steps server install last' => 'Letzte offizielle Zwischenversion',
 'install steps server install nightly' => 'Nightly Build',
 'install use local zip' => 'Auf Ihrem Webaccount/Server vorhandene Zip-Datei verwenden',
 'install overwrite existing config' => 'Konfigurationsdatei neu erstellen',
+
+'install found existing admin user and did not replace it' => 'Es wurde ein bestehender Administrator-Account gefunden. Bitte benutzen Sie ggf. die "Passwort zurücksetzen"-Funktion.',
+'install could not write configuration file' => 'Die Konfigurationsdatei konnte nicht erstellt werden. Ein Zugriff auf WSP ist nicht möglich. Bitte versuchen Sie die Installation erneut oder legen Sie die Konfiguration manuell an.',
 
 'btn next' => 'Weiter',
 'btn back' => 'Zurück',
@@ -140,6 +146,7 @@ $lang['de'] = array(
 'timebasedstart and/or timebasedend false' => 'Der eingegebene Zeitraum war fehlerhaft',
 
 'login please log in' => 'Bitte melden Sie sich an.',
+'login try extended login' => 'Bitte versuchen Sie den erweiterten Login',
 'login please activate cookies' => 'Zur Benutzung von WSP müssen <em><strong>Cookies</strong></em>',
 'login please activate jscript1' => ' und <em><strong>Javascript</strong></em> ',
 'login please activate' => 'aktiviert sein.',

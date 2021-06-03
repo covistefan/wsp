@@ -217,10 +217,10 @@ else {
             }
             else {
                 // check the login directory with webserver credentials
-
-                echo __DIR__;
-
-                $install = true;
+                $tmpfile = fopen(DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/tmp/install.log', "a");
+                fwrite($tmpfile, "install ".DOCUMENT_ROOT);
+                fclose($tmpfile);
+                $install = (is_file(DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/tmp/install.log')) ? true : false ;
             }
         } 
         else {
@@ -399,6 +399,9 @@ else {
                     $_SESSION['msg'][] = returnIntLang('install installed or updated all tables');
                     unlink(DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/tmp/database.xml');
                 }
+            } else {
+                // init the db connection to create user 
+                $_SESSION['wspvars']['db'] = $dbcon;
             }
             // get the user table
             if ($error===false) {
@@ -418,6 +421,8 @@ else {
                     } else {
                         if ($_POST['overwriteconf']==0) {
                             $_SESSION['msg'][] = returnIntLang('install could not create admin user');
+                        } else {
+                            $_SESSION['msg'][] = returnIntLang('install found existing admin user and did not replace it');
                         }
                     }
                 }
@@ -476,9 +481,6 @@ else {
             
             // create conf file if isset overwriteconf or no conf file exists
             if ($error===false) {
-
-                echo 'conf file creation';
-
                 if (!(is_file(DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/data/include/wspconf.inc.php')) || $_POST['overwriteconf']==1) {
                     $confdata = "<?php\n";
                     $confdata.= "/**\n";
@@ -492,12 +494,16 @@ else {
                     $confdata.= "define('DB_USER','".trim($data['DB_USER'])."');\n";
                     $confdata.= "define('DB_PASS','".trim($data['DB_PASS'])."');\n";
                     $confdata.= "define('DB_PREFIX','".trim($data['DB_PREFIX'])."'); // optional\n\n";
-                    $confdata.= "define('FTP_HOST','".trim($data['FTP_HOST'])."');\n";
-                    $confdata.= "define('FTP_BASE','".trim($data['FTP_BASE'])."');\n";
-                    $confdata.= "define('FTP_USER','".$_POST['ftp_user']."');\n";
-                    $confdata.= "define('FTP_PASS','".$_POST['ftp_pass']."');\n";
-                    $confdata.= "define('FTP_PORT','".$_POST['ftp_port']."'); // optional\n";
-                    $confdata.= "define('FTP_SSL',".((intval($_POST['ftp_ssl'])==1)?'true':'false')."); // optional\n\n";
+                    if ($ftpstat) {
+                        $confdata.= "define('FTP_HOST','".trim($data['FTP_HOST'])."');\n";
+                        $confdata.= "define('FTP_BASE','".trim($data['FTP_BASE'])."');\n";
+                        $confdata.= "define('FTP_USER','".$_POST['ftp_user']."');\n";
+                        $confdata.= "define('FTP_PASS','".$_POST['ftp_pass']."');\n";
+                        $confdata.= "define('FTP_PORT','".$_POST['ftp_port']."'); // optional\n";
+                        $confdata.= "define('FTP_SSL',".((intval($_POST['ftp_ssl'])==1)?'true':'false')."); // optional\n\n";
+                    } else {
+                        $confdata.= "define('FTP_IGNORE',true);\n\n";
+                    }
                     if (trim($data['SMTP_HOST'])!='' && intval($data['SMTP_PORT'])>0 && trim($data['SMTP_USER'])!='' && trim($data['SMTP_PASS'])!='') {
                         $confdata.= "define('SMTP_HOST','".trim($data['SMTP_HOST'])."');\n";
                         $confdata.= "define('SMTP_USER','".trim($data['SMTP_USER'])."');\n";
@@ -520,7 +526,11 @@ else {
                     fwrite($fh, $confdata);
                     fclose($fh);
                     // copy file to structure
-                    $didcopy = @ftp_put($ftpstat, $data['FTP_BASE'].'/'.trim($_SESSION['tmpwspbasedir']).'/data/include/wspconf.inc.php', $conffile, FTP_BINARY);
+                    if ($ftpstat) {
+                        $didcopy = @ftp_put($ftpstat, $data['FTP_BASE'].'/'.trim($_SESSION['tmpwspbasedir']).'/data/include/wspconf.inc.php', $conffile, FTP_BINARY);
+                    } else {
+                        $didcopy = rename(DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/tmp/wspconf.inc.php', DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/data/include/wspconf.inc.php');
+                    }
                     @unlink($conffile);
                     if ($didcopy) {
                         $_SESSION['msg'][] = returnIntLang('install configuration file written');
@@ -879,6 +889,14 @@ else {
                                     <p class='wizarddesc'><?php echo returnIntLang('install steps smtp desc'); ?></p>
                                     <div class="row">
                                         <div class="col-md-4">
+                                            <p><?php echo returnIntLang('install steps smtp ignore'); ?></p>
+                                        </div>
+                                        <div class="col-md-4">
+                                        <input type="checkbox" id="smtp_ignore" name="smtp_ignore" value="1" onchange="ignoreSMTP(this.checked)" />&nbsp;
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4">
                                             <p><?php echo returnIntLang('install steps smtp host'); ?></p>
                                         </div>
                                         <div class="col-md-4">
@@ -940,7 +958,7 @@ else {
                                         <?php if (isset($uselocal) && $uselocal===true) { ?>
                                         <div class="col-md-12"><input type="hidden" name="localsystem" value="0" /><input type="checkbox" id="use-localsystem" name="localsystem" value="1" /> <?php echo returnIntLang('install use local zip'); ?></div>
                                         <?php } ?>
-                                        <div class="col-md-12"><input type="hidden" name="overwriteconf" value="0" /><input type="checkbox" name="overwriteconf" value="1" /> <?php echo returnIntLang('install overwrite existing config'); ?></div>
+                                        <div class="col-md-12"><input type="hidden" name="overwriteconf" value="<?php if (!(is_file(DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/data/include/wspconf.inc.php'))) { echo 1; } ?>" /><input type="checkbox" name="overwriteconf" value="1" <?php if (!(is_file(DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/data/include/wspconf.inc.php'))) { echo ' disabled="disabled" checked="checked" '; } ?> /> <?php echo returnIntLang('install overwrite existing config'); ?></div>
                                     </div>
                                 </div>
                                 <input type="hidden" name="wsplang" value="<?php echo $_SESSION['wspvars']['locallang']; ?>" />
@@ -1003,6 +1021,22 @@ else {
                     $('#ftp_base').addClass('validate').attr('required', true).attr('data-parsley-group', 'validate').attr('disabled', false);
                     $('#ftp_port').addClass('validate').attr('required', true).attr('data-parsley-group', 'validate').attr('disabled', false);
                     $('#ftp_ssl').attr('disabled', false);
+                }
+            }
+
+            function ignoreSMTP(val) {
+                if (val) {
+                    $('#smtp_host').removeClass('validate').attr('required', false).attr('data-parsley-group', false).attr('disabled', 'disabled');
+                    $('#smtp_user').removeClass('validate').attr('required', false).attr('data-parsley-group', false).attr('disabled', 'disabled');
+                    $('#smtp_pass').removeClass('validate').attr('required', false).attr('data-parsley-group', false).attr('disabled', 'disabled');
+                    $('#smtp_port').removeClass('validate').attr('required', false).attr('data-parsley-group', false).attr('disabled', 'disabled');
+                    $('#smtp_ssl').attr('disabled', 'disabled');
+                } else {
+                    $('#smtp_host').addClass('validate').attr('required', true).attr('data-parsley-group', 'validate').attr('disabled', false);
+                    $('#smtp_user').addClass('validate').attr('required', true).attr('data-parsley-group', 'validate').attr('disabled', false);
+                    $('#smtp_pass').addClass('validate').attr('required', true).attr('data-parsley-group', 'validate').attr('disabled', false);
+                    $('#smtp_port').addClass('validate').attr('required', true).attr('data-parsley-group', 'validate').attr('disabled', false);
+                    $('#smtp_ssl').attr('disabled', false);
                 }
             }
 

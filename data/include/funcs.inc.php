@@ -4540,6 +4540,13 @@ if (!(function_exists('installUpdateDBTable'))) {
                     // get the correct key of updater field
                     $comp = array_keys($updfields, $cv['Field'])[0];
                     if ($systres['set'][$ck]!=$tabledata[$comp]) {
+
+                        echo 'SYSTEM: ';
+                        var_export($systres['set'][$ck]);
+                        echo '<br />UPDATE: ';
+                        var_export($tabledata[$comp]);
+                        echo '<hr />';
+
                         // fieldname is same, but some facts changed
                         $res = doSQL(trim("ALTER TABLE `".$dbname."`.`".$tablename."` CHANGE `".$tabledata[$comp]['Field']."` `".$tabledata[$comp]['Field']."` ".$tabledata[$comp]['Type']." ".(($tabledata[$comp]['Null']=='YES')?'NULL':'NOT NULL')." ".(($tabledata[$comp]['Default']!==NULL)?"DEFAULT '".$tabledata[$comp]['Default']."'":'')));
                         $_SESSION['msg'][] = "altered col `".$tabledata[$comp]['Field']."` from table `".$dbname."`.`".$tablename."`";
@@ -4999,8 +5006,8 @@ function dirList($path, $basepath, $sub = true, $children = true, $build = false
                         'text' => ($filecount>0)?cleanPath(str_replace($basepath, "", $path).$dsv)." <span class='badge inline-badge'>".$filecount."</span>":cleanPath(str_replace($basepath, "", $path).$dsv),
                         'children' => dirList($path.'/'.$dsv, $basepath.'/'.$dsv, $sub, $children, $build, $folder),
                         'state' => array(
-                            'opened' => ($build?false:(strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath("/".$path."/".$dsv."/")))?true:false),
-                            'selected' => ($build?false:(strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath("/".$path."/".$dsv."/")))?true:false),
+                            'opened' => (($build)?false:((strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath("/".$path."/".$dsv."/")))?true:false)),
+                            'selected' => (($build)?false:((strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath("/".$path."/".$dsv."/")))?true:false)),
                         ),
                         'a_attr' => array(
                             'rel' => base64_encode(cleanPath("/".$path."/".$dsv."/")),
@@ -5012,8 +5019,8 @@ function dirList($path, $basepath, $sub = true, $children = true, $build = false
                         'dirlistcount' => count(dirList($path.'/'.$dsv, '', false, true, $build, $folder)),
                         'text' => ($filecount>0)?str_replace("//", "/", str_replace("//", "/", str_replace($basepath, "", $path).$dsv))." <span class='badge inline-badge'>".$filecount."</span>":str_replace("//", "/", str_replace("//", "/", str_replace($basepath, "", $path).$dsv)),
                         'state' => array(
-                            'opened' => ($build?false:(strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$dsv.DIRECTORY_SEPARATOR)))?true:false),
-                            'selected' => ($build?false:(strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$dsv.DIRECTORY_SEPARATOR)))?true:false),
+                            'opened' => ($build?false:((strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$dsv.DIRECTORY_SEPARATOR)))?true:false)),
+                            'selected' => ($build?false:((strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$dsv.DIRECTORY_SEPARATOR)))?true:false)),
                         ),
                         'a_attr' => array(
                             'rel' => base64_encode(cleanPath("/".$path."/".$dsv."/")),
@@ -5037,8 +5044,8 @@ function dirList($path, $basepath, $sub = true, $children = true, $build = false
                             'onclick' => 'showFiles($(this).attr("rel"))'
                         ),
                         'state' => array(
-                            'opened' => ($build?false:(strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath("/".$path."/".$dsv."/")))?true:false),
-                            'selected' => ($build?false:(strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath("/".$path."/".$dsv."/")))?true:false),
+                            'opened' => ($build?false:((strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath("/".$path."/".$dsv."/")))?true:false)),
+                            'selected' => ($build?false:((strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath("/".$path."/".$dsv."/")))?true:false)),
                         ),
                         );
                 else:

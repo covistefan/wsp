@@ -5,7 +5,7 @@
  * @since 7.0
  * @type design
  * @version 7.0
- * @lastchange 2020-04-30
+ * @lastchange 2021-06-03
  *	
  * Based on KLOROFIL PRO 1.4 - Bootstrap Admin Dashboard Template
  */
@@ -18,7 +18,7 @@ html {
 
 body {
     background-color: #F5F6F9;
-    font-family: "Source Sans Pro", sans-serif;
+    font-family: "Source Sans Pro", sans-serif !important;
     font-size: 14px;
     color: #5e6773;
 }
