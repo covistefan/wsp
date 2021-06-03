@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 3.1
  * @version 7.0
- * @lastchange 2019-03-08
+ * @lastchange 2021-06-03
  */
 
 if (phpversion()>5): date_default_timezone_set('Europe/Berlin'); endif;
@@ -37,10 +37,10 @@ if (is_file(str_replace("//", "/", __DIR__."/wspconf.inc.php"))):
 	include(str_replace("//", "/", __DIR__."/wspconf.inc.php"));
 	// set wsp basedir if not set
 	// temp solution -> detection required
-	if (!(defined('WSP_DIR'))): define('WSP_DIR', $_SERVER['SCRIPT_URL']); endif;
+	if (!(defined('WSP_DIR'))): define('WSP_DIR', str_replace("//", "/", str_replace(basename($_SERVER['SCRIPT_URL']), '', $_SERVER['SCRIPT_URL']))); endif;
 else:
 	if (!(defined('WSP_DIR'))): 
-        define('WSP_DIR', $_SERVER['SCRIPT_URL']);
+        define('WSP_DIR', str_replace("//", "/", str_replace(basename($_SERVER['SCRIPT_URL']), '', $_SERVER['SCRIPT_URL'])));
     endif;
 endif;
 if (is_file(str_replace("//", "/", __DIR__."/wsplang.inc.php"))): 

@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 7.0
  * @version 7.0
- * @lastchange 2021-01-19
+ * @lastchange 2021-06-03
  */
 
 /* start session ----------------------------- */
@@ -351,26 +351,20 @@ include("./data/include/loginheader.inc.php");
             </div>
         </div>
     </div>
-
-
 <?php 
 			
-if (isset($_SESSION['wspvars']['cookiecheck']) && $_SESSION['wspvars']['cookiecheck']=="requested"): 
+if (isset($_SESSION['wspvars']['cookiecheck']) && $_SESSION['wspvars']['cookiecheck']=="requested") { 
     echo returnIntLang('login please log in')." ";
     echo returnIntLang('login pass requested', true); 
     echo " <a href=\"index.php\">".returnIntLang('login return to login', true)."</a>";
-elseif (isset($_SESSION['wspvars']['cookiecheck']) && $_SESSION['wspvars']['cookiecheck']=="pass"): 
+} else if (isset($_SESSION['wspvars']['cookiecheck']) && $_SESSION['wspvars']['cookiecheck']=="pass") {
 	echo returnIntLang('login request pass emailinfo', true); 
 	echo returnIntLang('login request pass', true);
     echo returnIntLang('str email', true); 
-    ?>
-<input name="loginmail" id="loginmail" type="text" value="<?php if (isset($_POST['loginmail'])) echo $_POST['loginmail']; ?>" class="one full" />
+    echo '<input name="loginmail" id="loginmail" type="text" value="'.(isset($_POST['loginmail'])?$_POST['loginmail']:'').'" class="one full" />';
+    echo '<p><input name="requestfield" type="hidden" value="go"><a href="#" onclick="document.getElementById(\'passrequest\').submit();" class="greenfield">'.returnIntLang('str request', true).'</a></p>';
+} else { 
+    echo '</p></fieldset>';
+}
 
-<p><input name="requestfield" type="hidden" value="go"><a href="#" onclick="document.getElementById('passrequest').submit();" class="greenfield"><?php echo returnIntLang('str request', true); ?></a></p>
-			<?php else: 
-				
-				 ?></p>
-			</fieldset>
-			
-
-			<?php endif; ?>
+// EOF
