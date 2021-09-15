@@ -206,6 +206,19 @@ else if (isset($_REQUEST['op']) && isset($_REQUEST['id']) && $_REQUEST['op']=='r
     $_REQUEST['op'] = 'edit';
 }
 
+// run folder for files
+if (is_dir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR."data".DIRECTORY_SEPARATOR."script".DIRECTORY_SEPARATOR))) {
+    $scanfiles = scanfiles(cleanPath(DIRECTORY_SEPARATOR."data".DIRECTORY_SEPARATOR."script".DIRECTORY_SEPARATOR));   
+} else {
+    $created = createFolder(DIRECTORY_SEPARATOR."data".DIRECTORY_SEPARATOR."script".DIRECTORY_SEPARATOR);
+    if ($created===true) {
+        $scanfiles = scanfiles(cleanPath(DIRECTORY_SEPARATOR."data".DIRECTORY_SEPARATOR."script".DIRECTORY_SEPARATOR));
+    } else {
+        addWSPMsg('errormsg', 'could not detect script folder');
+        $scanfiles = array();
+    }
+}
+
 // head der datei
 require ("./data/include/header.inc.php");
 require ("./data/include/navbar.inc.php");
@@ -234,12 +247,11 @@ require ("./data/include/sidebar.inc.php");
             
             // run folder for files ...
             $foundjsfiles = array();
-            $scanfiles = scanfiles("/data/script/");
             foreach ($scanfiles AS $fk => $fv) {
                 $foundjsfiles[] = $fv;
-                $foundjssize[$fv] = filesize(DOCUMENT_ROOT."/data/script/".$fv);
-                $foundjsdate[$fv] = filemtime(DOCUMENT_ROOT."/data/script/".$fv);
-                $foundjshash[$fv] = base64_encode(trim(cleanPath("/data/script/".$fv)));
+                $foundjssize[$fv] = filesize(DOCUMENT_ROOT.DIRECTORY_SEPARATOR."data".DIRECTORY_SEPARATOR."script".DIRECTORY_SEPARATOR.$fv);
+                $foundjsdate[$fv] = filemtime(DOCUMENT_ROOT.DIRECTORY_SEPARATOR."data".DIRECTORY_SEPARATOR."script".DIRECTORY_SEPARATOR.$fv);
+                $foundjshash[$fv] = base64_encode(trim(cleanPath(DIRECTORY_SEPARATOR."data".DIRECTORY_SEPARATOR."script".DIRECTORY_SEPARATOR.$fv)));
                 clearstatcache();
             }
             
@@ -544,8 +556,8 @@ require ("./data/include/sidebar.inc.php");
                                     <div class="col-md-10">
                                         <?php
                                         
-                                        $path = "/data/script/".$cfolder."/";
-                                        $subs = dirList($path, '/data/script/', true, false);
+                                        $path = DIRECTORY_SEPARATOR."data".DIRECTORY_SEPARATOR."script".DIRECTORY_SEPARATOR.$cfolder.DIRECTORY_SEPARATOR;
+                                        $subs = dirList($path, DIRECTORY_SEPARATOR."data".DIRECTORY_SEPARATOR."script".DIRECTORY_SEPARATOR, true, false);
                                         if (is_array($subs) && count($subs)>0) {
                                             array_unshift($subs, $path);
                                         } else {
