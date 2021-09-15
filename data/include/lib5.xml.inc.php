@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @copyright (c) 2019, webtweakers.com. All rights reserved.
  * @since 3.2
- * @version 6.8
+ * @version 7.0
  * @lastchange 2019-01-25
  */
 

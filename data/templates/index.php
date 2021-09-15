@@ -2,7 +2,7 @@
 /**
  * @author stefan@covi.de
  * @since 3.1
- * @version 3.6
+ * @version 7.0
  * @lastchange 2009-11-24
  */
 ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">

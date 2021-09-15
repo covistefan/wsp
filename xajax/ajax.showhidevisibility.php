@@ -1,28 +1,28 @@
 <?php
 /**
- * sichtbarkeit von ausgeblendeten / weitergeleiteten menüpunkten
+ * sichtbarkeit von menüpunkten
  * @author stefan@covi.de
  * @since 6.0
- * @version 6.8
- * @lastchange 2018-09-14
+ * @version 7.0
+ * @lastchange 2019-03-14
  */
-if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!=''):
-session_start();
-require $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir'].'/data/include/globalvars.inc.php';
-require $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir'].'/data/include/wsplang.inc.php';
-require $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/include/dbaccess.inc.php";
-require $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/include/ftpaccess.inc.php";
-require $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/include/funcs.inc.php";
-require $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/include/filesystemfuncs.inc.php";
-include $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/include/errorhandler.inc.php";
-include $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/include/siteinfo.inc.php";
+if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
+    session_start();
+    require("../data/include/globalvars.inc.php");
+    require("../data/include/errorhandler.inc.php");
+    require("../data/include/siteinfo.inc.php");
+    
+    if (isset($_REQUEST['mid']) && intval($_REQUEST['mid'])>0 && isset($_REQUEST['vis'])) {
+        $res = doSQL("UPDATE `menu` SET `visibility` = ".intval($_REQUEST['vis'])." WHERE `mid` = ".intval($_REQUEST['mid']));
+        if ($res['aff']==1) {
+            // has to be developed: get all affected pages and set contentchange
+            // use: contentChangeStat(intval($sAv['id']), 'structure')
+            // status 2019-03-14: update ALL pages contentchange
+            doSQL("UPDATE `menu` SET `contentchange` = 1 WHERE `trash` = 0");
+            echo true;
+        }
+    }
+    
+}
 
-if (isset($_SESSION['wspvars']['showhideInvStruc']) && $_SESSION['wspvars']['showhideInvStruc']=="hide"):
-	echo "show";
-	$_SESSION['wspvars']['showhideInvStruc'] = "show";
-else:
-	echo "hide";
-	$_SESSION['wspvars']['showhideInvStruc'] = "hide";
-endif;
-endif;
 // EOF ?>

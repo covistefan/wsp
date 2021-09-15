@@ -3,7 +3,7 @@
  * Verwaltung von Globalen Inhalten
  * @author stefan@covi.de
  * @since 3.1
- * @version 6.8.6
+ * @version 7.0
  * @lastchange 2019-11-11
  */
 

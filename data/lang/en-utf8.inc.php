@@ -3,12 +3,12 @@
  * English
  * @author stefan@covi.de
  * @since 3.1
- * @version 6.1537431538
- * @lastchange 2018-09-20
+ * @version 7.0
+ * @lastchange 2015-10-14
  */
 
 $lang['en'] = array();
-$wspvars['locallanguages']['en'] = 'English';
+$_SESSION['wspvars']['locallanguages']['en'] = 'English';
 
 $lang['en'] = array(
 
@@ -632,4 +632,4 @@ $lang['en'] = array(
 
 );
 
-// EOF ?>
+?>

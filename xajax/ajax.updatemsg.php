@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @copyright (c) 2019, Common Visions Media.Agentur (COVI)
  * @since 6.0
- * @version 6.8
+ * @version 7.0
  * @lastchange 2019-01-19
  */
 session_start();
@@ -25,4 +25,5 @@ if (array_key_exists('wspvars', $_SESSION) && array_key_exists('wspbasediradd', 
 	endif;
 	if (trim($msgbarcontent!="")) { echo $msgbarcontent; }
 endif;
-// EOF ?>
+
+// EOF

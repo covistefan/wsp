@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @copyright (c) 2019, Common Visions Media.Agentur (COVI)
  * @since 6.0
- * @version 6.8
+ * @version 7.0
  * @lastchange 2019-01-19
  */
 session_start();
@@ -15,4 +15,4 @@ include $_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd']."/".
 $msg_sql = "UPDATE `wspmsg` SET `read` = 1 WHERE `id` = ".intval($_POST['msgid']);
 $msg_res = doSQL($msg_sql);
 
-// EOF ?>
+// EOF

@@ -6,7 +6,7 @@
  * pruefung und umschreiben von dateinamen
  * @author stefan@covi.de
  * @since 3.1
- * @version 6.9
+ * @version 7.0
  * @lastchange 2020-11-25
  */
 

@@ -3,7 +3,7 @@
  * blowfish and xtea passphrase
  * @author system
  * @since 4.0
- * @version 3.7
+ * @version 7.0
  * @lastchange 2010-04-20
  */
 

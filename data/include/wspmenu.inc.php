@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @copyright (c) 2021, Common Visions Media.Agentur (COVI)
  * @since 3.1
- * @version 6.9.3
+ * @version 7.0
  * @lastchange 2021-01-20
  */
 

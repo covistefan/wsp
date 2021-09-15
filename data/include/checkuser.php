@@ -1,7 +1,7 @@
 <?php
 /**
 *
-* @version 3.3.1
+* @version 7.0
 * @lastchange 2007-08-10
 */
 
