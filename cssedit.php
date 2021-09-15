@@ -202,16 +202,12 @@ else if (isset($_REQUEST['op']) && isset($_REQUEST['id']) && $_REQUEST['op']=='r
 }
 
 // site specific definitions
-
 $mediaarray = array(
 	"all" => returnIntLang('css mediatype allmedia', false),
 	"screen" => returnIntLang('css mediatype screen', false),
 	"print" => returnIntLang('css mediatype print', false),
-	"handheld" => returnIntLang('css mediatype handheld', false),
-	"only screen and (max-device-width: 480px)" => returnIntLang('css mediatype appleiphone', false),
-	"only screen and (max-device-width: 1024px)" => returnIntLang('css mediatype applemobile', false)
-	);
-	
+);
+
 $browserarray = array(
 	"all" => returnIntLang('css browser allbrowser', false),
 	"IE" => returnIntLang('css browser ieall', false),
@@ -227,6 +223,19 @@ $browserarray = array(
 	"lte IE 9" => returnIntLang('css browser ie9lower', false),
 	"IE 9" => returnIntLang('css browser ie9', false)
 	);
+
+// run folder for files
+if (is_dir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR."media".DIRECTORY_SEPARATOR."layout".DIRECTORY_SEPARATOR))) {
+    $scanfiles = scanfiles(cleanPath(DIRECTORY_SEPARATOR."media".DIRECTORY_SEPARATOR."layout".DIRECTORY_SEPARATOR));
+} else {
+    $created = createFolder(DIRECTORY_SEPARATOR."media".DIRECTORY_SEPARATOR."layout".DIRECTORY_SEPARATOR);
+    if ($created===true) {
+        $scanfiles = scanfiles(cleanPath(DIRECTORY_SEPARATOR."media".DIRECTORY_SEPARATOR."layout".DIRECTORY_SEPARATOR));
+    } else {
+        addWSPMsg('errormsg', 'could not detect layout folder');
+        $scanfiles = array();
+    }
+}
 
 // head of file - first regular output -------
 require("./data/include/header.inc.php");
@@ -257,19 +266,13 @@ require("./data/include/sidebar.inc.php");
             $foundcsssize = array();
             $foundcssdate = array();
             $foundcsshash = array();
-            // run folder for files
-            $cssdir = str_replace("//", "/", DOCUMENT_ROOT."/media/layout/");
-            $dirrun = dir($cssdir);
-            while (false !== ($entry = $dirrun->read())) {
-                if ((substr($entry, 0, 1)!='.') && (is_file(str_replace("//", "/", str_replace("//", "/", $cssdir."/".$entry))))) {
-                    $foundcssfiles[] = $entry;
-                    $foundcsssize[$entry] = filesize(str_replace("//", "/", str_replace("//", "/", $cssdir."/".$entry)));
-                    $foundcssdate[$entry] = filemtime(str_replace("//", "/", str_replace("//", "/", $cssdir."/".$entry)));
-                    $foundcsshash[$entry] = base64_encode(trim(str_replace("//", "/", str_replace("//", "/", "/media/layout/".$entry))));
-                    clearstatcache();
-                }
+            foreach ($scanfiles AS $fk => $fv) {
+                $foundcssfiles[] = $fv;
+                $foundcsssize[$fv] = filesize(DOCUMENT_ROOT.DIRECTORY_SEPARATOR."media".DIRECTORY_SEPARATOR."layout".DIRECTORY_SEPARATOR.$fv);
+                $foundcssdate[$fv] = filemtime(DOCUMENT_ROOT.DIRECTORY_SEPARATOR."media".DIRECTORY_SEPARATOR."layout".DIRECTORY_SEPARATOR.$fv);
+                $foundcsshash[$fv] = base64_encode(trim(cleanPath(DIRECTORY_SEPARATOR."media".DIRECTORY_SEPARATOR."layout".DIRECTORY_SEPARATOR.$fv)));
+                clearstatcache();
             }
-            $dirrun->close();
             
             // run database for saved files
             $css_sql = "SELECT `file` FROM `stylesheets` WHERE `cfolder` = `lastchange` ORDER BY `file`";
@@ -465,7 +468,9 @@ require("./data/include/sidebar.inc.php");
                                 endforeach; ?>
                                 </tbody>
                             </table>
-                            <?php } else { echo '<p>'.returnIntLang('css no folders found').'<p>'; } ?>
+                            <?php } else {
+                                echo '<p>'.returnIntLang('css no folders found').'<p>';
+                            } ?>
                         </div>
                     </div>
                 </div>
