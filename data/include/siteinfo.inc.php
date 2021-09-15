@@ -8,9 +8,8 @@
  */
 
 // redirect to secure connection
-if (intval(getWSPProperties('sslmode'))==1 && $_SERVER['REQUEST_SCHEME']=='http') {
-    header('location: https://'.str_replace("//", "/", $_SERVER['HTTP_HOST'].'/'.$_SERVER['SCRIPT_URL']));
-}
+if (intval(getWSPProperties('sslmode'))==1 && $_SERVER['REQUEST_SCHEME']=='http') { header('location: https://'.str_replace("//", "/", $_SERVER['HTTP_HOST'].'/'.$_SERVER['SCRIPT_URL'])); }
+if (isset($_REQUEST['night']) && $_REQUEST['night']=='off') { $_SESSION['wspvars']['daily'] = true; }
 
 $_SESSION['wspvars']['workspaceurl'] = doResultSQL("SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'devurl'");
 $_SESSION['wspvars']['liveurl'] = doResultSQL("SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'siteurl'");
@@ -114,8 +113,6 @@ else {
     $_SESSION['wspvars']['locallang'] = 'de';
 }
 
-
-
 /* temp. disabled
 
 // get plugin wsplang
@@ -129,4 +126,3 @@ $plugin_num = 0;
 
 ksort($_SESSION['wspvars']);
 
-?>
