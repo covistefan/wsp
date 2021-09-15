@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 7.0
  * @version 7.0
- * @lastchange 2021-01-19
+ * @lastchange 2021-09-15
  */
 
 /* start session ----------------------------- */
@@ -29,10 +29,69 @@ require("./data/include/siteinfo.inc.php");
 
 // do update checks if admin user logged in
 if ($_SESSION['wspvars']['usertype']==1) {
-    $fh = @fopen('http://'.WSP_UPDSRV."/download/version.php?key=".WSP_UPDKEY, 'r');
-    $updversion = false;
-    if (intval($fh)!=0) { while (!feof($fh)) { $updversion .= fgets($fh, 4096); } fclose($fh); }
-    if (compareVersion($_SESSION['wspvars']['localversion'],$updversion)>0) { $_SESSION['wspvars']['updatesystem'] = true; }
+    $_SESSION['wspvars']['updatedate'] = 0;
+    $_SESSION['wspvars']['updateversion'] = 0;
+    $_SESSION['wspvars']['updatesystem'] = null;
+    if (isCurl()) {
+        if (defined('WSP_UPDSRV') && WSP_UPDSRV=='git') {
+            $defaults = array( 
+                CURLOPT_URL => trim('https://api.github.com/repos/covistefan/wsp'),
+                CURLOPT_HEADER => 0,
+                CURLOPT_USERAGENT => 'WebSitePreview/7.0',
+                CURLOPT_POST => 0,
+                CURLOPT_RETURNTRANSFER => TRUE, 
+                CURLOPT_TIMEOUT => 4 
+            );
+            $ch = curl_init();
+            curl_setopt_array($ch, $defaults);    
+            if( ! $getgit = curl_exec($ch)) { addWSPMsg('errormsg', 'github returned: '.trigger_error(curl_error($ch))); }
+            curl_close($ch);
+            $getgit = (json_decode($getgit, true));
+            $_SESSION['wspvars']['updatedate'] = strtotime($getgit['pushed_at']);
+        } else {
+            $defaults = array( 
+                CURLOPT_URL => trim('https://'.WSP_UPDSRV.'/download/version.json'),
+                CURLOPT_HEADER => 0, 
+                CURLOPT_RETURNTRANSFER => TRUE, 
+                CURLOPT_TIMEOUT => 4 
+            );
+            $ch = curl_init();
+            curl_setopt_array($ch, $defaults);    
+            if( ! $getversion = curl_exec($ch)) { addWSPMsg('errormsg', trigger_error(curl_error($ch))); }
+            curl_close($ch);
+            $getversion = (json_decode($getversion, true));
+            $_SESSION['wspvars']['updatedate'] = intval($getversion['pushed_at']);
+            $_SESSION['wspvars']['updateversion'] = trim($getversion['version']);
+        }
+    }
+    else {
+        if (defined('WSP_UPDSRV') && WSP_UPDSRV=='git') {
+            // fopen is not supported … so we can't get information
+        } else {
+            $fh = @fopen('https://'.WSP_UPDSRV.'/download/version.json', 'r');
+            if (intval($fh)!=0) {
+                $getversion = '';
+                while (!feof($fh)) {
+                    $getversion .= fgets($fh);
+                }
+                fclose($fh);
+                $getversion = (json_decode($getversion, true));
+                $_SESSION['wspvars']['updatedate'] = intval($getversion['pushed_at']);
+                $_SESSION['wspvars']['updateversion'] = trim($getversion['version']);
+            }
+        }
+    }
+    // try to get information about stored version and last update
+    if (getWSPProperties('lastupdate')!=false) {
+        if (getWSPProperties('lastupdate')<$_SESSION['wspvars']['updatedate']) {
+            $_SESSION['wspvars']['updatesystem'] = true;
+        }
+    }
+    if (getWSPProperties('lastversion')!=false) {
+        if (version_compare($_SESSION['wspvars']['updateversion'],getWSPProperties('lastversion'))>0) {
+            $_SESSION['wspvars']['updatesystem'] = true;
+        }
+    }
 }
 
 /* include head ------------------------------ */

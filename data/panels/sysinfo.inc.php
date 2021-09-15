@@ -1,16 +1,22 @@
 <?php
 
-$fh = @fopen('http://'.WSP_UPDSRV."/download/version.php?key=".WSP_UPDKEY, 'r');
-$updversion = false;
-if (intval($fh)!=0):
-    while (!feof($fh)):
-        $updversion .= fgets($fh, 4096);
-    endwhile;
-    fclose($fh);
-endif;
+var_export(date('Y-m-d H:i:s', $_SESSION['wspvars']['updatedate']));
+var_export(getWSPProperties('lastversion')." : ".$_SESSION['wspvars']['updateversion']);
+var_export(version_compare($_SESSION['wspvars']['updateversion'],getWSPProperties('lastversion')));
+var_export($_SESSION['wspvars']['updatesystem']);
 
-if (!($updversion)):
-?>
+if (WSP_UPDSRV=='git') {
+    ?>
+    <div class="col-md-3">
+        <div class="widget widget-metric_6">
+            <span class="icon-wrapper custom-bg-<?php echo ($_SESSION['wspvars']['updatesystem']===true)?'red':'green'; ?>"><i class="fab fa-github"></i></span>
+            <div class="right">
+                <span class="value"><?php echo returnIntLang('home widget sys info'); ?> <small><?php echo $_SESSION['wspvars']['localversion']; ?></small></span>
+                <span class="title"><?php echo returnIntLang('home widget sys git update').' '.date(returnIntLang('format date time'), $_SESSION['wspvars']['updatedate']); ?> </span>
+            </div>
+        </div>
+    </div>
+<?php } else if ($_SESSION['wspvars']['updatesystem']===false) { ?>
 <div class="col-md-3">
     <div class="widget widget-metric_6">
         <span class="icon-wrapper custom-bg-red"><i class="fa fa-warning"></i></span>
@@ -20,21 +26,17 @@ if (!($updversion)):
         </div>
     </div>
 </div>
-<?php
-elseif (compareVersion($_SESSION['wspvars']['localversion'],$updversion)>0):
-?>
+<?php } else if ($_SESSION['wspvars']['updatesystem']===true) { ?>
 <div class="col-md-3">
     <div class="widget widget-metric_6">
         <span class="icon-wrapper custom-bg-red"><i class="fa fa-cloud-download-alt"></i></span>
         <div class="right">
-            <span class="value"><?php echo $updversion; ?>/<small><?php echo $_SESSION['wspvars']['localversion']; ?></small></span>
+            <span class="value"><?php echo $_SESSION['wspvars']['updateversion']; ?>/<small><?php echo $_SESSION['wspvars']['localversion']; ?></small></span>
             <span class="title"><?php echo returnIntLang('home widget sys info'); ?></span>
         </div>
     </div>
 </div>
-<?php
-else:
-?>
+<?php } else { ?>
 <div class="col-md-3">
     <div class="widget widget-metric_6">
         <span class="icon-wrapper custom-bg-green"><i class="fa fa-cloud"></i></span>
@@ -44,4 +46,4 @@ else:
         </div>
     </div>
 </div>
-<?php endif; ?>
+<?php } ?>
