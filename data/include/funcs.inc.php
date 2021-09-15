@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 3.1
  * @version 7.0
- * @lastchange 2020-06-30
+ * @lastchange 2021-09-15
  */
 
 // sql related functions
@@ -44,7 +44,7 @@ if (!(function_exists('mysql_get_client_info'))) {
     function mysql_get_client_info() {
         addWSPMsg('errormsg', 'mysql_get_client_info() called. '.var_export(debug_backtrace(), true)." <hr />");
         if (isset($_SESSION['wspvars']['db']) && $_SESSION['wspvars']['db']) {
-            $data = mysqli_get_client_version($_SESSION['wspvars']['db']);
+            $data = mysqli_get_client_version();
             $main = floor($data/10000);
             $minor = intval($data-(floor($data/10000)*10000))/100;
             return $main.".".$minor;
@@ -93,54 +93,54 @@ function mysql_fetch_assoc($data, $datatype) {
 endif;
 
 // replacing deprecated mysql_result()
-if (!(function_exists('mysql_result'))):
-function mysql_result($resultset,$resultpos,$resultvar=false) { 
-    addWSPMsg('errormsg', 'mysql_result() called. '.var_export(debug_backtrace(), true)." <hr />");
-	// setting up numeric keys for older statements
-    $rnum = array();
-    foreach ($resultset['set'][0] AS $rkey => $rvalue):
-        $rnum[] = $rkey;
-    endforeach;
-    if ($resultvar===false):
-        return $resultset['set'][$resultpos][($rnum[0])];
-    elseif (is_int($resultvar)):
-        return $resultset['set'][$resultpos][($rnum[intval($resultvar)])];
-    else:
-        return $resultset['set'][$resultpos][$resultvar];
-    endif;
+if (!(function_exists('mysql_result'))) {
+    function mysql_result($resultset,$resultpos,$resultvar=false) { 
+        addWSPMsg('errormsg', 'mysql_result() called. '.var_export(debug_backtrace(), true)." <hr />");
+        // setting up numeric keys for older statements
+        $rnum = array();
+        foreach ($resultset['set'][0] AS $rkey => $rvalue) {
+            $rnum[] = $rkey;
+        }
+        if ($resultvar===false) {
+            return $resultset['set'][$resultpos][($rnum[0])];
+        } else if (is_int($resultvar)) {
+            return $resultset['set'][$resultpos][($rnum[intval($resultvar)])];
+        } else {
+            return $resultset['set'][$resultpos][$resultvar];
+        }
 	}
-endif;
+}
 
 // replacing deprecated mysql_real_escape_string()
-if (!(function_exists('mysql_real_escape_string'))):
-function mysql_real_escape_string($string) { 
-    addWSPMsg('errormsg', 'mysql_real_escape_string() called. '.var_export(debug_backtrace(), true)." <hr />");
-	return escapeSQL($string);
+if (!(function_exists('mysql_real_escape_string'))) {
+    function mysql_real_escape_string($string) { 
+        addWSPMsg('errormsg', 'mysql_real_escape_string() called. '.var_export(debug_backtrace(), true)." <hr />");
+        return escapeSQL($string);
 	}
-endif;
+}
 
 // replacing deprecated mysql_db_name()
-if (!(function_exists('mysql_db_name'))):
-function mysql_db_name($result, $row, $field = NULL) { 
-    addWSPMsg('errormsg', 'mysql_db_name() called. '.var_export(debug_backtrace(), true)." <hr />");
-	return $result['set'][$row][$field];
+if (!(function_exists('mysql_db_name'))) {
+    function mysql_db_name($result, $row, $field = NULL) { 
+        addWSPMsg('errormsg', 'mysql_db_name() called. '.var_export(debug_backtrace(), true)." <hr />");
+        return $result['set'][$row][$field];
 	}
-endif;
+}
 
 // mysqli based functions 
 // sql result function for mysqli
-if (!(function_exists('mysqli_result'))):
-function mysqli_result($res, $row, $field=0) { 
-	$res->data_seek($row); 
-	$datarow = $res->fetch_array(); 
-	return $datarow[$field]; 
+if (!(function_exists('mysqli_result'))) {
+    function mysqli_result($res, $row, $field=0) { 
+        $res->data_seek($row); 
+        $datarow = $res->fetch_array(); 
+        return $datarow[$field]; 
 	}
-endif;
+}
 
 // escape strings to sql
 if (!(function_exists('escapeSQL'))) {
     function escapeSQL($string) {
-        if (isset($_SESSION['wspvars']['db']) && $_SESSION['wspvars']['db'] && !(mysqli_connect_error($_SESSION['wspvars']['db']))) {
+        if (isset($_SESSION['wspvars']['db']) && $_SESSION['wspvars']['db']) {
             return mysqli_real_escape_string($_SESSION['wspvars']['db'], $string);
         } else {
             return $string;
@@ -150,34 +150,34 @@ if (!(function_exists('escapeSQL'))) {
 
 // do sql statement
 // returns array with resultset and complete information
-if (!(function_exists('doSQL'))) {
-    function doSQL($statement = '') {
-        $set = array('res'=>false,'aff'=>0,'num'=>0,'set'=>array(),'sql'=>$statement,'inf'=>'','err'=>'');
-        if (isset($_SESSION['wspvars']['db']) && $_SESSION['wspvars']['db'] && !(mysqli_connect_error($_SESSION['wspvars']['db']))) {
-            $res = $_SESSION['wspvars']['db']->query($statement);
-            if ($res===true) {
-                $set['res'] = true;
-                $set['aff'] = $_SESSION['wspvars']['db']->affected_rows;
-            } else if ($res) {
-                $set['res'] = true;
-                $set['aff'] = $_SESSION['wspvars']['db']->affected_rows;
-                $set['num'] = $res->num_rows;
-            } else {
-                $set['err'] = $_SESSION['wspvars']['db']->error_list;
-            }
-            if ($set['res']) {
-                $set['inf'] = $_SESSION['wspvars']['db']->insert_id;
-            }
-            if ($set['num'] && $set['num']>0) {
-                for($n=0; $n<$set['num']; $n++) {
-                    $set['set'][$n] = mysqli_fetch_assoc($res);
-                }
-                mysqli_free_result($res);
-            }
-        }
-        return $set;
-    }
-}
+if (!(function_exists('doSQL'))):
+function doSQL($statement = '') {
+	$set = array('res'=>false,'aff'=>0,'num'=>0,'set'=>array(),'sql'=>$statement,'inf'=>'','err'=>'');
+	if ($_SESSION['wspvars']['db']):
+		$res = $_SESSION['wspvars']['db']->query($statement);
+		if ($res===true):
+			$set['res'] = true;
+			$set['aff'] = $_SESSION['wspvars']['db']->affected_rows;
+		elseif ($res):
+			$set['res'] = true;
+			$set['aff'] = $_SESSION['wspvars']['db']->affected_rows;
+			$set['num'] = $res->num_rows;
+		else:
+			$set['err'] = $_SESSION['wspvars']['db']->error_list;
+		endif;
+		if ($set['res']):
+			$set['inf'] = $_SESSION['wspvars']['db']->insert_id;
+		endif;
+		if ($set['num'] && $set['num']>0):
+			for($n=0; $n<$set['num']; $n++):
+				$set['set'][$n] = mysqli_fetch_assoc($res);
+			endfor;
+			mysqli_free_result($res);
+		endif;
+	endif;
+	return $set;
+	}
+endif;
 
 // returns ONE result with a given statement that SHOULD return ONE result 
 if (!(function_exists('doResultSQL'))):
@@ -278,7 +278,7 @@ if (!(function_exists('mysqli_wsp_server_version'))) {
 if (!(function_exists('mysqli_wsp_client_version'))) {
     function mysqli_wsp_client_version() {
         if (isset($_SESSION['wspvars']['db']) && $_SESSION['wspvars']['db']) {
-            $data = mysqli_get_client_version($_SESSION['wspvars']['db']);
+            $data = mysqli_get_client_version();
             $main = floor($data/10000);
             $minor = intval($data-(floor($data/10000)*10000))/100;
             return $main.".".$minor;
@@ -296,29 +296,29 @@ function isCurl(){
 
 // getWSPProperties returns an array with wsp properties for multiple values or a string for ONE requested value
 // input none or array with varnames that values should be returned
-if (!(function_exists('getWSPProperties'))):
-function getWSPProperties($propselected = '') {
-    if (!(is_array($propselected)) && trim($propselected)=='') {
-        // get all properties
-        $wspprop = doSQL("SELECT * FROM `wspproperties`");
-        foreach ($wspprop['set'] AS $wpk => $wpv){
-            $wspproperties[trim($wpv['varname'])] = $wpv['varvalue'];
-        }
-    } else if (!(is_array($propselected)) && trim($propselected)!='') {
-        $wspproperties = doResultSQL("SELECT `varvalue` FROM `wspproperties` WHERE `varname` = '".escapeSQL( trim($propselected))."'");
-    } else {
-        if (count($propselected)==1) {
-            $wspproperties = doResultSQL("SELECT `varvalue` FROM `wspproperties` WHERE `varname` = '".escapeSQL(trim($propselected[0]))."'");
-        } 
-        else {
-            foreach ($propselected AS $pv) {
-                $wspproperties[$pv] = doResultSQL("SELECT `varvalue` FROM `wspproperties` WHERE `varname` = '".escapeSQL($pv)."'");
+if (!(function_exists('getWSPProperties'))) {
+    function getWSPProperties($propselected = '') {
+        if (!(is_array($propselected)) && trim($propselected)=='') {
+            // get all properties
+            $wspprop = doSQL("SELECT * FROM `wspproperties`");
+            foreach ($wspprop['set'] AS $wpk => $wpv){
+                $wspproperties[trim($wpv['varname'])] = $wpv['varvalue'];
+            }
+        } else if (!(is_array($propselected)) && trim($propselected)!='') {
+            $wspproperties = doResultSQL("SELECT `varvalue` FROM `wspproperties` WHERE `varname` = '".escapeSQL( trim($propselected))."'");
+        } else {
+            if (count($propselected)==1) {
+                $wspproperties = doResultSQL("SELECT `varvalue` FROM `wspproperties` WHERE `varname` = '".escapeSQL(trim($propselected[0]))."'");
+            } 
+            else {
+                foreach ($propselected AS $pv) {
+                    $wspproperties[$pv] = doResultSQL("SELECT `varvalue` FROM `wspproperties` WHERE `varname` = '".escapeSQL($pv)."'");
+                }
             }
         }
-    }
-	return $wspproperties;
+        return $wspproperties;
 	}
-endif;
+}
 
 if (!(function_exists('datetotime'))) {
 // 2018-07-10, returns timestamp by given date()-based format string and given data string
@@ -547,37 +547,6 @@ function datetotime($formatstring, $datastring, $strict = false) {
 }
 }
 
-
-// readable mysqli server info
-if (!(function_exists('mysqli_wsp_server_version'))) {
-    function mysqli_wsp_server_version() {
-        if (isset($_SESSION['wspvars']['db']) && $_SESSION['wspvars']['db']) {
-            $data = mysqli_get_server_version($_SESSION['wspvars']['db']);
-            $main = floor($data/10000);
-            $minor = intval($data-(floor($data/10000)*10000))/100;
-            return $main.".".$minor;
-        }
-        else {
-            return "-";
-        }
-    }
-}
-
-// readable mysqli client info
-if (!(function_exists('mysqli_wsp_client_version'))) {
-    function mysqli_wsp_client_version() {
-        if (isset($_SESSION['wspvars']['db']) && $_SESSION['wspvars']['db']) {
-            $data = mysqli_get_client_version($_SESSION['wspvars']['db']);
-            $main = floor($data/10000);
-            $minor = intval($data-(floor($data/10000)*10000))/100;
-            return $main.".".$minor;
-        }
-        else {
-            return "-";
-        }
-    }
-}
-
 // test CURL functionality
 if (!(function_exists('isCurl'))) {
     function isCurl(){
@@ -660,11 +629,12 @@ function returnIntLang($internationalize, $textoutput = true) {
 endif;
 
 if (!function_exists('generate_password')) {
-	function generate_password() {
-		$pool  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-		$pool .= "abcdefghijklmnopqrstuvwxyz";
-		$pool .= "1234567890";
-		$password = "";
+	function generate_password(){
+		$pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		$pool.= "abcdefghijklmnopqrstuvwxyz";
+		$pool.= "1234567890";
+        $pool.= "-.+&()!";
+		$password = '';
 		for ($i = 0; $i < 10; $i++) {
 			$password .= $pool[rand(0, strlen($pool)-1)];
 		}
@@ -709,41 +679,41 @@ if (!(function_exists('cryptRootPhrase'))) {
 }
 
 // escape special chars from filename
-if (!(function_exists('removeSpecialChar'))):
-function removeSpecialChar($filename, $fileextension = '') {
-	$lastdotpos = 0;
-	if (trim($fileextension)==''):
-		$lastdotpos = strrpos($filename, ".");
-		if($lastdotpos>0):
-			$fileextension = str_replace(".", "", substr($filename, $lastdotpos));
-			$filename = substr($filename, 0, (-1*(intval(strlen($fileextension))+1)));
-		endif;
-	endif;
-	$filereplacer = trim(@doResultSQL("SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'filereplacer'"));
-	if (trim($filereplacer)=="") { $filereplacer = "-"; }
-	$filename = str_replace(chr(228), 'ae', $filename);
-	$filename = str_replace(chr(196), 'ae', $filename);
-	$filename = str_replace(chr(246), 'oe', $filename);
-	$filename = str_replace(chr(214), 'oe', $filename);
-	$filename = str_replace(chr(252), 'ue', $filename);
-	$filename = str_replace(chr(220), 'ue', $filename);
-	$filename = str_replace(chr(223), 'ss', $filename);
-	$filename = str_replace(' ', $filereplacer, $filename);
-	$filename = str_replace('.', $filereplacer, $filename);
-	$filename = str_replace('\\', '', $filename);
-	$filename = str_replace('/', '', $filename);
-	$filename = str_replace('(', $filereplacer, $filename);
-	$filename = str_replace(')', $filereplacer, $filename);
-	$allowed_in_file = "[^a-zA-Z0-9_]";
-	$filename = preg_replace("/$allowed_in_file/", $filereplacer, $filename);
-	$filename = str_replace($filereplacer.$filereplacer, $filereplacer, str_replace($filereplacer.$filereplacer, $filereplacer, str_replace($filereplacer.$filereplacer, $filereplacer, str_replace($filereplacer.$filereplacer, $filereplacer, str_replace($filereplacer.$filereplacer, $filereplacer, str_replace($filereplacer.$filereplacer, $filereplacer, $filename))))));
-	if($lastdotpos>0):
-		return strtolower(urltext($filename).".".$fileextension);
-	else:
-		return strtolower(urltext($filename));
-	endif;
+if (!(function_exists('removeSpecialChar'))) {
+    function removeSpecialChar($filename, $fileextension = '') {
+        $lastdotpos = 0;
+        if (trim($fileextension)=='') {
+            $lastdotpos = strrpos($filename, ".");
+            if($lastdotpos>0) {
+                $fileextension = str_replace(".", "", substr($filename, $lastdotpos));
+                $filename = substr($filename, 0, (-1*(intval(strlen($fileextension))+1)));
+            }
+        }
+        $filereplacer = trim(@doResultSQL("SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'filereplacer'"));
+        if (trim($filereplacer)=="") { $filereplacer = "-"; }
+        $filename = str_replace(chr(228), 'ae', $filename);
+        $filename = str_replace(chr(196), 'ae', $filename);
+        $filename = str_replace(chr(246), 'oe', $filename);
+        $filename = str_replace(chr(214), 'oe', $filename);
+        $filename = str_replace(chr(252), 'ue', $filename);
+        $filename = str_replace(chr(220), 'ue', $filename);
+        $filename = str_replace(chr(223), 'ss', $filename);
+        $filename = str_replace(' ', $filereplacer, $filename);
+        $filename = str_replace('.', $filereplacer, $filename);
+        $filename = str_replace('\\', '', $filename);
+        $filename = str_replace('/', '', $filename);
+        $filename = str_replace('(', $filereplacer, $filename);
+        $filename = str_replace(')', $filereplacer, $filename);
+        $allowed_in_file = "[^a-zA-Z0-9_]";
+        $filename = preg_replace("/$allowed_in_file/", $filereplacer, $filename);
+        $filename = str_replace($filereplacer.$filereplacer, $filereplacer, str_replace($filereplacer.$filereplacer, $filereplacer, str_replace($filereplacer.$filereplacer, $filereplacer, str_replace($filereplacer.$filereplacer, $filereplacer, str_replace($filereplacer.$filereplacer, $filereplacer, str_replace($filereplacer.$filereplacer, $filereplacer, $filename))))));
+        if($lastdotpos>0) {
+            return strtolower(urltext($filename).".".$fileextension);
+        } else {
+            return strtolower(urltext($filename));
+        }
 	}	// removeSpecialChar()
-endif;
+}
 
 // return any string url-ready
 if (!(function_exists("urltext"))): function urltext($txt) { $txt = strtolower(trim(utf8_decode($txt))); $replaces = array( chr(192) => "a", chr(193) => "a", chr(194) => "a", chr(195) => "ae", chr(197) => "a", chr(196) => "ae", chr(228) => "ae", chr(198) => "ae", chr(214) => "oe", chr(220) => "ue", chr(223) => "ss", chr(224) => "a", chr(225) => "a", chr(226) => "a", chr(232) => "e", chr(233) => "e", chr(234) => "e", chr(236) => "i", chr(237) => "i", chr(238) => "i", chr(242) => "o", chr(243) => "o", chr(244) => "o", chr(246) => "oe", chr(249) => "u", chr(250) => "u", chr(251) => "u", chr(252) => "ue", "\"" => "", "'" => "", "," => "", " " => "-", "/" => "-", "." => "-", "_" => "-", "?" => "", "!" => "", "*" => "", "#" => ""); foreach ($replaces AS $key => $value): $txt = str_replace($key, $value, trim($txt)); endforeach; $txt = preg_replace('/[^a-z0-9\-_]/', "", $txt); $t = 0; while (strpos($txt, '--') || $t==20): $txt = str_replace("--", "-", $txt); $t++; endwhile; return $txt; } endif;
@@ -1111,7 +1081,7 @@ endif;
 //  $posmid » array of mid that can be shown
 //  $lvl »
 if (!(function_exists('returnContentStructureItem'))):
-function returnContentStructureItem($datatable = 'menu', $mid, $showsub = false, $maxlevel = 9999, $openpath = array(), $posmid = array(), $lvl = 0) {
+function returnContentStructureItem($datatable = 'menu', $mid = 0, $showsub = false, $maxlevel = 9999, $openpath = array(), $posmid = array(), $lvl = 0) {
     $item = '';
     $middata_sql = "SELECT * FROM `".$datatable."` WHERE `trash` != 1 AND `mid` = ".intval($mid);
     $middata_res = doSQL($middata_sql);
@@ -1316,7 +1286,7 @@ if (!(function_exists('returnContents'))) {
 
 // inserts content from dataset (based on table `content` structure to a special mid)
 if (!(function_exists('insertContents'))) {
-    function insertContents($dataset = array(), $mid, $carea = 0, $pos = 0, $language = '') {
+    function insertContents($dataset = array(), $mid = 0, $carea = 0, $pos = 0, $language = '') {
         if (count($dataset)>0 && intval($mid)>0) {
             $sql = "INSERT INTO `content` SET ";
             $sql.= "`mid` = ".intval($mid).", ";
@@ -2217,7 +2187,7 @@ if (!(function_exists('getMenuStructure'))):
 	/* call from sitestructure.php as admin: getMenuStructure(0, array, '', integer, 'structure', 'de'); */ 
 	/* call from contentstructure.php as admin: getMenuStructure(0, array, '', 0, 'contents') */
 	/* call from contentstructure.php as user: getMenuStructure(0, Array, Array, 0, 'contents') */
-	function getMenuStructure($parent = 0, $aSelectIDs = array(), $op = '', $showmidpath = '', $outputtype, $showlang = 'de') {
+	function getMenuStructure($parent = 0, $aSelectIDs = array(), $op = '', $showmidpath = '', $outputtype = null, $showlang = 'de') {
 		/* get all menu information to parent connector */
 		$gms_sql = "SELECT * FROM `menu` WHERE `connected` = ".intval($parent)." ORDER BY `position`";
 		$gms_res = mysql_query($gms_sql);
@@ -4540,13 +4510,6 @@ if (!(function_exists('installUpdateDBTable'))) {
                     // get the correct key of updater field
                     $comp = array_keys($updfields, $cv['Field'])[0];
                     if ($systres['set'][$ck]!=$tabledata[$comp]) {
-
-                        echo 'SYSTEM: ';
-                        var_export($systres['set'][$ck]);
-                        echo '<br />UPDATE: ';
-                        var_export($tabledata[$comp]);
-                        echo '<hr />';
-
                         // fieldname is same, but some facts changed
                         $res = doSQL(trim("ALTER TABLE `".$dbname."`.`".$tablename."` CHANGE `".$tabledata[$comp]['Field']."` `".$tabledata[$comp]['Field']."` ".$tabledata[$comp]['Type']." ".(($tabledata[$comp]['Null']=='YES')?'NULL':'NOT NULL')." ".(($tabledata[$comp]['Default']!==NULL)?"DEFAULT '".$tabledata[$comp]['Default']."'":'')));
                         $_SESSION['msg'][] = "altered col `".$tabledata[$comp]['Field']."` from table `".$dbname."`.`".$tablename."`";
@@ -5006,30 +4969,30 @@ function dirList($path, $basepath, $sub = true, $children = true, $build = false
                         'text' => ($filecount>0)?cleanPath(str_replace($basepath, "", $path).$dsv)." <span class='badge inline-badge'>".$filecount."</span>":cleanPath(str_replace($basepath, "", $path).$dsv),
                         'children' => dirList($path.'/'.$dsv, $basepath.'/'.$dsv, $sub, $children, $build, $folder),
                         'state' => array(
-                            'opened' => (($build)?false:((strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath("/".$path."/".$dsv."/")))?true:false)),
-                            'selected' => (($build)?false:((strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath("/".$path."/".$dsv."/")))?true:false)),
+                            'opened' => ($build?false:((strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath("/".$path."/".$dsv."/")))?true:false)),
+                            'selected' => ($build?false:((strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath("/".$path."/".$dsv."/")))?true:false)),
                         ),
                         'a_attr' => array(
-                            'rel' => base64_encode(cleanPath("/".$path."/".$dsv."/")),
+                            'rel' => base64_encode(cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$dsv.DIRECTORY_SEPARATOR)),
                             'onclick' => 'showFiles($(this).attr("rel"))',
                         ),
                     ):array(
-                        'id' => urltext(cleanPath($path."/".$dsv)),
+                        'id' => urltext(cleanPath($path.DIRECTORY_SEPARATOR.$dsv)),
                         'scandircount' => $dircount,
-                        'dirlistcount' => count(dirList($path.'/'.$dsv, '', false, true, $build, $folder)),
+                        'dirlistcount' => count(dirList($path.DIRECTORY_SEPARATOR.$dsv, '', false, true, $build, $folder)),
                         'text' => ($filecount>0)?str_replace("//", "/", str_replace("//", "/", str_replace($basepath, "", $path).$dsv))." <span class='badge inline-badge'>".$filecount."</span>":str_replace("//", "/", str_replace("//", "/", str_replace($basepath, "", $path).$dsv)),
                         'state' => array(
                             'opened' => ($build?false:((strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$dsv.DIRECTORY_SEPARATOR)))?true:false)),
                             'selected' => ($build?false:((strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$dsv.DIRECTORY_SEPARATOR)))?true:false)),
                         ),
                         'a_attr' => array(
-                            'rel' => base64_encode(cleanPath("/".$path."/".$dsv."/")),
+                            'rel' => base64_encode(cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$dsv.DIRECTORY_SEPARATOR)),
                             'onclick' => 'showFiles($(this).attr("rel"))',
                         ),
                     );
                 else:
                     $dirlist[] = str_replace("//", "/", str_replace("//", "/", "/".str_replace($basepath, "", $path)."/".$dsv."/"));
-                    $subdirlist = dirList('/'.$path.'/'.$dsv.'/', $basepath, $sub, $children, $build, $folder);
+                    $subdirlist = dirList(cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$dsv.DIRECTORY_SEPARATOR), $basepath, $sub, $children, $build, $folder);
                     if ($subdirlist!==false):
                         $dirlist = array_merge($dirlist, $subdirlist);
                     endif;
@@ -5037,19 +5000,19 @@ function dirList($path, $basepath, $sub = true, $children = true, $build = false
             else:
                 if ($children):
                     $dirlist[] = array(
-                        'id' => urltext(str_replace("//", "/", str_replace("//", "/", str_replace($basepath, "", $path)."/".$dsv))),
-                        'text' => ((count(scandir(DOCUMENT_ROOT.$path.'/'.$dsv))-count(dirList($path.'/'.$dsv, '', false, true, $build, $folder))-1)>0)?str_replace("//", "/", str_replace("//", "/", str_replace($basepath, "", $path).$dsv))." <span class='badge inline-badge'>".(count(scandir(DOCUMENT_ROOT.$path.'/'.$dsv))-count(dirList($path.'/'.$dsv, '', false, true, $build, $folder))-1)."</span>":str_replace("//", "/", str_replace("//", "/", str_replace($basepath, "", $path).$dsv)),
+                        'id' => urltext(cleanPath(str_replace($basepath, "", $path).DIRECTORY_SEPARATOR.$dsv)),
+                        'text' => ((count(scandir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$dsv)))-count(dirList($path.'/'.$dsv, '', false, true, $build, $folder))-1)>0)?str_replace("//", "/", str_replace("//", "/", str_replace($basepath, "", $path).$dsv))." <span class='badge inline-badge'>".(count(scandir(DOCUMENT_ROOT.$path.'/'.$dsv))-count(dirList($path.'/'.$dsv, '', false, true, $build, $folder))-1)."</span>":str_replace("//", "/", str_replace("//", "/", str_replace($basepath, "", $path).$dsv)),
                         'a_attr' => array(
-                            'rel' => base64_encode(cleanPath("/".$path."/".$dsv."/")),
+                            'rel' => base64_encode(cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$dsv.DIRECTORY_SEPARATOR)),
                             'onclick' => 'showFiles($(this).attr("rel"))'
                         ),
                         'state' => array(
-                            'opened' => ($build?false:((strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath("/".$path."/".$dsv."/")))?true:false)),
-                            'selected' => ($build?false:((strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath("/".$path."/".$dsv."/")))?true:false)),
+                            'opened' => ($build?false:((strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$dsv.DIRECTORY_SEPARATOR)))?true:false)),
+                            'selected' => ($build?false:((strstr($_SESSION['wspvars']['activemedia'][$_SESSION['wspvars']['upload']['basetarget']], cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$dsv.DIRECTORY_SEPARATOR)))?true:false)),
                         ),
                         );
                 else:
-                    $dirlist[] = cleanPath(str_replace($basepath, "", $path)."/".$dsv."/");
+                    $dirlist[] = cleanPath(str_replace($basepath, "", $path).DIRECTORY_SEPARATOR.$dsv.DIRECTORY_SEPARATOR);
                 endif;
             endif;
         endif;
@@ -5084,33 +5047,47 @@ function simpledirlist($path, $sub = true) {
 }
 endif;
 
-if (!(function_exists('scandirs'))):
-function scandirs($directory, $sorting_order = SCANDIR_SORT_ASCENDING) {
-    $values = @scandir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$directory), $sorting_order);
-    if (is_array($values)):
-        foreach($values AS $vk => $cv): if(!(is_dir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$directory.DIRECTORY_SEPARATOR.$cv)))): unset($values[$vk]); endif; if(substr($cv,0,1)=='.'): unset($values[$vk]); endif; endforeach;
-        $values = array_values($values);
-        return $values;
-    else:
-        return false;
-    endif;
+if (!(function_exists('scandirs'))) {
+    function scandirs($directory, $sorting_order = SCANDIR_SORT_ASCENDING, $showhidden = false) {
+        $values = @scandir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$directory), $sorting_order);
+        if (is_array($values)) {
+            foreach ($values AS $vk => $cv) {
+                if (!(is_dir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$directory.DIRECTORY_SEPARATOR.$cv)))) {
+                    unset($values[$vk]);
+                }
+                if (!$showhidden && substr($cv,0,1)=='.') {
+                    unset($values[$vk]);
+                }
+            }
+            $values = array_values($values);
+            return $values;
+        } else {
+            return false;
+        }
+    }
 }
-endif;
 
 // scans a directory for FILES only (on the other hand SAME usability as scandir)
 // array scanfiles ( string $directory [, int $sorting_order = SCANDIR_SORT_ASCENDING [, resource $context ]] )
-if (!(function_exists('scanfiles'))):
-function scanfiles($directory, $sorting_order = SCANDIR_SORT_ASCENDING) {
-    $values = @scandir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$directory), $sorting_order);
-    if (is_array($values)):
-        foreach($values AS $vk => $cv): if(!(is_file(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$directory.DIRECTORY_SEPARATOR.$cv)))): unset($values[$vk]); endif; endforeach;
-        $values = array_values($values);
-        return $values;
-    else:
-        return false;
-    endif;
+if (!(function_exists('scanfiles'))) {
+    function scanfiles($directory, $sorting_order = SCANDIR_SORT_ASCENDING, $showhidden = false) {
+        $values = @scandir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$directory), $sorting_order);
+        if (is_array($values)) {
+            foreach ($values AS $vk => $cv) {
+                if (!(is_file(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$directory.DIRECTORY_SEPARATOR.$cv)))) {
+                    unset($values[$vk]);
+                }
+                if (!$showhidden && substr($cv,0,1)=='.') {
+                    unset($values[$vk]);
+                }
+            }
+            $values = array_values($values);
+            return $values;
+        } else {
+            return false;
+        }
+    }
 }
-endif;
 
 if (!(function_exists('fileData'))):
 // $path AS subdirectory of /media/
@@ -5253,66 +5230,39 @@ if (!(function_exists('createNewFolder'))) {
 // creates a new folder below FTP_BASEDIR
 if (!(function_exists('createFolder'))) {
     function createFolder($path='/') {
-        // clean path
-        $path = cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR);
-        // try different connection models
-        if (isset($_SESSION['wspvars']['ftp']) && $_SESSION['wspvars']['ftp']===true) {
-            // use ftp connection
-            // create ftp-based path
-            if (substr($path, 0, strlen(cleanPath(DIRECTORY_SEPARATOR.FTP_BASE.DIRECTORY_SEPARATOR)))==cleanPath(DIRECTORY_SEPARATOR.FTP_BASE.DIRECTORY_SEPARATOR)) {
-                // path is given with ftp base path, so we do nothing here
-            } else {
-                $path = cleanPath(FTP_BASE.DIRECTORY_SEPARATOR.cleanPath($path));
-            }
-            // create ftp-connection
-            $ftp = doFTP();
-            if ($ftp!==false) {
-                if (@ftp_chdir($ftp, $path)) {
-                    // changedir is possible, so directory already exists
-                    return true;
-                } else {
-                    $pathparts = explode(DIRECTORY_SEPARATOR, $path);
-                    $try = true;
-                    $tp = '';
-                    foreach ($pathparts AS $ppk => $ppv) {
-                        $tp = cleanPath(DIRECTORY_SEPARATOR.$tp.DIRECTORY_SEPARATOR.$ppv.DIRECTORY_SEPARATOR);
-                        if (@ftp_chdir($ftp, $tp)) {
-                            // changedir is possible, so some of the upper directories already exists
-                            // no returning of an error message
-                        }
-                        else if (!(@ftp_mkdir($ftp, $tp))) {
-                            $try = false;
-                        }
-                    }
-                    return $try;
-                }
-                ftp_close($ftp);
-            }
-            else {
-                addWSPMsg('errormsg', 'func <em>createFolder</em> could not create folder by ftp');
-                return false;
-            }
-        } else if (isset($_SESSION['wspvars']['srv']) && $_SESSION['wspvars']['srv']===true) {
-            // use srv direct connection
-            // create srv-based path
-            $pathparts = explode(DIRECTORY_SEPARATOR, cleanPath($path));
-            $createpath = DOCUMENT_ROOT;
-            foreach ($pathparts AS $pk => $pv) {
-                if (trim($pv)!='') {
-                    if (!is_dir($createpath.DIRECTORY_SEPARATOR.$pv)) {
-                        $mdstat = @mkdir($createpath.DIRECTORY_SEPARATOR.$pv, 0764);
-                    }
-                    $createpath = $createpath.DIRECTORY_SEPARATOR.$pv;
-                }
-            }
-            if ($mdstat===false) {
-                addWSPMsg('errormsg', 'func <em>createFolder</em> could not create folder by srv');
-                return false;
-            } else {
-                return true;
-            }
+        $path = cleanPath('/'.$path.'/');
+        if (substr($path, 0, strlen(cleanPath('/'.FTP_BASE.'/')))==cleanPath('/'.FTP_BASE.'/')) {
+            // path is given with ftp base path, so we do nothing here
         } else {
-            addWSPMsg('errormsg', 'no connection avaiable for func <em>createFolder</em>');
+            $path = cleanPath(FTP_BASE."/".cleanPath($path));
+        }
+        // create ftp-connection
+        $ftp = doFTP();
+        if ($ftp!==false) {
+            if (@ftp_chdir($ftp, $path)) {
+                // changedir is possible, so directory already exists
+                return true;
+            } else {
+                $pathparts = explode("/", $path);
+                $try = true;
+                $tp = '';
+                foreach ($pathparts AS $ppk => $ppv) {
+                    $tp = cleanPath('/'.$tp.'/'.$ppv.'/');
+                    if (@ftp_chdir($ftp, $tp)) {
+                        // changedir is possible, so some of the upper directories already exists
+                        // no returning of an error message
+                    }
+                    else if (!(@ftp_mkdir($ftp, $tp))) {
+                        $try = false;
+                    }
+                }
+                return $try;
+            }
+            echo __LINE__;
+            ftp_close($ftp);
+        }
+        else {
+            addWSPMsg('errormsg', 'func <em>createFolder</em> could not connect');
             return false;
         }
     }
@@ -5326,8 +5276,8 @@ if (!(function_exists('renameFolder'))) {
             $newpath = cleanPath(DIRECTORY_SEPARATOR.$newpath.DIRECTORY_SEPARATOR);
             if (count(explode(DIRECTORY_SEPARATOR, $oldpath))==count(explode(DIRECTORY_SEPARATOR, $newpath))) {
                 // converts file-path to an absolute path and sets THEN relative to FTP_BASE
-                $oldpath = cleanPath(FTP_BASE.DIRECTORY_SEPARATOR.cleanPath($oldpath));
-                $newpath = cleanPath(FTP_BASE.DIRECTORY_SEPARATOR.cleanPath($newpath));
+                $oldpath = cleanPath($_SESSION['wspvars']['ftp_base']."/".cleanPath($oldpath));
+                $newpath = cleanPath($_SESSION['wspvars']['ftp_base']."/".cleanPath($newpath));
                 // create ftp-connection
                 $ftp = doFTP();
                 if ($ftp!==false) {
@@ -5645,9 +5595,9 @@ if (!(function_exists('imageSelect'))):
 	// hidepath => hide path in selection (show only filenames)
 	// selected => array ausgewählter Dateien
 	function imageSelect($path = '/', $toppath = '', $hidepath = false, $selected, $trimname = 60, $buildforjs = true) {
-		if (isset($_SESSION['wspvars']['stripfilenames']) && intval($_SESSION['wspvars']['stripfilenames'])>intval($trimname)):
+		if (isset($_SESSION['wspvars']['stripfilenames']) && intval($_SESSION['wspvars']['stripfilenames'])>intval($trimname)) {
 			$trimname = intval($_SESSION['wspvars']['stripfilenames']);
-		endif;
+		}
 		// get hidemedia option
 		$hide_sql = "SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'hiddenmedia'";
 		$hide_res = doSQL($hide_sql);
@@ -5906,7 +5856,7 @@ endif;
  * @return $mediafiles
  */
 if (!(function_exists('getMediaDownload'))):
-	function getMediaDownload($path = '/', $selected, $toppath = '', $trimname = 40, $buildforjs = true) {
+	function getMediaDownload($path = '/', $selected = array() , $toppath = '', $trimname = 40, $buildforjs = true) {
 		//
 		// array $selected abfangen 
 		//
@@ -6804,7 +6754,7 @@ if (!(function_exists('returnInterpreterPath'))) {
 }
 
 // returns path from Interpreter to given mid
-if (!(function_exists('returnLinkedText'))):
+if (!(function_exists('returnLinkedText'))) {
 	function returnLinkedText($text) {
 		//	linktypen:
 		//	wsp<6
@@ -6901,7 +6851,7 @@ if (!(function_exists('returnLinkedText'))):
 		endif;
 		return $text;
 	}	// returnLinkedText()
-endif;
+}
 
 // compare versions
 if (!(function_exists('compVersion'))):
@@ -7092,7 +7042,7 @@ if (!(function_exists('showMenuDesign'))) {
 
 // deprecated 2018-09-11
 if (!(function_exists('getImageFiles'))):
-function getImageFiles($path = '/', $selected, $toppath = '', $trimname = 40, $buildforjs = true) {
+function getImageFiles($path = '/', $selected = array(), $toppath = '', $trimname = 40, $buildforjs = true) {
     $mediafiles = '<option value="">Please use function mediaSelect()</option>';
     return $mediafiles;
     }	// getImageFiles()
@@ -7100,7 +7050,7 @@ endif;
 
 // deprecated 2018-09-11
 if (!(function_exists('getDownloadFiles'))):
-function getDownloadFiles($path='/', $selected=array(), $toppath = '', $trimname = 40, $buildforjs = true) {
+function getDownloadFiles($path='/', $selected = array() , $toppath = '', $trimname = 40, $buildforjs = true) {
     $mediafiles = '<option value="">Please use function mediaSelect()</option>';
     return $mediafiles;
     }	// getDownloadFiles()
@@ -7108,7 +7058,7 @@ endif;
 
 // deprecated 2018-09-11
 if (!(function_exists('getFlashFiles'))):
-function getFlashFiles($path='/', $selected, $toppath = '', $trimname = 40, $buildforjs = true) {
+function getFlashFiles( $path='/' , $selected = array() , $toppath = '' , $trimname = 40 , $buildforjs = true) {
     $mediafiles = '<option value="">Please use function mediaSelect()</option>';
     return $mediafiles;
     }	// getFlashFiles()
