@@ -138,22 +138,22 @@ function mysqli_result($res, $row, $field=0) {
 endif;
 
 // escape strings to sql
-if (!(function_exists('escapeSQL'))):
-function escapeSQL($string) {
-	if (isset($_SESSION['wspvars']['db']) && $_SESSION['wspvars']['db']): 
-		return mysqli_real_escape_string($_SESSION['wspvars']['db'], $string);
-	else:
-		return $string;
-	endif;
+if (!(function_exists('escapeSQL'))) {
+    function escapeSQL($string) {
+        if (isset($_SESSION['wspvars']['db']) && $_SESSION['wspvars']['db'] && !(mysqli_connect_error($_SESSION['wspvars']['db']))) {
+            return mysqli_real_escape_string($_SESSION['wspvars']['db'], $string);
+        } else {
+            return $string;
+        }
 	}
-endif;
+}
 
 // do sql statement
 // returns array with resultset and complete information
 if (!(function_exists('doSQL'))) {
     function doSQL($statement = '') {
         $set = array('res'=>false,'aff'=>0,'num'=>0,'set'=>array(),'sql'=>$statement,'inf'=>'','err'=>'');
-        if ($_SESSION['wspvars']['db']) {
+        if (isset($_SESSION['wspvars']['db']) && $_SESSION['wspvars']['db'] && !(mysqli_connect_error($_SESSION['wspvars']['db']))) {
             $res = $_SESSION['wspvars']['db']->query($statement);
             if ($res===true) {
                 $set['res'] = true;
@@ -5253,39 +5253,66 @@ if (!(function_exists('createNewFolder'))) {
 // creates a new folder below FTP_BASEDIR
 if (!(function_exists('createFolder'))) {
     function createFolder($path='/') {
-        $path = cleanPath('/'.$path.'/');
-        if (substr($path, 0, strlen(cleanPath('/'.FTP_BASE.'/')))==cleanPath('/'.FTP_BASE.'/')) {
-            // path is given with ftp base path, so we do nothing here
-        } else {
-            $path = cleanPath(FTP_BASE."/".cleanPath($path));
-        }
-        // create ftp-connection
-        $ftp = doFTP();
-        if ($ftp!==false) {
-            if (@ftp_chdir($ftp, $path)) {
-                // changedir is possible, so directory already exists
-                return true;
+        // clean path
+        $path = cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR);
+        // try different connection models
+        if (isset($_SESSION['wspvars']['ftp']) && $_SESSION['wspvars']['ftp']===true) {
+            // use ftp connection
+            // create ftp-based path
+            if (substr($path, 0, strlen(cleanPath(DIRECTORY_SEPARATOR.FTP_BASE.DIRECTORY_SEPARATOR)))==cleanPath(DIRECTORY_SEPARATOR.FTP_BASE.DIRECTORY_SEPARATOR)) {
+                // path is given with ftp base path, so we do nothing here
             } else {
-                $pathparts = explode("/", $path);
-                $try = true;
-                $tp = '';
-                foreach ($pathparts AS $ppk => $ppv) {
-                    $tp = cleanPath('/'.$tp.'/'.$ppv.'/');
-                    if (@ftp_chdir($ftp, $tp)) {
-                        // changedir is possible, so some of the upper directories already exists
-                        // no returning of an error message
-                    }
-                    else if (!(@ftp_mkdir($ftp, $tp))) {
-                        $try = false;
-                    }
-                }
-                return $try;
+                $path = cleanPath(FTP_BASE.DIRECTORY_SEPARATOR.cleanPath($path));
             }
-            echo __LINE__;
-            ftp_close($ftp);
-        }
-        else {
-            addWSPMsg('errormsg', 'func <em>createFolder</em> could not connect');
+            // create ftp-connection
+            $ftp = doFTP();
+            if ($ftp!==false) {
+                if (@ftp_chdir($ftp, $path)) {
+                    // changedir is possible, so directory already exists
+                    return true;
+                } else {
+                    $pathparts = explode(DIRECTORY_SEPARATOR, $path);
+                    $try = true;
+                    $tp = '';
+                    foreach ($pathparts AS $ppk => $ppv) {
+                        $tp = cleanPath(DIRECTORY_SEPARATOR.$tp.DIRECTORY_SEPARATOR.$ppv.DIRECTORY_SEPARATOR);
+                        if (@ftp_chdir($ftp, $tp)) {
+                            // changedir is possible, so some of the upper directories already exists
+                            // no returning of an error message
+                        }
+                        else if (!(@ftp_mkdir($ftp, $tp))) {
+                            $try = false;
+                        }
+                    }
+                    return $try;
+                }
+                ftp_close($ftp);
+            }
+            else {
+                addWSPMsg('errormsg', 'func <em>createFolder</em> could not create folder by ftp');
+                return false;
+            }
+        } else if (isset($_SESSION['wspvars']['srv']) && $_SESSION['wspvars']['srv']===true) {
+            // use srv direct connection
+            // create srv-based path
+            $pathparts = explode(DIRECTORY_SEPARATOR, cleanPath($path));
+            $createpath = DOCUMENT_ROOT;
+            foreach ($pathparts AS $pk => $pv) {
+                if (trim($pv)!='') {
+                    if (!is_dir($createpath.DIRECTORY_SEPARATOR.$pv)) {
+                        $mdstat = @mkdir($createpath.DIRECTORY_SEPARATOR.$pv, 0764);
+                    }
+                    $createpath = $createpath.DIRECTORY_SEPARATOR.$pv;
+                }
+            }
+            if ($mdstat===false) {
+                addWSPMsg('errormsg', 'func <em>createFolder</em> could not create folder by srv');
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            addWSPMsg('errormsg', 'no connection avaiable for func <em>createFolder</em>');
             return false;
         }
     }
@@ -5299,8 +5326,8 @@ if (!(function_exists('renameFolder'))) {
             $newpath = cleanPath(DIRECTORY_SEPARATOR.$newpath.DIRECTORY_SEPARATOR);
             if (count(explode(DIRECTORY_SEPARATOR, $oldpath))==count(explode(DIRECTORY_SEPARATOR, $newpath))) {
                 // converts file-path to an absolute path and sets THEN relative to FTP_BASE
-                $oldpath = cleanPath($_SESSION['wspvars']['ftp_base']."/".cleanPath($oldpath));
-                $newpath = cleanPath($_SESSION['wspvars']['ftp_base']."/".cleanPath($newpath));
+                $oldpath = cleanPath(FTP_BASE.DIRECTORY_SEPARATOR.cleanPath($oldpath));
+                $newpath = cleanPath(FTP_BASE.DIRECTORY_SEPARATOR.cleanPath($newpath));
                 // create ftp-connection
                 $ftp = doFTP();
                 if ($ftp!==false) {

@@ -114,6 +114,8 @@ else {
     $_SESSION['wspvars']['locallang'] = 'de';
 }
 
+
+
 /* temp. disabled
 
 // get plugin wsplang
