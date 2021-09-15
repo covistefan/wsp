@@ -40,4 +40,3 @@ define('ROOTPHRASE', 'string with 32 chars' );
 
 // define('BASEMAIL', 'mail address' ); // optional » this mail can get every notification even if no user is set
 
-?>
