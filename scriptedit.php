@@ -1,10 +1,10 @@
 <?php
 /**
- * Bearbeiten von JavaScript
+ * editing JavaScript files and folders
  * @author stefan@covi.de
  * @since 3.4
  * @version 7.0
- * @lastchange 2019-11-04
+ * @lastchange 2021-09-15
  */
 
 // start session -----------------------------
