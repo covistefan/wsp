@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 3.1
  * @version 7.0
- * @lastchange 2019-07-25
+ * @lastchange 2021-09-15
  */
 
 /* start session ----------------------------- */
@@ -14,6 +14,7 @@ require ("./data/include/usestat.inc.php");
 require ("./data/include/globalvars.inc.php");
 /* define actual system position ------------- */
 $_SESSION['wspvars']['lockstat'] = 'design';
+$_SESSION['wspvars']['pagedesc'] = array('fa fa-paint-brush',returnIntLang('menu design'),returnIntLang('menu design templates'));
 $_SESSION['wspvars']['mgroup'] = 4;
 $_SESSION['wspvars']['fpos'] = $_SERVER['PHP_SELF'];
 $_SESSION['wspvars']['fposcheck'] = true;
@@ -144,7 +145,7 @@ require("./data/include/sidebar.inc.php");
             $templates_sql = "SELECT `id`, `name` FROM `templates` ORDER BY `name`";
             $templates_res = doSQL($templates_sql);
             
-            if ($templates_res['num']>0): ?>
+            if ($templates_res['num']>0 && checkParamVar('op')!='edit') { ?>
                 <div class="row">
                     <div class="col-md-12">
                         <div class="panel">
@@ -276,9 +277,9 @@ require("./data/include/sidebar.inc.php");
                         </div>
                     </div>
                 </div>
-            <?php endif; ?>
+            <?php }
             
-            <?php if ((checkParamVar('op')=='edit' || checkParamVar('op')=='clone' && intval(checkParamVar('id'))>0) || checkParamVar('op')=='new'): 
+            if ((checkParamVar('op')=='edit' || checkParamVar('op')=='clone' && intval(checkParamVar('id'))>0) || checkParamVar('op')=='new'): 
                 
                 $edittemp_res = array('num' => 0);
                 if (intval(checkParamVar('id'))>0):
