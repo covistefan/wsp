@@ -19,7 +19,7 @@ ksort($_SESSION);
     <meta name="robots" content="nofollow" />
     <title>WSP 7.0</title>
     <!-- get icon fonts -->
-    <link rel="stylesheet" href="<?php echo cleanpath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR); ?>media/layout/fontlist.css" />
+    <link rel="stylesheet" href="<?php echo cleanpath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR); ?>media/layout/fontface.css" />
     <link rel="stylesheet" href="<?php echo cleanpath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR); ?>media/layout/font-awesome.css" />
     <!-- load jquery -->
     <script src="<?php echo cleanpath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR); ?>data/script/jquery/js/jquery-3.3.1.js"></script>
