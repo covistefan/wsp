@@ -104,7 +104,7 @@ include ("data/include/sidebar.inc.php");
                 $selfvars_sql = "SELECT * FROM `selfvars` ORDER BY `name`";
                 $selfvars_data = doSQL($selfvars_sql);
                 
-                if ($selfvars_data['num']>0):
+                if ($selfvars_data['num']>0 && $op!='edit') {
                 ?>
                 <div class="col-md-12">
                     <div class="panel">
@@ -172,7 +172,7 @@ include ("data/include/sidebar.inc.php");
                     </div>
                 </div>
             </div>
-            <?php endif; ?>
+            <?php } ?>
 	
             <?php
 
