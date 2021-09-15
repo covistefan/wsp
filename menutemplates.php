@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 3.2.4
  * @version 7.0
- * @lastchange 2019-03-08
+ * @lastchange 2021-09-15
  */
 
 /* start session ----------------------------- */
@@ -18,10 +18,7 @@ $_SESSION['wspvars']['lockstat'] = 'design';
 $_SESSION['wspvars']['pagedesc'] = array('fa fa-paint-brush',returnIntLang('menu design'),returnIntLang('menu design menutmp'));
 $_SESSION['wspvars']['fpos'] = $_SERVER['PHP_SELF'].';id='.checkparamvar('id');
 $_SESSION['wspvars']['fposcheck'] = true;
-$_SESSION['wspvars']['addpagejs'] = array(
-    'jquery/jquery.sortable.js',
-    'jquery/jquery.autogrowtextarea.js',
-);
+$_SESSION['wspvars']['addpagejs'] = array('jquery/jquery.autogrowtextarea.js',);
 $_SESSION['wspvars']['addpagecss'] = array('jquery.nestable.css');
 /* second includes --------------------------- */
 require ("./data/include/checkuser.inc.php");
@@ -813,6 +810,7 @@ $(document).ready(function() {
     $('.autogrow').autoGrow();
 
     // sticky property panel
+    /*
     var nh = $('.navbar').outerHeight();
     var pt = $('#property_panel').offset().top;
     $(window).on('scroll', function(e) {
@@ -825,6 +823,7 @@ $(document).ready(function() {
         }
         
     });
+    */
     
 });
 
