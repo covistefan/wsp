@@ -269,6 +269,7 @@ $lang['de'] = array(
 'home widget publish queue' => 'Dateien in der Warteschlange',
 'home widget sys info' => 'Systemversion',
 'home widget sys no connect' => 'Verbindungsfehler',
+'home widget sys git update' => 'Letztes Update bei github.com', 
 'home widget free space' => 'Freier Speicher',
 'home widget total space' => 'Gesamt',
 'home widget pdf-support' => 'PDF-zu-Bild-Konvertierung',

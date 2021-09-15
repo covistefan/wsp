@@ -4250,7 +4250,9 @@ readers do not read off random characters that represent icons */
   margin: 0;
   overflow: visible;
   position: static;
-  width: auto; }
+  width: auto; 
+}
+
 @font-face {
   font-family: 'Font Awesome 5 Brands';
   font-style: normal;

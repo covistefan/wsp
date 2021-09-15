@@ -11,11 +11,10 @@
 @header('X-Content-Type-Options: nosniff');
 @header('X-Frame-Options: ALLOWALL');
 @header('Referrer-Policy: strict-origin-when-cross-origin');
-@header('Content-Security-Policy: default-src * \'unsafe-inline\';');
+@header('Content-Security-Policy: default-src \'self\' \'unsafe-inline\' \'unsafe-eval\' data: blob:;');
 @header('Permissions-Policy: accelerometer=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()');
 
-if (phpversion()>5): date_default_timezone_set('Europe/Berlin'); endif;
-
+date_default_timezone_set(date_default_timezone_get());
 if (isset($_REQUEST['night']) && $_REQUEST['night']=='off') { $_SESSION['wspvars']['daily'] = true; }
 
 // handle fake-subdomains used (for EXAMPLE) at strato hosting services
