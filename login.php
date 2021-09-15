@@ -21,8 +21,8 @@ include("./data/include/errorhandler.inc.php");
 include("./data/include/siteinfo.inc.php");
 // define page specific vars -----------------
 
-// cleanup some temp folders
-$tmpfolder = scandir(str_replace("//","/",str_replace("//","/",DOCUMENT_ROOT."/".WSP_DIR."/tmp/")));
+// cleanup older temporary folders
+$tmpfolder = scandir("./tmp/");
 if (is_array($tmpfolder)) {
     $tf = 0;
     foreach ($tmpfolder AS $tfk => $tfv) {
@@ -37,6 +37,7 @@ if (is_array($tmpfolder)) {
     }
 }
 
+// handle logout
 if (isset($_REQUEST['logout'])):
     if (isset($_SESSION['wspvars']['usevar']) && trim($_SESSION['wspvars']['usevar'])!=''):
         // remove temporary data
@@ -116,15 +117,13 @@ if (isset($_POST['loginfield']) && $_POST['loginfield']=="true") {
         $_SESSION['wspvars']['usevar'] = md5($login_res['set'][0]['rid'].$_SERVER['REMOTE_ADDR'].time().$_SERVER['HTTP_USER_AGENT']);
         // do security entry
 		$sql = "INSERT INTO `security` SET 
-			`referrer` = '".$_SERVER['REMOTE_ADDR']."',
+			`referrer` = '".escapeSQL($_SERVER['REMOTE_ADDR'])."',
 			`userid` = ".intval($login_res['set'][0]['rid']).",
 			`timevar` = ".time().",
-			`usevar` = '".$_SESSION['wspvars']['usevar']."',
+			`usevar` = '".escapeSQL($_SESSION['wspvars']['usevar'])."',
 			`logintime` = ".time().",
-			`position` = 'loginattempt',
-			`useragent` = '".$_SERVER['HTTP_USER_AGENT']."'";
+			`position` = 'loginattempt'";
 		doSQL($sql);
-
         // bring ftp-data to session
         if (defined('FTP_USAGE') && FTP_USAGE===false) {
             $_SESSION['wspvars']['ftp'] = false;
@@ -171,6 +170,9 @@ if (isset($_POST['loginfield']) && $_POST['loginfield']=="true") {
                     }
                     @ftp_close($ftp);
                 }
+            } else {
+                // try to use the srv-access
+                $_SESSION['wspvars']['srv'] = true;
             }
         }
         
@@ -207,9 +209,16 @@ if (isset($_POST['loginfield']) && $_POST['loginfield']=="true") {
         }
     }
     else {
+        if (defined('WSP_DEV') && WSP_DEV) {
+            var_export($login_res);
+        }
         $_SESSION['wspvars']['fails']++;
         if (isset($_SESSION['wspvars']['loginfails']) && $_SESSION['wspvars']['fails']>=$_SESSION['wspvars']['loginfails']) {
+            
             addWSPMsg('errormsg', returnIntLang('logindata failure username set inactive', false));
+            
+
+            // send message to basemail
             if (defined('BASEMAIL')) {
                 $notice = "username »".trim($_POST['loginuser'])."« had too many login attempts with false pass from IP ".trim($_SERVER['REMOTE_ADDR'])."\n\n";
                 mail(BASEMAIL , 'user blocked from '.$_SERVER['HTTP_HOST'] , $notice);
