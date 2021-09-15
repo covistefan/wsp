@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 3.1
  * @version 7.0
- * @lastchange 2019-11-04
+ * @lastchange 2021-09-15
  */
 
 $_SESSION['wspvars']['addpagecss'] = array(
@@ -61,12 +61,12 @@ if(!(is_dir(cleanPath(DOCUMENT_ROOT."/".$_SESSION['wspvars']['upload']['basetarg
 
 if (isset($_POST['newfldr']) && trim($_POST['newfldr'])!='') {
     $newfolder = urltext($_POST['newfldr']);
-    $fldr = cleanPath(base64_decode(trim($_REQUEST['fldr']))."/".$newfolder);
+    $fldr = cleanPath(base64_decode(trim($_REQUEST['fldr'])).DIRECTORY_SEPARATOR.$newfolder);
     $return = createFolder($fldr);
     if ($return) {
         addWSPMsg('resultmsg', returnIntLang('media subfolder was created 1')." ".$fldr." ".returnIntLang('media subfolder was created 2'));
         cleanupDirList($_SESSION['wspvars']['upload']['basetarget']);
-        $_REQUEST['fldr'] = base64_encode(cleanPath("/".$fldr."/"));
+        $_REQUEST['fldr'] = base64_encode(cleanPath(DIRECTORY_SEPARATOR.$fldr.DIRECTORY_SEPARATOR));
     }
     else {
         addWSPMsg('errormsg', returnIntLang('media subfolder could not be created 1')." ".$fldr." ".returnIntLang('media subfolder could not be created 2'));
@@ -88,7 +88,7 @@ if (isset($_POST['renamefldr']) && trim($_POST['renamefldr'])!='') {
     if ($return) {
         addWSPMsg('resultmsg', returnIntLang('media subfolder was renamed 1')." ".$path." ".returnIntLang('media subfolder was renamed 2'));
         cleanupDirList($_SESSION['wspvars']['upload']['basetarget']);
-        $_REQUEST['fldr'] = base64_encode(cleanPath("/".$path."/"));
+        $_REQUEST['fldr'] = base64_encode(cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR));
     }
     else {
         addWSPMsg('errormsg', returnIntLang('media subfolder could not be renamed 1')." ".$fldr." ".returnIntLang('media subfolder could not be renamed 2'));
@@ -124,7 +124,7 @@ if (isset($_POST['deletefldr']) && trim($_POST['deletefldr'])!='') {
         $path = array_values($path);
         array_pop($path);
         cleanupDirList($mediafolder);
-        $_REQUEST['fldr'] = base64_encode(cleanPath("/".implode(DIRECTORY_SEPARATOR, $path)."/"));
+        $_REQUEST['fldr'] = base64_encode(cleanPath(DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, $path).DIRECTORY_SEPARATOR));
     }
     else {
         addWSPMsg('errormsg', returnIntLang('media subfolder could not be deleted 1')." ".$fldr." ".returnIntLang('media subfolder could not be deleted 2'));
