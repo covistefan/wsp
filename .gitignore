@@ -2,3 +2,4 @@ data/include/wspconf.inc.php
 updater.php
 versions.php
 testfile-wsp.txt
+tmp/*
