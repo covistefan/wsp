@@ -1,10 +1,5 @@
 <?php
 
-var_export(date('Y-m-d H:i:s', $_SESSION['wspvars']['updatedate']));
-var_export(getWSPProperties('lastversion')." : ".$_SESSION['wspvars']['updateversion']);
-var_export(version_compare($_SESSION['wspvars']['updateversion'],getWSPProperties('lastversion')));
-var_export($_SESSION['wspvars']['updatesystem']);
-
 if (WSP_UPDSRV=='git') {
     ?>
     <div class="col-md-3">
@@ -46,4 +41,4 @@ if (WSP_UPDSRV=='git') {
         </div>
     </div>
 </div>
-<?php } ?>
+<?php } 

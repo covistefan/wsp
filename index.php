@@ -131,16 +131,18 @@ require("./data/include/sidebar.inc.php");
                 ?>
             </div>
             <div class="row">
-                <div class="col-md-6">
-                    <!-- CONTENT CHANGED -->
-                    <?php include("./data/panels/content.changed.inc.php"); ?>
-                    <!-- END CONTENT CHANGED -->
-                </div>
-                <div class="col-md-6">
-                    <!-- CONTENT PUBLISHED -->
-                    <?php include("./data/panels/content.published.inc.php"); ?>
-                    <!-- END CONTENT PUBLISHED -->
-                </div>
+                <!-- CONTENT CHANGED -->
+                <?php 
+                $panel['outerclass'] = 'col-md-6';
+                include("./data/panels/content.changed.inc.php");
+                ?>
+                <!-- END CONTENT CHANGED -->
+                <!-- CONTENT PUBLISHED -->
+                <?php 
+                $panel['outerclass'] = 'col-md-6';
+                include("./data/panels/content.published.inc.php"); 
+                ?>
+                <!-- END CONTENT PUBLISHED -->
             </div>
         </div>
     </div>
