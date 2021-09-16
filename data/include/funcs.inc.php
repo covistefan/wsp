@@ -5222,49 +5222,56 @@ function showMediaFiles($directory = '', $filelist = array(), $sorting = 'filena
 }
 
 // creates a new folder below FTP_BASEDIR
+// will be removed in 7.2
 if (!(function_exists('createNewFolder'))) {
     function createNewFolder($path='/') {
-        addWSPMsg('errormsg', 'createNewFolder() is deprecated and was replaced with createFolder()');
+        addWSPMsg('errormsg', 'createNewFolder() is deprecated and was replaced with createFolder(). createNewFolder() will be removed in version 7.2');
         return(createFolder($path));
     }
 }
 
 // creates a new folder below FTP_BASEDIR
 if (!(function_exists('createFolder'))) {
-    function createFolder($path='/') {
-        $path = cleanPath('/'.$path.'/');
-        if (substr($path, 0, strlen(cleanPath('/'.FTP_BASE.'/')))==cleanPath('/'.FTP_BASE.'/')) {
-            // path is given with ftp base path, so we do nothing here
-        } else {
-            $path = cleanPath(FTP_BASE."/".cleanPath($path));
-        }
-        // create ftp-connection
-        $ftp = doFTP();
-        if ($ftp!==false) {
-            if (@ftp_chdir($ftp, $path)) {
-                // changedir is possible, so directory already exists
+    function createFolder($path=DIRECTORY_SEPARATOR) {
+        // define path always as a subfolder to DOCUMENT_ROOT OR FTP_BASE
+        $path = cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR);
+        // do the creation
+        if (isset($_SESSION['wspvars']['ftp']) && $_SESSION['wspvars']['ftp']!==false) {
+            // try to create by ftp
+            $path = cleanPath(FTP_BASE.DIRECTORY_SEPARATOR.cleanPath($path));
+            $pathparts = explode(DIRECTORY_SEPARATOR, $path);
+            $try = true;
+            $tp = '';
+            foreach ($pathparts AS $ppk => $ppv) {
+                $tp = cleanPath(DIRECTORY_SEPARATOR.$tp.DIRECTORY_SEPARATOR.$ppv.DIRECTORY_SEPARATOR);
+                if (@ftp_chdir($ftp, $tp)) {
+                    // changedir is possible, so some of the upper directories already exists
+                    // no returning of an error message
+                } else if (!(@ftp_mkdir($ftp, $tp))) {
+                    $try = false;
+                }
+            }
+            return $try;
+        } else if (isset($_SESSION['wspvars']['srv']) && $_SESSION['wspvars']['srv']!==false) {
+            // try to create by srv
+            $pathparts = explode("/", $path);
+            $startpath = DOCUMENT_ROOT;
+            foreach ($pathparts AS $pk => $pv) {
+                mkdir(cleanPath($startpath.DIRECTORY_SEPARATOR.$pv));
+                $startpath = cleanPath($startpath.DIRECTORY_SEPARATOR.$pv);
+            }
+            if (is_dir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$path))) {
                 return true;
             } else {
-                $pathparts = explode("/", $path);
-                $try = true;
-                $tp = '';
-                foreach ($pathparts AS $ppk => $ppv) {
-                    $tp = cleanPath('/'.$tp.'/'.$ppv.'/');
-                    if (@ftp_chdir($ftp, $tp)) {
-                        // changedir is possible, so some of the upper directories already exists
-                        // no returning of an error message
-                    }
-                    else if (!(@ftp_mkdir($ftp, $tp))) {
-                        $try = false;
-                    }
+                if (defined('WSP_DEV') && WSP_DEV) {
+                    addWSPMsg( 'errormsg', '<em>createFolder</em> could not create folder by srv' );
                 }
-                return $try;
+                return false;
             }
-            echo __LINE__;
-            ftp_close($ftp);
-        }
-        else {
-            addWSPMsg('errormsg', 'func <em>createFolder</em> could not connect');
+        } else {
+            if (defined('WSP_DEV') && WSP_DEV) {
+                addWSPMsg( 'errormsg', '<em>createFolder</em> could not create folder in any way' );
+            }
             return false;
         }
     }
@@ -5563,7 +5570,7 @@ if (!(function_exists('deleteFolder'))) {
     }
 }
 
-// deletes a file below FTP_BASEDIR
+// deletes a file 
 if (!(function_exists('deleteFile'))) {
     function deleteFile($path = false) {
         if (is_file(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$path))) {
@@ -5613,6 +5620,49 @@ if (!(function_exists('deleteFile'))) {
     }
 }
 
+if (!(function_exists('copyFile'))) {
+    function copyFile($from = false, $to = false) {
+        // check for final directory and create if not exists
+        if (!is_dir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.dirname(cleanPath($to)).DIRECTORY_SEPARATOR))) {
+            $return = createFolder(cleanPath(DIRECTORY_SEPARATOR.dirname(cleanPath($to)).DIRECTORY_SEPARATOR));
+        }
+        // try to copy by ftp
+        if ($return && isset($_SESSION['wspvars']['ftp']) && $_SESSION['wspvars']['ftp']!==false) {
+            $ftp = doFTP();
+            if ($ftp!==false) {
+                if (ftp_put($ftp, cleanPath(FTP_BASE.DIRECTORY_SEPARATOR.cleanPath($to)), $from, FTP_BINARY)) {
+                    return true;
+                } else {
+                    if (defined('WSP_DEV') && WSP_DEV) {
+                        addWSPMsg('errormsg', '<em>copyFile</em> could not copy <strong>'.$to.'</strong> by ftp');
+                    }
+                    return false;
+                }
+            } else {
+                if (defined('WSP_DEV') && WSP_DEV) {
+                    addWSPMsg('errormsg', 'no ftp con');
+                }
+                return false;
+            }
+        } else if ($return && isset($_SESSION['wspvars']['srv']) && $_SESSION['wspvars']['srv']!==false) {
+            if (@move_uploaded_file($from, cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.cleanPath($to)))) {
+                return true;
+            } else {
+                if (defined('WSP_DEV') && WSP_DEV) {
+                    addWSPMsg('errormsg', '<em>copyFile</em> could not copy <strong>'.$to.'</strong> by srv');
+                }
+                return false;
+            }
+        } else {
+            if (defined('WSP_DEV') && WSP_DEV) {
+                addWSPMsg( 'errormsg', '<em>copyFile</em> could not copy in any way' );
+            }
+            return false;
+        }
+    }
+}
+
+// ?????? special function for WHAT !?!?
 if (!(function_exists('cleanupDirList'))) {
     function cleanupDirList($list) {
         return deleteFile (cleanPath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR."tmp".DIRECTORY_SEPARATOR.$_SESSION['wspvars']['usevar'].DIRECTORY_SEPARATOR.trim($list).".json"));
