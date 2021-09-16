@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 3.1
  * @version 7.0
- * @lastchange 2021-09-15
+ * @lastchange 2021-09-16
  */
 
 // sql related functions
@@ -716,21 +716,23 @@ if (!(function_exists('removeSpecialChar'))) {
 }
 
 // return any string url-ready
-if (!(function_exists("urltext"))): function urltext($txt) { $txt = strtolower(trim(utf8_decode($txt))); $replaces = array( chr(192) => "a", chr(193) => "a", chr(194) => "a", chr(195) => "ae", chr(197) => "a", chr(196) => "ae", chr(228) => "ae", chr(198) => "ae", chr(214) => "oe", chr(220) => "ue", chr(223) => "ss", chr(224) => "a", chr(225) => "a", chr(226) => "a", chr(232) => "e", chr(233) => "e", chr(234) => "e", chr(236) => "i", chr(237) => "i", chr(238) => "i", chr(242) => "o", chr(243) => "o", chr(244) => "o", chr(246) => "oe", chr(249) => "u", chr(250) => "u", chr(251) => "u", chr(252) => "ue", "\"" => "", "'" => "", "," => "", " " => "-", "/" => "-", "." => "-", "_" => "-", "?" => "", "!" => "", "*" => "", "#" => ""); foreach ($replaces AS $key => $value): $txt = str_replace($key, $value, trim($txt)); endforeach; $txt = preg_replace('/[^a-z0-9\-_]/', "", $txt); $t = 0; while (strpos($txt, '--') || $t==20): $txt = str_replace("--", "-", $txt); $t++; endwhile; return $txt; } endif;
+if (!(function_exists("urltext"))) { 
+    function urltext($txt) { $txt = strtolower(trim(utf8_decode($txt))); $replaces = array( chr(192) => "a", chr(193) => "a", chr(194) => "a", chr(195) => "ae", chr(197) => "a", chr(196) => "ae", chr(228) => "ae", chr(198) => "ae", chr(214) => "oe", chr(220) => "ue", chr(223) => "ss", chr(224) => "a", chr(225) => "a", chr(226) => "a", chr(232) => "e", chr(233) => "e", chr(234) => "e", chr(236) => "i", chr(237) => "i", chr(238) => "i", chr(242) => "o", chr(243) => "o", chr(244) => "o", chr(246) => "oe", chr(249) => "u", chr(250) => "u", chr(251) => "u", chr(252) => "ue", "\"" => "", "'" => "", "," => "", " " => "-", "/" => "-", "." => "-", "_" => "-", "?" => "", "!" => "", "*" => "", "#" => ""); foreach ($replaces AS $key => $value): $txt = str_replace($key, $value, trim($txt)); endforeach; $txt = preg_replace('/[^a-z0-9\-_]/', "", $txt); $t = 0; while (strpos($txt, '--') || $t==20): $txt = str_replace("--", "-", $txt); $t++; endwhile; return $txt; }
+}
 
 // returns a clean path without double slashes etc
-if (!(function_exists('cleanPath'))):
+if (!(function_exists('cleanPath'))) {
     function cleanPath($pathstring) {
-        while (substr($pathstring, 0, 1)=='.'): $pathstring = substr($pathstring, 1); endwhile;
+        while (substr($pathstring, 0, 1)=='.') { $pathstring = substr($pathstring, 1); }
         // replaces all '..' with '.'
-        while (preg_match("/\.\./", $pathstring)): $pathstring = preg_replace("/\.\./", ".", $pathstring); endwhile;
+        while (preg_match("/\.\./", $pathstring)) { $pathstring = preg_replace("/\.\./", ".", $pathstring); }
         // replaces all './' with '/'
-        while (preg_match("/\.\//", $pathstring)): $pathstring = preg_replace("/\.\//", "/", $pathstring); endwhile;
+        while (preg_match("/\.\//", $pathstring)) { $pathstring = preg_replace("/\.\//", "/", $pathstring); }
         // replaces all '//' with '/'
-        while (preg_match("/\/\//", $pathstring)): $pathstring = preg_replace("/\/\//", "/", $pathstring); endwhile;
+        while (preg_match("/\/\//", $pathstring)) { $pathstring = preg_replace("/\/\//", "/", $pathstring); }
         return trim($pathstring);
-        }
-endif;
+    }
+}
 
 // replaces only first existment of needle in string if it was found at the beginning of the string
 if (!(function_exists("strl_replace"))) { 
@@ -760,6 +762,7 @@ if (!(function_exists("strr_replace"))) {
 
 if (!(function_exists("compareVersion"))): 
 function compareVersion($given,$check) {
+    die ('deprecated compareVersion');
     $v = 0; // v>0 » newer version avaiable, v<0 » newer version given
     $givenv = explode(".", $given);
     $checkv = explode(".", $check);
@@ -798,8 +801,6 @@ function compareVersion($given,$check) {
     return $v;
     }
 endif;
-
-
 
 // mid-related functions
 // 
@@ -1566,6 +1567,7 @@ function insertContent($mid, $op = 'add', $lang = '', $carea = 0, $posvor = 0, $
 // cleanup and remove a directory below document root except(!!!)
 if (!(function_exists('removeDir'))):
 function removeDIR($path = '') {
+    die ('removeDIR is deprecated, please use deleteFolder');
     // SECURE directories that of THIS AND CHILDREN cannot be removed by THIS function
     $scrdir = array(
         '/^\/'.WSP_DIR.'\//'
@@ -5306,7 +5308,7 @@ if (!(function_exists('renameFolder'))) {
 if (!(function_exists('doFTP'))) {
     function doFTP($condata = false) {
         $ftp = false;
-        $ftp = (((isset($condata['ftp_ssl'])?$condata['ftp_ssl']:FTP_SSL)===true)?ftp_ssl_connect((isset($condata['ftp_host'])?$condata['ftp_host']:FTP_HOST), (isset($condata['ftp_port'])?$condata['ftp_port']:FTP_PORT)):ftp_connect((isset($condata['ftp_host'])?$condata['ftp_host']:FTP_HOST), (isset($condata['ftp_port'])?$condata['ftp_port']:FTP_PORT))); if ($ftp!==false) {if (!ftp_login($ftp, (isset($condata['ftp_user'])?$condata['ftp_user']:FTP_USER), (isset($condata['ftp_pass'])?$condata['ftp_pass']:FTP_PASS))) { $ftp = false; }} if ($ftp!==false) { ftp_pasv($ftp, (isset($condata['ftp_pasv'])?$condata['ftp_pasv']:(defined('FTP_PASV')?FTP_PASV:false))); }
+        $ftp = (((isset($condata['ftp_ssl'])?$condata['ftp_ssl']:(defined('FTP_SSL')?FTP_SSL:false))===true)?ftp_ssl_connect((isset($condata['ftp_host'])?$condata['ftp_host']:(defined('FTP_HOST')?FTP_HOST:false)), (isset($condata['ftp_port'])?$condata['ftp_port']:(defined('FTP_PORT')?FTP_PORT:false))):ftp_connect((isset($condata['ftp_host'])?$condata['ftp_host']:(defined('FTP_HOST')?FTP_HOST:false)), (isset($condata['ftp_port'])?$condata['ftp_port']:(defined('FTP_PORT')?FTP_PORT:false)))); if ($ftp!==false) {if (!ftp_login($ftp, (isset($condata['ftp_user'])?$condata['ftp_user']:FTP_USER), (isset($condata['ftp_pass'])?$condata['ftp_pass']:FTP_PASS))) { $ftp = false; }} if ($ftp!==false) { ftp_pasv($ftp, (isset($condata['ftp_pasv'])?$condata['ftp_pasv']:(defined('FTP_PASV')?FTP_PASV:false))); }
         return $ftp;
     }
 }
@@ -5484,59 +5486,75 @@ if (!(function_exists('emptyFolder'))) {
     }
 }
 
-// deletes a folder below FTP_BASEDIR
+// deletes a folder
 if (!(function_exists('deleteFolder'))) {
     function deleteFolder($path = false, $emptyrequired = true) {
-        if (trim($path)!='' && cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR)!="/" && cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR)!=cleanPath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR)) {
+        if (trim($path)!='' && cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR)!=DIRECTORY_SEPARATOR && cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR)!=cleanPath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR)) {
             if ($emptyrequired) {
                 // try to remove directories without checking for empty dir
-                // create ftp-connection
-                $ftp = doFTP();
-                if ($ftp!==false) {
-                    // try to do it by FTP
-                    if (@ftp_rmdir($ftp, cleanPath(FTP_BASE.DIRECTORY_SEPARATOR.$path))) {
-                        return true;
-                    }
-                    // try to do it by file system
-                    else if (@rmdir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$path))) {
-                        return true;
-                    }
-                    else {
+                // try different connection modes
+                if (isset($_SESSION['wspvars']['ftp']) && $_SESSION['wspvars']['ftp']!==false) {
+                    // create ftp-connection
+                    $ftp = doFTP();
+                    if ($ftp!==false) {
+                        // try to do it by FTP
+                        if (@ftp_rmdir($ftp, cleanPath(FTP_BASE.DIRECTORY_SEPARATOR.$path))) {
+                            return true;
+                        } else {
+                            if (defined('WSP_DEV') && WSP_DEV) {
+                                addWSPMsg( 'errormsg', '<em>deleteFolder</em> could not remove folder' );
+                            }
+                            return false;
+                        }
+                        ftp_quit($ftp);
+                    } else {
+                        if (defined('WSP_DEV') && WSP_DEV) {
+                            addWSPMsg( 'errormsg', '<em>deleteFolder</em> could not connect by ftp' );
+                        }
                         return false;
                     }
-                    ftp_quit($ftp);
-                } else if (WSP_DEV) {
-                    echo "no ftp";
+                } else if (isset($_SESSION['wspvars']['srv']) && $_SESSION['wspvars']['srv']!==false) {
+                    // try with srv connection
+                    if (@rmdir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$path))) {
+                        return true;
+                    } else {
+                        if (defined('WSP_DEV') && WSP_DEV) {
+                            addWSPMsg( 'errormsg', '<em>deleteFolder</em> could not connect by srv' );
+                        }
+                        return false;
+                    }
+                } else {
+                    if (defined('WSP_DEV') && WSP_DEV) {
+                        addWSPMsg( 'errormsg', '<em>deleteFolder</em> could not connect in any way' );
+                    }
+                    return false;
                 }
             } 
             else {
-                // create ftp-connection
-                $folderlist = scandirs(cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR));
-                $filelist = scanfiles(cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR));
+                $folderlist = scandirs(cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR), SCANDIR_SORT_ASCENDING, true);
+                $filelist = scanfiles(cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR), SCANDIR_SORT_ASCENDING, true);
+                $removed = array();
                 if (is_array($folderlist)) {
                     foreach ($folderlist AS $fk => $fv) {
-                        deleteFolder(cleanPath($path.DIRECTORY_SEPARATOR.$fv), false);
+                        if ($fv!='.' && $fv!='..') {
+                            $removed[] = deleteFolder(cleanPath($path.DIRECTORY_SEPARATOR.$fv), false);
+                        }
                     }
                 }
                 if (is_array($filelist) && count($filelist)>0) {
                     foreach ($filelist AS $fk => $fv) {
-                        deleteFile(cleanPath($path.DIRECTORY_SEPARATOR.$fv));
+                        if ($fv!='.' && $fv!='..') {
+                            $removed[] = deleteFile(cleanPath($path.DIRECTORY_SEPARATOR.$fv));
+                        }
                     }
                 }
-                $ftp = doFTP();
-                if ($ftp!==false) {
-                    // try to do it by FTP
-                    if (@ftp_rmdir($ftp, cleanPath(FTP_BASE.DIRECTORY_SEPARATOR.$path))) {
-                        return true;
-                    }
-                    // try to do it by file system
-                    else if (@rmdir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$path))) {
-                        return true;
-                    }
-                    else {
-                        return false;
-                    }
-                    ftp_quit($ftp);
+                // recheck for empty folder
+                $folderlist = scandirs(cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR));
+                $filelist = scanfiles(cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR));
+                if (!in_array(false, $removed)) {
+                    return deleteFolder($path);
+                } else {
+                    return false;
                 }
             }
         } else if (defined('WSP_DEV') && WSP_DEV===true) {
@@ -5549,25 +5567,47 @@ if (!(function_exists('deleteFolder'))) {
 if (!(function_exists('deleteFile'))) {
     function deleteFile($path = false) {
         if (is_file(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$path))) {
-            $ftp = doFTP();
-            if ($ftp!==false) {
-                // try to do it by FTP
-                if (@ftp_delete($ftp, cleanPath(FTP_BASE.DIRECTORY_SEPARATOR.$path))) {
-                    return true;
-                }
-                // try to do it by file system
-                else if (@unlink(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$path))) {
-                    return true;
-                }
-                else {
+
+            if (isset($_SESSION['wspvars']['ftp']) && $_SESSION['wspvars']['ftp']!==false) {
+                // create ftp-connection
+                $ftp = doFTP();
+                if ($ftp!==false) {
+                    // try to do it by FTP
+                    if (@ftp_delete($ftp, cleanPath(FTP_BASE.DIRECTORY_SEPARATOR.$path))) {
+                        return true;
+                    } else {
+                        if (defined('WSP_DEV') && WSP_DEV) {
+                            addWSPMsg( 'errormsg', '<em>deleteFile</em> could not remove file' );
+                        }
+                        return false;
+                    }
+                    ftp_quit($ftp);
+                } else {
+                    if (defined('WSP_DEV') && WSP_DEV) {
+                        addWSPMsg( 'errormsg', '<em>deleteFile</em> could not connect by ftp' );
+                    }
                     return false;
                 }
-                ftp_quit($ftp);
-            }
-            else {
+            } else if (isset($_SESSION['wspvars']['srv']) && $_SESSION['wspvars']['srv']!==false) {
+                // try with srv connection
+                if (@unlink(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$path))) {
+                    return true;
+                } else {
+                    if (defined('WSP_DEV') && WSP_DEV) {
+                        addWSPMsg( 'errormsg', '<em>deleteFile</em> could not connect by srv' );
+                    }
+                    return false;
+                }
+            } else {
+                if (defined('WSP_DEV') && WSP_DEV) {
+                    addWSPMsg( 'errormsg', '<em>deleteFile</em> could not connect in any way' );
+                }
                 return false;
-            }
+            }    
         } else {
+            if (defined('WSP_DEV') && WSP_DEV) {
+                addWSPMsg( 'errormsg', '<em>deleteFile</em> could not find file' );
+            }
             return false;
         }
     }
@@ -5575,12 +5615,7 @@ if (!(function_exists('deleteFile'))) {
 
 if (!(function_exists('cleanupDirList'))) {
     function cleanupDirList($list) {
-        if (is_file(cleanPath(DOCUMENT_ROOT."/".WSP_DIR."/tmp/".$_SESSION['wspvars']['usevar']."/".trim($list).".json"))) {
-            unlink(cleanPath(DOCUMENT_ROOT."/".WSP_DIR."/tmp/".$_SESSION['wspvars']['usevar']."/".trim($list).".json"));
-            return true;
-        } else {
-            return false;
-        }
+        return deleteFile (cleanPath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR."tmp".DIRECTORY_SEPARATOR.$_SESSION['wspvars']['usevar'].DIRECTORY_SEPARATOR.trim($list).".json"));
     }
 }
 
@@ -5594,7 +5629,7 @@ if (!(function_exists('imageSelect'))):
 	// toppath => point in path, from which data will be returned as value (e.g. path = / , toppath = /images => return will start below /images)
 	// hidepath => hide path in selection (show only filenames)
 	// selected => array ausgewählter Dateien
-	function imageSelect($path = '/', $toppath = '', $hidepath = false, $selected, $trimname = 60, $buildforjs = true) {
+	function imageSelect($path = '/', $toppath = '', $hidepath = false, $selected = array() , $trimname = 60, $buildforjs = true) {
 		if (isset($_SESSION['wspvars']['stripfilenames']) && intval($_SESSION['wspvars']['stripfilenames'])>intval($trimname)) {
 			$trimname = intval($_SESSION['wspvars']['stripfilenames']);
 		}
