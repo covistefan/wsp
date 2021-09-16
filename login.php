@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 7.0
  * @version 7.0
- * @lastchange 2021-06-03
+ * @lastchange 2021-09-16
  */
 
 /* start session ----------------------------- */
@@ -22,15 +22,15 @@ include("./data/include/siteinfo.inc.php");
 // define page specific vars -----------------
 
 // cleanup older temporary folders
-$tmpfolder = scandir("./tmp/");
+$tmpfolder = scandirs(".".DIRECTORY_SEPARATOR."tmp".DIRECTORY_SEPARATOR);
 if (is_array($tmpfolder)) {
     $tf = 0;
     foreach ($tmpfolder AS $tfk => $tfv) {
-        $fdata = str_replace("//","/",str_replace("//","/",DOCUMENT_ROOT."/".WSP_DIR."/tmp/".$tfv));
+        $fdata = cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR.'tmp'.DIRECTORY_SEPARATOR.$tfv);
         $fstat = stat($fdata);
         if ($tf<5 && is_dir($fdata) && substr($tfv,0,1)!='.') {
             if ($fstat['mtime']<(time()+(86400*3))) {
-                removeDir("/".WSP_DIR."/tmp/".$tfv);
+                deleteFolder(cleanPath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR.'tmp'.DIRECTORY_SEPARATOR.$tfv), false);
                 $tf++;
             }
         }
@@ -41,7 +41,7 @@ if (is_array($tmpfolder)) {
 if (isset($_REQUEST['logout'])):
     if (isset($_SESSION['wspvars']['usevar']) && trim($_SESSION['wspvars']['usevar'])!=''):
         // remove temporary data
-        removeDir(str_replace("//","/",str_replace("//","/",WSP_DIR."/tmp/".str_replace("./", "/", str_replace("../", "/", $_SESSION['wspvars']['usevar'])))));
+        deleteFolder(cleanPath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR.'tmp'.DIRECTORY_SEPARATOR.$_SESSION['wspvars']['usevar'].DIRECTORY_SEPARATOR), false);
         // make logout from database
         $sql = "DELETE FROM `security` WHERE `usevar` = '".escapeSQL($_SESSION['wspvars']['usevar'])."'";
         doSQL($sql);
@@ -150,29 +150,40 @@ if (isset($_POST['loginfield']) && $_POST['loginfield']=="true") {
                         if ($chmod) {
                             ftp_close($ftp); unset($ftp);
                             if (isset($_SESSION['wspvars']['related']) && trim($_SESSION['wspvars']['related'])!='') {
-                                $_SESSION['wspvars']['srv'] = true;
+                                $_SESSION['wspvars']['srv'] = false;
                                 $_SESSION['wspvars']['ftp'] = true;
+                                
+                                die(trim($_SESSION['wspvars']['related']));
+                                
                                 header("location: .".trim($_SESSION['wspvars']['related']));
                             }
                             else {
-                                $_SESSION['wspvars']['srv'] = true;
+                                $_SESSION['wspvars']['srv'] = false;
                                 $_SESSION['wspvars']['ftp'] = true;
                                 header("location: ./index.php");
                             }
                             die();
-                        }
-                        else {
-                            // addWSPMsg('errormsg', returnIntLang('login could not set rights on temporary directory', false));
+                        } else {
+                            if (defined('WSP_DEV') && WSP_DEV) {
+                                addWSPMsg('errormsg', returnIntLang('login could not set rights on temporary directory', false));
+                            }
+                            $_SESSION['wspvars']['srv'] = true;
+                            $_SESSION['wspvars']['ftp'] = false;
                         }
                     }
                     else {
-                        // addWSPMsg('errormsg', returnIntLang('login could not create temporary directory', false));
+                        if (defined('WSP_DEV') && WSP_DEV) {
+                            addWSPMsg('errormsg', returnIntLang('login could not create temporary directory', false));
+                        }
+                        $_SESSION['wspvars']['srv'] = true;
+                        $_SESSION['wspvars']['ftp'] = false;
                     }
                     @ftp_close($ftp);
                 }
             } else {
                 // try to use the srv-access
                 $_SESSION['wspvars']['srv'] = true;
+                $_SESSION['wspvars']['ftp'] = false;
             }
         }
         
@@ -207,8 +218,7 @@ if (isset($_POST['loginfield']) && $_POST['loginfield']=="true") {
 			$loginindex = false;
 			addWSPMsg('errormsg', returnIntLang('login try extended login', false));
         }
-    }
-    else {
+    } else {
         if (defined('WSP_DEV') && WSP_DEV) {
             var_export($login_res);
         }
