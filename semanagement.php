@@ -37,97 +37,57 @@ require ("./data/include/siteinfo.inc.php");
 
 @include ("./data/include/config.inc.php");
 
-if (isset($_POST['savedata'])):
-    foreach ($_POST AS $key => $value):
-		if ($key!="savedata" && $key!='removeset'):
+if (isset($_POST['savedata'])) {
+    foreach ($_POST AS $key => $value) {
+		if ($key!="savedata" && $key!='removeset') {
 			$deletedata_sql = "DELETE FROM `wspproperties` WHERE `varname` = '".escapeSQL($key)."'";
 			doSQL($deletedata_sql);
-            if (is_array($value)):
-				$insertdata_sql = "INSERT INTO `wspproperties` SET `varname` = '".escapeSQL($key)."', `varvalue` = '".serialize($value)."'";
-                doSQL($insertdata_sql);
-			elseif (trim($value)!=''):
+            if (is_array($value)) {
+				$insertdata_sql = "INSERT INTO `wspproperties` SET `varname` = '".escapeSQL($key)."', `varvalue` = '".escapeSQL(serialize($value))."'";
+                $insertdata_res = doSQL($insertdata_sql);
+            } else if (trim($value)!='') {
                 $insertdata_sql = "INSERT INTO `wspproperties` SET `varname` = '".escapeSQL($key)."', `varvalue` = '".escapeSQL($value)."'";
-                doSQL($insertdata_sql);
-			endif;
-		elseif ($key=='removeset'):
-            if (intval($value['favicon'])==1): 
-                // remove file 
-                $ftp = @ftp_connect(FTP_HOST, FTP_PORT);
-                $login = @ftp_login($ftp, FTP_USER, FTP_PASS);
-                if ($login):
-                    @ftp_delete($ftp, cleanPath(FTP_BASE."/media/screen/favicon.ico"));
-                    ftp_close($ftp);
-                else:
-                    addWSPMsg('errormsg', 'no ftp con');
-                endif;
-            endif;
-            if (intval($value['smartphone'])==1):
-                $ftp = @ftp_connect(FTP_HOST, FTP_PORT);
-                $login = @ftp_login($ftp, FTP_USER, FTP_PASS);
-                if ($login):
-                    @ftp_delete($ftp, cleanPath(FTP_BASE."/media/screen/iphone_favicon.png"));
-                    ftp_close($ftp);
-                else:
-                    addWSPMsg('errormsg', 'no ftp con');
-                endif;
-            endif;
-            if (intval($value['opengraph'])==1): 
-                $ftp = @ftp_connect(FTP_HOST, FTP_PORT);
-                $login = @ftp_login($ftp, FTP_USER, FTP_PASS);
-                if ($login):
-                    @ftp_delete($ftp, cleanPath(FTP_BASE."/media/screen/fbscreenshot.png"));
-                    ftp_close($ftp);
-                else:
-                    addWSPMsg('errormsg', 'no ftp con');
-                endif;
-            endif;
-        endif;
-	endforeach;
-    foreach ($_FILES AS $key => $value):
-        if ($key=='favicon' && $value['name']!='' && intval($value['error'])==0 && intval($value['size'])>0):
-            $ftp = @ftp_connect(FTP_HOST, FTP_PORT);
-            $login = @ftp_login($ftp, FTP_USER, FTP_PASS);
-            if ($login):
-                if (ftp_put($ftp, cleanPath(FTP_BASE."/media/screen/favicon.ico"), $value['tmp_name'], FTP_BINARY)):
-                    addWSPMsg('noticemsg', 'seo favicon uploaded');
-                else:
-                    addWSPMsg('errormsg', 'seo favicon could not be copied to final location');
-                endif;
-                ftp_close($ftp);
-            else:
-                addWSPMsg('errormsg', 'no ftp con');
-            endif;
-        endif;
-        if ($key=='smartphone' && $value['name']!='' && intval($value['error'])==0 && intval($value['size'])>0):
-            $ftp = @ftp_connect(FTP_HOST, FTP_PORT);
-            $login = @ftp_login($ftp, FTP_USER, FTP_PASS);
-            if ($login):
-                if (ftp_put($ftp, cleanPath(FTP_BASE."/media/screen/iphone_favicon.png"), $value['tmp_name'], FTP_BINARY)):
-                    addWSPMsg('noticemsg', 'seo smartphone icon uploaded');
-                else:
-                    addWSPMsg('errormsg', 'seo smartphone icon could not be copied to final location');
-                endif;
-                ftp_close($ftp);
-            else:
-                addWSPMsg('errormsg', 'no ftp con');
-            endif;
-        endif;
-        if ($key=='opengraph' && $value['name']!='' && intval($value['error'])==0 && intval($value['size'])>0):
-            $ftp = @ftp_connect(FTP_HOST, FTP_PORT);
-            $login = @ftp_login($ftp, FTP_USER, FTP_PASS);
-            if ($login):
-                if (ftp_put($ftp, cleanPath(FTP_BASE."/media/screen/fbscreenshot.png"), $value['tmp_name'], FTP_BINARY)):
-                    addWSPMsg('noticemsg', 'seo opengraph image uploaded');
-                else:
-                    addWSPMsg('errormsg', 'seo opengraph image could not be copied to final location');
-                endif;
-                ftp_close($ftp);
-            else:
-                addWSPMsg('errormsg', 'no ftp con');
-            endif;
-        endif;
-    endforeach;
-endif;
+                $insertdata_res = doSQL($insertdata_sql);
+			}
+        } else if ($key=='removeset') {
+            if (intval($value['favicon'])==1) { 
+                deleteFile("/media/screen/favicon.ico");
+            }
+            if (intval($value['smartphone'])==1) {
+                deleteFile("/media/screen/iphone_favicon.png");
+            }
+            if (intval($value['opengraph'])==1) {
+                deleteFile("/media/screen/ogscreenshot.png");
+            }
+        }
+	}
+    foreach ($_FILES AS $key => $value) {
+        if ($key=='favicon' && $value['name']!='' && intval($value['error'])==0 && intval($value['size'])>0) {
+            $docopy = copyFile($value['tmp_name'], "/media/screen/favicon.ico");
+            if ($docopy===true) {
+                addWSPMsg('noticemsg', 'seo favicon uploaded');
+            } else {
+                addWSPMsg('errormsg', 'seo favicon could not be copied to final location');
+            }
+        }
+        if ($key=='smartphone' && $value['name']!='' && intval($value['error'])==0 && intval($value['size'])>0) {
+            $docopy = copyFile($value['tmp_name'], "/media/screen/iphone_favicon.png");
+            if ($docopy===true) {
+                addWSPMsg('noticemsg', 'seo smartphone uploaded');
+            } else {
+                addWSPMsg('errormsg', 'seo smartphone could not be copied to final location');
+            }
+        }
+        if ($key=='opengraph' && $value['name']!='' && intval($value['error'])==0 && intval($value['size'])>0) {
+            $docopy = copyFile($value['tmp_name'], "/media/screen/ogscreenshot.png");
+            if ($docopy===true) {
+                addWSPMsg('noticemsg', 'seo opengraph uploaded');
+            } else {
+                addWSPMsg('errormsg', 'seo opengraph could not be copied to final location');
+            }
+        }
+    }
+}
 
 // head of file - first regular output -------
 require("./data/include/header.inc.php");
@@ -227,7 +187,7 @@ $sitedata = getWSPProperties();
                                 <h3 class="panel-title"><?php echo returnIntLang('file opengraph'); ?></h3>
                             </div>
                             <div class="panel-body">
-                                <input name="opengraph" type="file" id="dropify-opengraph" data-allowed-file-extensions="png" data-default-file="<?php if (is_file(DOCUMENT_ROOT."/media/screen/fbscreenshot.png")): echo "/media/screen/fbscreenshot.png"; endif; ?>"><input type="hidden" name="removeset[opengraph]" value="0" id="removeset-opengraph" />
+                                <input name="opengraph" type="file" id="dropify-opengraph" data-allowed-file-extensions="png" data-default-file="<?php if (is_file(DOCUMENT_ROOT."/media/screen/ogscreenshot.png")): echo "/media/screen/ogscreenshot.png"; endif; ?>"><input type="hidden" name="removeset[opengraph]" value="0" id="removeset-opengraph" />
                             </div>
                         </div>
                     </div>

@@ -199,7 +199,7 @@ if (!(function_exists('getHeadVar'))) {
                             $headvar .= "<script src=\"/data/script/jquery/jquery-3.3.1.js\" type=\"text/javascript\"></script>\n";
                         }
                         if ($tfwk=='jquerygoogle' && $tfwv==1) {
-                            $headvar .= "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js\"></script>\n";
+                            $headvar .= "<script src=\"//ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js\"></script>\n";
                         }
                         if ($tfwk=='covifuncs' && $tfwv==1) {
                             $headvar .= "<script src=\"/data/script/covifuncs.js\" type=\"text/javascript\"></script>\n";
@@ -346,8 +346,8 @@ if (!(function_exists('getHeadVar'))) {
                 // opengraph properties
                 // opengraph screenshot
                 $headvar .= "<!-- og meta -->\n";
-                if (is_file(DOCUMENT_ROOT."/media/screen/fbscreenshot.png")) {
-                    $headvar .= "<meta property=\"og:image\" content=\"http://".$siteurl."/media/screen/fbscreenshot.png\" />\n";
+                if (is_file(DOCUMENT_ROOT."/media/screen/ogscreenshot.png")) {
+                    $headvar .= "<meta property=\"og:image\" content=\"https://".$siteurl."/media/screen/ogscreenshot.png\" />\n";
                 }
                 // facebook title
                 $headvar .= "<meta property=\"og:title\" content=\"".str_replace("\"", "'", stripslashes(trim($sitetitle)))."\" />\n"; //'
@@ -401,7 +401,7 @@ if (!(function_exists('getHeadVar'))) {
                         $headvar .= "}\n";
                         $headvar .= "</script>\n";
                         $headvar .= "<!-- Global Site Tag (gtag.js) - Google Analytics -->\n";
-                        $headvar .= "<script async src='https://www.googletagmanager.com/gtag/js?id=".trim($analytics_res)."'></script>\n";
+                        $headvar .= "<script async src='//www.googletagmanager.com/gtag/js?id=".trim($analytics_res)."'></script>\n";
                         $headvar .= "<script>\n";
                         $headvar .= "window.dataLayer = window.dataLayer || [];\n";
                         $headvar .= "function gtag(){dataLayer.push(arguments);}\n";
