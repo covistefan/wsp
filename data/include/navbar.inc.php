@@ -116,8 +116,7 @@
                     <li class="dropdown">
                         <a href="/<?php echo WSP_DIR ?>/usermanagement.php"><i class="fa fa-user"></i> <span class="hide"><?php echo returnIntLang('menu user managedata'); ?></span></a>
                         <ul class="dropdown-menu logged-user-menu">
-                            <li><a href="/<?php echo WSP_DIR ?>/usermanagement.php"><i class="ti-user"></i> <span><?php echo returnIntLang('menu user managedata'); ?></span></a></li>
-                            <!-- <li><a href="#"><i class="ti-email"></i> <span>Message</span></a></li> -->
+                            <li><a href="/<?php echo WSP_DIR ?>/usermanagement.php"><i class="fa fa-user"></i> <span><?php echo returnIntLang('menu user managedata'); ?></span></a></li>
                         </ul>
                     </li>
                 <?php else: ?>
