@@ -462,9 +462,11 @@ if ($lint_res>0) {
     foreach ($lint_res['set'] AS $lik => $liv) {
         $res = doSQL("INSERT INTO `modules` SET `name` = '".escapeSQL(trim($liv['name']))."', `version` = '".escapeSQL(trim($liv['version']))."', `guid` = '".escapeSQL(trim($liv['module_guid']))."', `archive` = '', `dependences` = '', `isparser` = 1, `iscmsmodul` = 0, `ismenu` = 0, `modsetup` = '', `settings` = '', `affectedcontent` = '', `filelist` = ''");
         if ($res['aff']==1) {
-            addWSPMsg('errormsg', returnIntLang('modules lost and found interpreter1').trim($liv['name'])." ".trim($liv['version']).returnIntLang('modules lost and found interpreter2'));
+            addWSPMsg('errormsg', returnIntLang('modules lost and found interpreter1')." ".trim($liv['name'])." ".trim($liv['version']).returnIntLang('modules lost and found interpreter2'));
         } else {
-            addWSPMsg('errormsg', var_export($res, true));
+            if (defined('WSP_DEV') && WSP_DEV) {
+                addWSPMsg('errormsg', var_export($res, true));
+            }
         }
     }
 }
@@ -587,7 +589,7 @@ if ($ip_res['num']>0) {
             }
         }
         else {
-            addWSPMsg('errormsg', returnIntLang('modules lost file interpreter1').trim($irv['name'])." ".trim($irv['version']).returnIntLang('modules lost file interpreter2'));
+            addWSPMsg('errormsg', returnIntLang('modules lost file interpreter1')." ".trim($irv['name'])." ".trim($irv['version']).returnIntLang('modules lost file interpreter2'));
         }
     }
     error_reporting($er);
