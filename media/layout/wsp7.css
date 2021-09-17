@@ -197,6 +197,13 @@ body.lockscreen {
     float: right;
 }
 
+@media screen and (max-width: 1024px) {
+  #wrapper .mainfix {
+    width: 100%;
+    float: none;
+  }
+}
+
 #wrapper #sidebar-nav,
 #wrapper .main {
   padding-top: 55px;
@@ -1454,31 +1461,31 @@ ul.logged-user-menu > li > a i {
   font-weight: normal;
 }
 
-.text-primary {
+.text-primary, .dd-item .custom-action i.text-primary {
   color: #00AAFF;
 }
 
-.text-success {
+.text-success, .dd-item .custom-action i.text-success {
   color: #41B314;
 }
 
-.text-warning {
+.text-warning, .dd-item .custom-action i.text-warning {
   color: #e4cb10;
 }
 
-.text-danger {
+.text-danger, .dd-item .custom-action i.text-danger {
   color: #F9354C;
 }
 
-.text-indicator-green {
+.text-indicator-green, .dd-item .custom-action i.text-indicator-green {
   color: #53c265;
 }
 
-.text-indicator-red {
+.text-indicator-red, .dd-item .custom-action i.text-indicator-red {
   color: #ff4402;
 }
 
-.text-muted {
+.text-muted, .dd-item .custom-action i.text-indicator-muted {
   color: #a0aeba;
 }
 
