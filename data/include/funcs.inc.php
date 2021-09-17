@@ -911,17 +911,17 @@ function returnStructureItem($datatable = 'menu', $mid = 0, $showsub = false, $m
                 $item.= '<a href="#" class="toggle-dropdown" data-toggle="dropdown" aria-expanded="false">';
                 // show item by type of menulink 
                 if ($mrsv['editable']==9):
-                    $item.= '<i class="fas fa-database '.(($mrsv['visibility']==0)?'fa-disabled':'').'"></i> ';
+                    $item.= '<i class="fas fa-database'.(($mrsv['visibility']==0)?' fa-disabled':'').(($mrsv['isindex']==1)?' text-success':'').'"></i> ';
                 elseif (trim($mrsv['filetarget'])!=''):
-                    $item.= '<i class="fas fa-hashtag '.(($mrsv['visibility']==0)?'fa-disabled':'').'"></i> ';
+                    $item.= '<i class="fas fa-hashtag'.(($mrsv['visibility']==0)?' fa-disabled':'').(($mrsv['isindex']==1)?' text-success':'').'"></i> ';
                 elseif (trim($mrsv['offlink'])!=''):
-                    $item.= '<i class="fas fa-sign-out-alt '.(($mrsv['visibility']==0)?'fa-disabled':'').'"></i> ';
+                    $item.= '<i class="fas fa-sign-out-alt'.(($mrsv['visibility']==0)?' fa-disabled':'').(($mrsv['isindex']==1)?' text-success':'').'"></i> ';
                 elseif (trim($mrsv['docintern'])!=''):
-                    $item.= '<i class="fas fa-file '.(($mrsv['visibility']==0)?'fa-disabled':'').'"></i> ';
+                    $item.= '<i class="fas fa-file'.(($mrsv['visibility']==0)?' fa-disabled':'').(($mrsv['isindex']==1)?' text-success':'').'"></i> ';
                 elseif ($mrsv['internlink_id']>0):
-                    $item.= '<i class="fas fa-sign-in-alt '.(($mrsv['visibility']==0)?'fa-disabled':'').'"></i> ';
+                    $item.= '<i class="fas fa-sign-in-alt'.(($mrsv['visibility']==0)?' fa-disabled':'').(($mrsv['isindex']==1)?' text-success':'').'"></i> ';
                 else:
-                    $item.= '<i class="fas fa-bookmark '.(($mrsv['visibility']==0)?'fa-disabled':'').'"></i> ';
+                    $item.= '<i class="fas fa-bookmark'.(($mrsv['visibility']==0)?' fa-disabled':'').(($mrsv['isindex']==1)?' text-success':'').'"></i> ';
                 endif;
                 $item.= '</a>';
                 $item.= '<ul class="dropdown-menu dropdown-menu-left">';
@@ -1009,25 +1009,14 @@ function returnStructureItem($datatable = 'menu', $mid = 0, $showsub = false, $m
                 $item.= $mrsv['description'];
             }
                     
-            if ($mrsv['isindex']==1) {
-                if ($datatype=='option') {
-                    $item.= " *";
-                }
-                else {
-                    if (trim($mrsv['showtime'])!='' || intval($mrsv['weekday'])>0) {
-                        $item.= " <sup><i class='fas fa-clock text-success'></i></sup>";
-                    }
-                    else {
-                        $item.= " <sup><i class='fas fa-certificate text-success'></i></sup>";
-                    }
-                }
-            } 
-            else if (trim($mrsv['showtime'])!='' || intval($mrsv['weekday'])>0) {
-                if ($datatype!='option') {
-                    $item.= " <sup><i class='far fa-clock'></i></sup>";
-                }
+        
+            if ($datatype=='option') {
+                $item.= " <sup><i class='fas fa-certificate'></i></sup>";
             }
-    
+            else if (trim($mrsv['showtime'])!='' || intval($mrsv['weekday'])>0) {
+                $item.= " <sup><i class='fas fa-clock'></i></sup>";
+            }
+                
             if (defined('WSP_DEV') && WSP_DEV===true) {
                 if(isset($_SESSION['wspvars']['structurefilter']) && trim($_SESSION['wspvars']['structurefilter'])!='') {
                     $item.= " : ".trim($_SESSION['wspvars']['structurefilter']);
@@ -1321,9 +1310,85 @@ if (!(function_exists('insertContents'))) {
                 return (intval($res['inf']));
             }
             else {
+                if (defined('WSP_DEV') && WSP_DEV) {
+                    addWSPMsg('errormsg', var_export($res, true));
+                }
                 return false;
             }
         }
+    }
+}
+
+// insert SINGLE content element
+function insertContent($mid, $op = 'add', $lang = '', $carea = 0, $posvor = 0, $sid = false, $gcid = false) {
+    // detect or set content position
+    $newpos = intval($posvor);
+	if ($newpos>0) {
+		$exc_sql = "SELECT `cid` FROM `content` WHERE `mid` = ".intval($mid)." AND `content_area` = ".intval($carea)." AND `position` >= ".$newpos." ORDER BY `position`";
+		$exc_res = doSQL($exc_sql);
+		if ($exc_res['num']>0) {
+			for ($ecres=0; $ecres<$exc_res['num']; $ecres++) {
+                doSQL("UPDATE `content` SET `position` = ".($newpos+$ecres+1)." WHERE `cid` = ".intval($exc_res['set'][$ecres]['cid']));
+			}
+		}
+    }
+	else {
+		$pc_sql = "SELECT MAX(`position`) AS `maxpos` FROM `content` WHERE `mid` = ".intval($mid)." AND `content_area` = ".intval($carea);
+		$pc_res = doSQL($pc_sql);
+		if ($pc_res['num']>0) { $newpos = intval($pc_res['set'][0]['maxpos'])+1; } else { $newpos = 1; }
+	}
+    // set $interpreterguid to given interpreter, but maybe overwrite it with global content interpreter
+	$interpreterguid = trim($sid); 
+    $globalcontentid = NULL;
+    // check for globalcontent
+    if (intval($gcid)>0) {
+        // if global content was choosen, check what global content was choosen and insert THIS into content table
+		$gc_sql = "SELECT `id`, `interpreter_guid` FROM `globalcontent` WHERE `id` = ".intval($gcid)." LIMIT 0,1";
+		$gc_res = doSQL($gc_sql);
+		if ($gc_res['num']>0) {
+            $interpreterguid = trim($gc_res['set'][0]['interpreter_guid']); 
+            $globalcontentid = intval($gc_res['set'][0]['id']); 
+        }
+    }
+    // CREATE the new content entry
+    $nc_sql = "INSERT INTO `content` SET 
+		`mid` = ".intval($mid).",
+        `uid` = ".intval($_SESSION['wspvars']['userid']).",
+		`globalcontent_id` = ".intval($globalcontentid).",
+		`connected` = 0,
+		`content_area` = ".intval($carea).",
+		`content_lang` = '".escapeSQL(trim($lang))."',
+		`position` = ".$newpos.",
+		`visibility` = 1,
+		`showday` = 0,
+		`showtime` = '',
+		`sid` = 0,
+		`valuefields` = '',
+		`lastchange` = ".time().",
+		`interpreter_guid` = '".escapeSQL($interpreterguid)."'";
+    $nc_res = doSQL($nc_sql);
+    if ($nc_res['inf']>0) {
+        // updating menu for changed content
+		$minfo_sql = "SELECT `contentchanged` FROM `menu` WHERE `mid` = ".intval($mid);
+		$minfo_res = doSQL($minfo_sql);
+		$ccres = 0; if ($minfo_res['num']>0): $ccres = intval($minfo_res['set'][0]['contentchanged']); endif;
+		$nccres = 0; if ($ccres==0): $nccres = 2;
+		elseif ($ccres==1): $nccres = 3;
+		elseif ($ccres==2): $nccres = 2;
+		elseif ($ccres==3): $nccres = 3;
+		elseif ($ccres==4): $nccres = 5;
+		elseif ($ccres==5): $nccres = 5;
+		endif;
+		$minfo_sql = "UPDATE `menu` SET `contentchanged` = ".intval($nccres)." WHERE `mid` = ".intval($mid);
+		doSQL($minfo_sql);
+        // return ID of inserted content
+        return $nc_res['inf'];
+    }
+    else {
+        if (defined('WSP_DEV') && WSP_DEV) {
+            addWSPMsg('errormsg', var_export($nc_res, true));
+        }
+        return false;
     }
 }
 
@@ -1491,76 +1556,6 @@ if (!(function_exists('returnContentItem'))) {
         $item.= "</li>\n";
         return $item;
         }
-}
-
-
-function insertContent($mid, $op = 'add', $lang = '', $carea = 0, $posvor = 0, $sid = false, $gcid = false) {
-    // detect or set content position
-    $newpos = intval($posvor);
-	if ($newpos>0) {
-		$exc_sql = "SELECT `cid` FROM `content` WHERE `mid` = ".intval($mid)." AND `content_area` = ".intval($carea)." AND `position` >= ".$newpos." ORDER BY `position`";
-		$exc_res = doSQL($exc_sql);
-		if ($exc_res['num']>0) {
-			for ($ecres=0; $ecres<$exc_res['num']; $ecres++) {
-                doSQL("UPDATE `content` SET `position` = ".($newpos+$ecres+1)." WHERE `cid` = ".intval($exc_res['set'][$ecres]['cid']));
-			}
-		}
-    }
-	else {
-		$pc_sql = "SELECT MAX(`position`) AS `maxpos` FROM `content` WHERE `mid` = ".intval($mid)." AND `content_area` = ".intval($carea);
-		$pc_res = doSQL($pc_sql);
-		if ($pc_res['num']>0) { $newpos = intval($pc_res['set'][0]['maxpos'])+1; } else { $newpos = 1; }
-	}
-    // set $interpreterguid to given interpreter, but maybe overwrite it with global content interpreter
-	$interpreterguid = trim($sid); 
-    $globalcontentid = NULL;
-    // check for globalcontent
-    if (intval($gcid)>0) {
-        // if global content was choosen, check what global content was choosen and insert THIS into content table
-		$gc_sql = "SELECT `id`, `interpreter_guid` FROM `globalcontent` WHERE `id` = ".intval($gcid)." LIMIT 0,1";
-		$gc_res = doSQL($gc_sql);
-		if ($gc_res['num']>0) {
-            $interpreterguid = trim($gc_res['set'][0]['interpreter_guid']); 
-            $globalcontentid = intval($gc_res['set'][0]['id']); 
-        }
-    }
-    // CREATE the new content entry
-    $nc_sql = "INSERT INTO `content` SET 
-		`mid` = ".intval($mid).",
-        `uid` = ".intval($_SESSION['wspvars']['userid']).",
-		`globalcontent_id` = ".intval($globalcontentid).",
-		`connected` = 0,
-		`content_area` = ".intval($carea).",
-		`content_lang` = '".escapeSQL(trim($lang))."',
-		`position` = ".$newpos.",
-		`visibility` = 1,
-		`showday` = 0,
-		`showtime` = '',
-		`sid` = '',
-		`valuefields` = '',
-		`lastchange` = ".time().",
-		`interpreter_guid` = '".escapeSQL($interpreterguid)."'";
-    $nc_res = doSQL($nc_sql);
-    if ($nc_res['inf']>0) {
-        // updating menu for changed content
-		$minfo_sql = "SELECT `contentchanged` FROM `menu` WHERE `mid` = ".intval($mid);
-		$minfo_res = doSQL($minfo_sql);
-		$ccres = 0; if ($minfo_res['num']>0): $ccres = intval($minfo_res['set'][0]['contentchanged']); endif;
-		$nccres = 0; if ($ccres==0): $nccres = 2;
-		elseif ($ccres==1): $nccres = 3;
-		elseif ($ccres==2): $nccres = 2;
-		elseif ($ccres==3): $nccres = 3;
-		elseif ($ccres==4): $nccres = 5;
-		elseif ($ccres==5): $nccres = 5;
-		endif;
-		$minfo_sql = "UPDATE `menu` SET `contentchanged` = ".intval($nccres)." WHERE `mid` = ".intval($mid);
-		doSQL($minfo_sql);
-        // return ID of inserted content
-        return $nc_res['inf'];
-    }
-    else {
-        return false;
-    }
 }
 
 // filesystem related functions
@@ -5231,6 +5226,7 @@ if (!(function_exists('createNewFolder'))) {
 
 // creates a new folder below FTP_BASEDIR
 if (!(function_exists('createFolder'))) {
+<<<<<<< Updated upstream
     function createFolder($path='/') {
         $path = cleanPath('/'.$path.'/');
         if (substr($path, 0, strlen(cleanPath('/'.FTP_BASE.'/')))==cleanPath('/'.FTP_BASE.'/')) {
@@ -5243,6 +5239,37 @@ if (!(function_exists('createFolder'))) {
         if ($ftp!==false) {
             if (@ftp_chdir($ftp, $path)) {
                 // changedir is possible, so directory already exists
+=======
+    function createFolder($path=DIRECTORY_SEPARATOR) {
+        // define path always as a subfolder to DOCUMENT_ROOT OR FTP_BASE
+        $path = cleanPath(DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR);
+        // do the creation
+        if (isset($_SESSION['wspvars']['ftp']) && $_SESSION['wspvars']['ftp']!==false) {
+            // try to create by ftp
+            $path = cleanPath(FTP_BASE.DIRECTORY_SEPARATOR.cleanPath($path));
+            $pathparts = explode(DIRECTORY_SEPARATOR, $path);
+            $try = true;
+            $tp = '';
+            foreach ($pathparts AS $ppk => $ppv) {
+                $tp = cleanPath(DIRECTORY_SEPARATOR.$tp.DIRECTORY_SEPARATOR.$ppv.DIRECTORY_SEPARATOR);
+                if (@ftp_chdir($ftp, $tp)) {
+                    // changedir is possible, so some of the upper directories already exists
+                    // no returning of an error message
+                } else if (!(@ftp_mkdir($ftp, $tp))) {
+                    $try = false;
+                }
+            }
+            return $try;
+        } else if (isset($_SESSION['wspvars']['srv']) && $_SESSION['wspvars']['srv']!==false) {
+            // try to create by srv
+            $pathparts = explode("/", $path);
+            $startpath = DOCUMENT_ROOT;
+            foreach ($pathparts AS $pk => $pv) {
+                @mkdir(cleanPath($startpath.DIRECTORY_SEPARATOR.$pv));
+                $startpath = cleanPath($startpath.DIRECTORY_SEPARATOR.$pv);
+            }
+            if (is_dir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$path))) {
+>>>>>>> Stashed changes
                 return true;
             } else {
                 $pathparts = explode("/", $path);
@@ -5613,6 +5640,58 @@ if (!(function_exists('deleteFile'))) {
     }
 }
 
+<<<<<<< Updated upstream
+=======
+if (!(function_exists('copyFile'))) {
+    function copyFile($from = false, $to = false) {
+        // check for final directory and create if not exists
+        if (!is_dir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.dirname(cleanPath($to)).DIRECTORY_SEPARATOR))) {
+            $return = createFolder(cleanPath(DIRECTORY_SEPARATOR.dirname(cleanPath($to)).DIRECTORY_SEPARATOR));
+        } else {
+            $return = true;
+        }
+        // try to copy by ftp
+        if ($return && isset($_SESSION['wspvars']['ftp']) && $_SESSION['wspvars']['ftp']!==false) {
+            $ftp = doFTP();
+            if ($ftp!==false) {
+                if (ftp_put($ftp, cleanPath(FTP_BASE.DIRECTORY_SEPARATOR.cleanPath($to)), $from, FTP_BINARY)) {
+                    return true;
+                } else {
+                    if (defined('WSP_DEV') && WSP_DEV) {
+                        addWSPMsg('errormsg', '<em>copyFile</em> could not copy <strong>'.$from.'</strong> to <strong>'.$to.'</strong> by ftp');
+                    }
+                    return false;
+                }
+            } else {
+                if (defined('WSP_DEV') && WSP_DEV) {
+                    addWSPMsg('errormsg', 'no ftp con');
+                }
+                return false;
+            }
+        } else if ($return && isset($_SESSION['wspvars']['srv']) && $_SESSION['wspvars']['srv']!==false) {
+            if (@move_uploaded_file($from, cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.cleanPath($to)))) {
+                return true;
+            } else {
+                if (@rename($from, cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.cleanPath($to)))) {
+                    return true;
+                } else {
+                    if (defined('WSP_DEV') && WSP_DEV) {
+                        addWSPMsg('errormsg', '<em>copyFile</em> could not copy <strong>'.$from.'</strong> to <strong>'.$to.'</strong> by srv');
+                    }
+                    return false;
+                }
+            }
+        } else {
+            if (defined('WSP_DEV') && WSP_DEV) {
+                addWSPMsg( 'errormsg', '<em>copyFile</em> could not copy in any way' );
+            }
+            return false;
+        }
+    }
+}
+
+// ?????? special function for WHAT !?!?
+>>>>>>> Stashed changes
 if (!(function_exists('cleanupDirList'))) {
     function cleanupDirList($list) {
         return deleteFile (cleanPath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR."tmp".DIRECTORY_SEPARATOR.$_SESSION['wspvars']['usevar'].DIRECTORY_SEPARATOR.trim($list).".json"));

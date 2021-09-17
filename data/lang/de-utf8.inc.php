@@ -1000,6 +1000,8 @@ $lang['de'] = array(
 'contentedit backup not saved' => 'Es wurde kein Backup angelegt.',
 'contentedit backup no changes' => 'Keine Veränderung zur Vorversion.',
 'contentedit backup viewer' => 'Ihnen werden Backup-Daten angezeigt - bitte speichern Sie, wenn Sie diese verwenden möchten.',
+'contentedit delete backup' => 'Backups löschen',
+'contentedit backup initial version' => 'Initiale Version',
 
 'contentedit add new content' => 'Inhalt einfügen',
 'contentedit add new content element' => 'Neuen Inhalt anlegen',
@@ -1358,6 +1360,7 @@ $lang['de'] = array(
 'mediadetails space MB' => 'MB',
 'mediadetails space GB' => 'GB',
 'mediadetails space TB' => 'TB',
+'mediadetails px' => 'PX',
 
 'mediadetails fileinfo' => 'Dateiinformationen',
 'mediadetails filesize' => 'Dateigröße',
@@ -1995,11 +1998,14 @@ $lang['de'] = array(
 'editorprefs handling login failures' => '<em>deprecated</em>',
 'editorprefs send login failures to admin' => 'Administrator bei fehlerhaften Logins benachrichtigen',
 'editorprefs login cookie runtime' => 'Laufzeit Login-Cookie',
+'editorprefs loginfails' => 'Anmeldefehler bis Sperre',
 'editorprefs errormessages submit to developers' => 'Fehlerinformation an Entwickler schicken',
 'editorprefs allow unsecure install' => 'Unsichere Modulinstallation erlauben',
 'editorprefs forbidden filenames' => 'Verbotene Dateinamen',
 'editorprefs forbidden filenames help' => 'Bitte bearbeiten Sie diese Werte mit der notwendigen Vorsicht, da die Freigabe bestimmter Dateinamen das Gesamtsystem beeinflussen kann.',
-
+'editorprefs output' => 'Ausgabe',
+'editorprefs liveurl' => 'Abweichende Live-Webseite',
+'editorprefs output ftpcon' => 'FTP-Verbindung zur Live-Webseite <em>beta</em>',
 
 'editorprefs errormessages' => 'Fehlermeldungen',
 'editorprefs mod install' => 'Modulinstallation',
@@ -2094,7 +2100,8 @@ $lang['de'] = array(
 'moddetails usage' => 'Benutzung',
 'moddetails usage as content' => 'Benutzung als Inhalt',
 'moddetails usage as globalcontent' => 'Benutzung als Globaler Inhalt',
-    
+'moddetails accoc interpreter' => 'Zugehörige Interpreter',
+
 'modinstall updatebeforeinstall1' => 'Bitte installieren Sie zuerst das Modul',
 'modinstall updatebeforeinstall2' => 'in der Version',
 'modinstall updatebeforeinstall3' => '',
