@@ -35,13 +35,13 @@ $_SESSION['wspvars']['fpos'] = $_SERVER['PHP_SELF'].";cid=".$cid;
 $_SESSION['wspvars']['fposcheck'] = true;
 $_SESSION['wspvars']['preventleave'] = true;
 $_SESSION['wspvars']['addpagecss'] = array(
-    'jquery.nestable.css',
-    'bootstrap-datepicker3.min.css'
-    );
+  'jquery.nestable.css',
+  'bootstrap-datepicker3.min.css'
+);
 $_SESSION['wspvars']['addpagejs'] = array(
-    'jquery/jquery.nestable.js',
-    'bootstrap/bootstrap-datepicker.js'
-    );
+  'jquery/jquery.nestable.js',
+  'bootstrap/bootstrap-datepicker.js'
+);
 // second includes ---------------------------
 require ("./data/include/checkuser.inc.php");
 require ("./data/include/errorhandler.inc.php");
@@ -136,16 +136,6 @@ if (isset($_POST) && array_key_exists('op', $_POST) && trim($_POST['op'])=='save
     // get some data for backup and information of content
 	$b_sql = "SELECT `cid`, `interpreter_guid`, `valuefields`, `lastchange`, `content_lang` FROM `content` WHERE `cid` = ".intval($cid);
 	$b_res = doSQL($b_sql);
-	if ($b_res['num']>0) {
-		// save backup from existing content
-		$bb_sql = "INSERT INTO `content_backup` SET `cid` = ".intval($cid).", `uid` = ".intval($_SESSION['wspvars']['userid']).", `valuefields` = '".escapeSQL(trim($b_res['set'][0]['valuefields']))."', `lastchange` = ".intval($b_res['set'][0]['lastchange']).", `lastbackup` = ".time().", `content_lang` = '".trim($b_res['set'][0]['content_lang'])."'";
-		$bb_res = doSQL($bb_sql);
-        if ($bb_res['res']===true) {
-			// backup saved - NO message output
-        } else {
-			addWSPMsg('errormsg', returnIntLang('contentedit backup not saved', false));
-        }
-	}
 	// get savedata from interpreter
 	if ($b_res['num']>0 && trim($b_res['set'][0]['interpreter_guid'])!='') {
 		$i_sql = "SELECT `parsefile` FROM `interpreter` WHERE `guid` = '".trim($b_res['set'][0]['interpreter_guid'])."'";
@@ -163,7 +153,47 @@ if (isset($_POST) && array_key_exists('op', $_POST) && trim($_POST['op'])=='save
 	if (!(isset($data)) || trim($data)=='') {
 		$data = serialize($_POST['field']);
 	}
-    // global content
+    if ($b_res['num']>0) {
+		// save backup from existing content if content changed
+        $be_sql = "SELECT MAX(`cbid`) AS `cbid` FROM `content_backup` WHERE `cid` = ".intval($cid)." AND `valuefields` = '".escapeSQL(trim($data))."'";
+        $be_res = doSQL($be_sql);
+        if (defined('WSP_DEV') && WSP_DEV) {
+            addWSPMsg('noticemsg', var_export($be_res, true));
+        }
+        if ($be_res['num']>0 && $be_res['set'][0]['cbid']!=null) {
+            $bb_sql = "UPDATE 
+                `content_backup` 
+            SET 
+                `lastchange` = ".intval($b_res['set'][0]['lastchange']).", 
+                `lastbackup` = ".time()." 
+            WHERE
+                `cbid` = ".intval($be_res['set'][0]['cbid']);
+        } else {
+            $bb_sql = "INSERT INTO 
+                `content_backup` 
+            SET 
+                `cid` = ".intval($cid).", 
+                `uid` = ".intval($_SESSION['wspvars']['userid']).", 
+                `valuefields` = '".escapeSQL(trim($b_res['set'][0]['valuefields']))."', 
+                `lastchange` = ".intval($b_res['set'][0]['lastchange']).", 
+                `lastbackup` = ".time().", 
+                `content_lang` = '".escapeSQL(trim($b_res['set'][0]['content_lang']))."'
+            ";
+        }
+		$bb_res = doSQL($bb_sql);
+        if ($bb_res['res']===true) {
+			if (defined('WSP_DEV') && WSP_DEV) {
+                addWSPMsg('noticemsg', var_export($bb_sql, true));
+                addWSPMsg('noticemsg', var_export($bb_res, true));
+            }
+        } else {
+            if (defined('WSP_DEV') && WSP_DEV) {
+                addWSPMsg('errormsg', var_export($bb_res, true));
+            }
+			addWSPMsg('errormsg', returnIntLang('contentedit backup not saved', false));
+        }
+	}
+	// global content
 	if(isset($_POST['gcid']) && intval($_POST['gcid'])>0) {
 		// update global content table
 		doSQL("UPDATE `globalcontent` SET `valuefield` = '".escapeSQL($data)."' WHERE `id` = ".intval($_POST['gcid']));
@@ -949,7 +979,7 @@ require ("./data/include/sidebar.inc.php");
                                                 </thead>
                                                 <tbody>
                                                     <?php
-                                                    
+
                                                     foreach ($contentbackup_res['set'] AS $cbresk => $cbresv) {
                                                         $lastchange = intval($cbresv["lastchange"]);
                                                         if ($lastchange==0) {
@@ -967,10 +997,9 @@ require ("./data/include/sidebar.inc.php");
                                                         if ($cbresk<intval($contentbackup_res['num']-1)) {
                                                             // get contents from next backup step
                                                             $nextbackup = unserializeBroken($contentbackup_res['set'][$cbresk+1]["valuefields"]);
-                                                            }
-                                                        else {
+                                                        } else {
                                                             // get actual contents
-                                                            $nextbackup = unserializeBroken($csrv['valuefields']);
+                                                            $nextbackup = unserializeBroken($cbresv['valuefields']);
                                                         }
                                                         $changes = array();
                                                         if (is_array($backupvalues) && is_array($nextbackup)) {
@@ -1009,18 +1038,18 @@ require ("./data/include/sidebar.inc.php");
                                                                                 echo "<tr class='details-".$cbresk."-".$sc."' style='display: none;'>";
                                                                                 echo "<td colspan='8'>";
                                                                                 if (is_array($backupvalues[$bkey])) {
-                                                                                    $bout = "<strong>".$bkey."</strong>:\n";
+                                                                                    $bout = "<span class='btn btn-xs btn-danger'>".$bkk."</span>\n";
                                                                                     foreach ($backupvalues[$bkey] AS $bkk => $bkv):
                                                                                         if (isset($backupvalues[$bkey][$bkk]) && isset($nextbackup[$bkey][$bkk]) && $backupvalues[$bkey][$bkk]!=$nextbackup[$bkey][$bkk]):
-                                                                                            $bout.= "<strong>".$bkk."</strong>: ";
+                                                                                            $bout.= "<span class='btn btn-xs btn-danger'>".$bkk."</span> ";
                                                                                             $bout.=trim($backupvalues[$bkey][$bkk]." » ".$nextbackup[$bkey][$bkk]);
                                                                                             $bout.= " - ";	
                                                                                         elseif (isset($backupvalues[$bkey][$bkk]) && !(isset($nextbackup[$bkey][$bkk]))):
-                                                                                            $bout.= "<strong>".$bkk."</strong>: ";
+                                                                                            $bout.= "<span class='btn btn-xs btn-danger'>".$bkk."</span> ";
                                                                                             $bout.= $backupvalues[$bkey][$bkk]." » <em>leer</em>";
                                                                                             $bout.= " - ";	
                                                                                         elseif (isset($nextbackup[$bkey][$bkk]) && !(isset($backupvalues[$bkey][$bkk]))):
-                                                                                            $bout.= "<strong>".$bkk."</strong>: ";
+                                                                                            $bout.= "<span class='btn btn-xs btn-danger'>".$bkk."</span> ";
                                                                                             $bout.= "<em>leer</em> » ".$nextbackup[$bkey][$bkk];
                                                                                             $bout.= " - ";	
                                                                                         endif;
@@ -1028,31 +1057,32 @@ require ("./data/include/sidebar.inc.php");
                                                                                     $bout.= "\n";
                                                                                     foreach ($nextbackup[$bkey] AS $bkk => $bkv):
                                                                                         if (isset($backupvalues[$bkey][$bkk]) && isset($nextbackup[$bkey][$bkk]) && $backupvalues[$bkey][$bkk]!=$nextbackup[$bkey][$bkk]):
-                                                                                            $bout.= "<strong>".$bkk."</strong>: ";
+                                                                                            $bout.= "<span class='btn btn-xs btn-danger'>".$bkk."</span> ";
                                                                                             $bout.= $backupvalues[$bkey][$bkk]." » ".$nextbackup[$bkey][$bkk];
                                                                                             $bout.= " - ";	
                                                                                         elseif (isset($backupvalues[$bkey][$bkk]) && !(isset($nextbackup[$bkey][$bkk]))):
-                                                                                            $bout.= "<strong>".$bkk."</strong>: ";
-                                                                                            $bout.= $backupvalues[$bkey][$bkk]." » <em>leer</em>";
+                                                                                            $bout.= "<span class='btn btn-xs btn-danger'>".$bkk."</span> ";
+                                                                                            $bout.= $backupvalues[$bkey][$bkk]." <span class='btn btn-xs btn-danger'>»</span> <em>".returnIntLang('str empty')."</em>";
                                                                                             $bout.= " - ";	
                                                                                         elseif (isset($nextbackup[$bkey][$bkk]) && !(isset($backupvalues[$bkey][$bkk]))):
-                                                                                            $bout.= "<strong>".$bkk."</strong>: ";
-                                                                                            $bout.= "<em>leer</em> » ".$nextbackup[$bkey][$bkk];
+                                                                                            $bout.= "<span class='btn btn-xs btn-danger'>".$bkk."</span> ";
+                                                                                            $bout.= "<em>".returnIntLang('str empty')."</em> <span class='btn btn-xs btn-danger'>»</span> ".$nextbackup[$bkey][$bkk];
                                                                                             $bout.= " - ";	
                                                                                         endif;		
                                                                                     endforeach;
                                                                                     $bout.= "\n";
                                                                                 }
                                                                                 else {
+                                                                                    $bout = '';
                                                                                     if (isset($backupvalues[$bkey]) && isset($nextbackup[$bkey])):
-                                                                                        $bout.= "<strong>".$bkey."</strong>: ".trim($backupvalues[$bkey])." <strong>»</strong> ".trim($nextbackup[$bkey])."<br/>";
+                                                                                        $bout.= "<span class='btn btn-xs btn-danger'>".$bkey."</span><br /><pre>".strip_tags(trim($backupvalues[$bkey]))."</pre><br /><span class='btn btn-xs btn-danger'>»</span><br /><pre>".strip_tags(trim($nextbackup[$bkey]))."</pre>";
                                                                                     elseif (isset($backupvalues[$bkey])):
-                                                                                        $bout.= "<strong>".$bkey."</strong>: ".trim($backupvalues[$bkey])." <strong>»</strong> <em>".returnIntLang('str empty')."</em><br/>";
+                                                                                        $bout.= "<span class='btn btn-xs btn-danger'>".$bkey."</span> ".trim($backupvalues[$bkey])." <span class='btn btn-xs btn-danger'>»</span> <em>".returnIntLang('str empty')."</em><br/>";
                                                                                     elseif (isset($nextbackup[$bkey])):
-                                                                                        $bout.= "<strong>".$bkey."</strong>: <em>".returnIntLang('str empty')."</em> <strong>»</strong> ".trim($nextbackup[$bkey])."<br/>";
+                                                                                        $bout.= "<span class='btn btn-xs btn-danger'>".$bkey."</span> <em>".returnIntLang('str empty')."</em> <span class='btn btn-xs btn-danger'>»</span> <pre>".strip_tags(trim($nextbackup[$bkey]))."</pre>";
                                                                                     endif;
                                                                                 }
-                                                                                if (trim(strip_tags($bout))!='') { echo nl2br($bout); }
+                                                                                if (trim(strip_tags($bout))!='') { echo $bout; }
                                                                                 echo "</td>";
                                                                                 echo "</tr>";
                                                                                 $sc++;
@@ -1061,6 +1091,14 @@ require ("./data/include/sidebar.inc.php");
                                                                     }
                                                                 }
                                                             }
+                                                        } else {
+                                                            echo "<tr>";
+                                                            echo "<td>".$showdate."</td>";
+                                                            echo "<td>".$showtime."</td>";
+                                                            echo "<td>".returnUserData('shortcut', intval($cbresv['uid']))."</td>";
+                                                            echo "<td>".returnIntLang('contentedit backup initial version')."</td>";
+                                                            echo "<td><a style=\"cursor: pointer;\" onclick=\"document.getElementById('backupop').value = 'restorebackup'; document.getElementById('restorebid').value = '".intval($cbresv['cbid'])."'; document.getElementById('restorebackup').submit();\"><i class='far fa-eye fa-btn'></i></a> <a style=\"cursor: pointer;\" onclick=\"document.getElementById('backupop').value = 'removebackup'; document.getElementById('restorebid').value = '".intval($cbresv['cbid'])."'; document.getElementById('restorebackup').submit();\"><i class='far fa-trash fa-btn'></i></a></td>";
+                                                            echo "</tr>";
                                                         }
                                                     }
                                                     

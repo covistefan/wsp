@@ -370,7 +370,7 @@ include("./data/include/sidebar.inc.php");
                                         </div>
                                         <div class="col-md-3">
                                             <div class="form-group">
-                                                <input type="text" name="liveurl" id="liveurl" value="<?php echo $sitedata['liveurl']; ?>" class="form-control" placeholder="<?php echo returnIntLang('editorprefs liveurl without http://', false); ?>" />
+                                                <input type="text" name="liveurl" id="liveurl" value="<?php echo isset($sitedata['liveurl'])?$sitedata['liveurl']:''; ?>" class="form-control" placeholder="<?php echo returnIntLang('editorprefs liveurl without http://', false); ?>" />
                                             </div>
                                         </div>
                                         <div class="col-md-3">
@@ -775,7 +775,7 @@ include("./data/include/sidebar.inc.php");
                                         <div class="col-md-3">
                                             <div class="fancy-checkbox custom-bgcolor-blue form-group">
                                                 <label>
-                                                   <input type="number" name="loginfails" id="loginfails" value="<?php echo intval($sitedata['loginfails']); ?>" class="form-control" />
+                                                   <input type="number" name="loginfails" id="loginfails" value="<?php echo isset($sitedata['loginfails'])?intval($sitedata['loginfails']):0; ?>" class="form-control" />
                                                 </label>
                                             </div>
                                         </div>
