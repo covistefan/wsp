@@ -22,8 +22,8 @@ if (isset($_REQUEST['clearsqlmsg'])) { unset($_SESSION['wspvars']['showsql']); }
 // show post area AND log area, if in dev mode
 if (defined('WSP_DEV') && WSP_DEV===true) { 
     echo '<div class="mainfix">';
-    echo '<iframe src="./xajax/iframe.empty.php" width="47%" height="400" name="publisherpost" id="publisherpost" style="border: 1px solid #ccc; outline: none; width: 47%; height: 400px; margin-left: 30px;"></iframe>'; 
-    echo '<pre id="publishoutput" style="float: right; margin-right: 30px; border-radius: 0px; background: transparent; border: 1px solid #ccc; outline: none; width: 47%; height: 400px;"></pre>';
+    echo '<iframe src="./xajax/iframe.empty.php" width="45%" height="400" name="publisherpost" id="publisherpost" style="border: 1px solid #ccc; outline: none; width: 47%; height: 400px; margin-left: 30px;"></iframe>'; 
+    echo '<pre id="publishoutput" style="float: right; margin-right: 30px; border-radius: 0px; background: transparent; border: 1px solid #ccc; outline: none; width: 45%; height: 400px;"></pre>';
     echo '</div>';
     ?>
     <script>

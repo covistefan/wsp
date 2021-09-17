@@ -150,7 +150,10 @@ if (!($_SESSION['wspvars']['rights']['contents']==2 || $_SESSION['wspvars']['rig
 
 if ((isset($_POST['op']) && $_POST['op']=='add') && isset($_POST['sid']) && isset($_POST['gcid']) && isset($_POST['mid']) && intval($_POST['mid'])>0) {
     $ncid = insertContent(intval($_POST['mid']), 'add', trim($_POST['lang']), intval($_POST['carea']), intval($_POST['posvor']), $_POST['sid'], $_POST['gcid']);
-	if (intval($ncid)>0) {
+	
+    var_export($ncid);
+    
+    if (intval($ncid)>0) {
 		$_SESSION['wspvars']['editcontentid'] = intval($ncid);
         addWSPMsg('resultmsg', returnIntLang('contentedit new content created succesfully'));
         header('location: contentedit.php');

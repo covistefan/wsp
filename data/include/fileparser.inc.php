@@ -370,7 +370,7 @@ if (!(function_exists('getHeadVar'))) {
                         endif;
                     endforeach;
                 }
-                $analytics_sql = "SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'analyticsprop'";
+                $analytics_sql = "SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'analyticsid'";
                 $analytics_res = doResultSQL($analytics_sql);
                 if ($analytics_res===false) {
                     // analytics fallback
@@ -384,7 +384,7 @@ if (!(function_exists('getHeadVar'))) {
                 }
                 $headvar .= "</head>\n";
                 // analytics functions
-                $analytics_sql = "SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'analyticsprop'";
+                $analytics_sql = "SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'analyticsid'";
                 $analytics_res = doResultSQL($analytics_sql);
                 if ($analytics_res!==false && !($preview)) {
                     if (trim($analytics_res)!="") {

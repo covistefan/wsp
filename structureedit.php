@@ -1723,7 +1723,7 @@ else:
 <?php
         
 $addnew = '';
-if (is_array($menueditdata['pluginconfig']['where']) && isset($menueditdata['pluginconfig']['where'][0])) {
+if (isset($menueditdata['pluginconfig']['where']) && is_array($menueditdata['pluginconfig']['where'])) {
     foreach ($menueditdata['pluginconfig']['where'] AS $wk => $wv) {
         if (trim($wv)!='') { ?>
         addDynWhere('new',

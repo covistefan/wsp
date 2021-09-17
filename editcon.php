@@ -313,13 +313,21 @@ include ("data/include/sidebar.inc.php");
                                 <div class="tab-pane fade in active" id="conftp">
                                     <div class="row">
                                         <div class="col-md-6">
-
+                                                <?php
+                                                
+                                                if ($_SESSION['wspvars']['ftp']===false) {
+                                                    print('<div class="row">
+                                                    <div class="col-md-12"><p>'.returnIntLang('no ftp connection setup. wsp works in srv mode.').'</p></div>
+                                                    </div>');
+                                                }
+                                                
+                                                ?>
                                                 <div class="form-group">
                                                     <label for="ticket-name" class="col-sm-3 control-label">FTP_HOST</label>
                                                     <div class="col-sm-9">
                                                         <div class="input-group form-group">
                                                             <span class="input-group-addon"><i class="fa fa-server"></i></span>
-                                                            <input type="text" class="form-control" name="ftp_host" id="ftp_host" placeholder="FTP_HOST" value="<?php echo FTP_HOST; ?>" data-toggle="tooltip" data-trigger="focus" data-placement="top" data-original-title="<?php echo returnIntLang('editcon ftp host help', false); ?>" onchange="updateCon('conftp',this.id,this.value);" />
+                                                            <input type="text" class="form-control" name="ftp_host" id="ftp_host" placeholder="FTP_HOST" value="<?php echo defined('FTP_HOST')?FTP_HOST:''; ?>" data-toggle="tooltip" data-trigger="focus" data-placement="top" data-original-title="<?php echo returnIntLang('editcon ftp host help', false); ?>" onchange="updateCon('conftp',this.id,this.value);" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -328,7 +336,7 @@ include ("data/include/sidebar.inc.php");
                                                     <div class="col-sm-9">
                                                         <div class="input-group form-group">
                                                             <span class="input-group-addon"><i class="fa fa-terminal"></i></span>
-                                                            <input type="text" required class="form-control" name="ftp_base" id="ftp_base" placeholder="<?php echo returnIntLang('editcon ftp basedir', false); ?>" value="<?php echo FTP_BASE ?>" data-toggle="tooltip" data-trigger="focus" data-placement="top" data-original-title="<?php echo returnIntLang('editcon ftp basedir help', false); ?>" onchange="updateCon('conftp',this.id,this.value);" />
+                                                            <input type="text" required class="form-control" name="ftp_base" id="ftp_base" placeholder="<?php echo returnIntLang('editcon ftp basedir', false); ?>" value="<?php echo defined('FTP_BASE')?FTP_BASE:''; ?>" data-toggle="tooltip" data-trigger="focus" data-placement="top" data-original-title="<?php echo returnIntLang('editcon ftp basedir help', false); ?>" onchange="updateCon('conftp',this.id,this.value);" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -337,7 +345,7 @@ include ("data/include/sidebar.inc.php");
                                                     <div class="col-sm-9">
                                                         <div class="input-group form-group">
                                                             <span class="input-group-addon"><i class="fa fa-user"></i></span>
-                                                            <input type="text" required class="form-control" name="ftp_user" id="ftp_user" placeholder="<?php echo returnIntLang('editcon ftp username', false); ?>" value="<?php echo FTP_USER; ?>" data-toggle="tooltip" data-trigger="focus" data-placement="top" data-original-title="<?php echo returnIntLang('editcon ftp username help', false); ?>" onchange="updateCon('conftp',this.id,this.value);" />
+                                                            <input type="text" required class="form-control" name="ftp_user" id="ftp_user" placeholder="<?php echo returnIntLang('editcon ftp username', false); ?>" value="<?php echo defined('FTP_USER')?FTP_USER:''; ?>" data-toggle="tooltip" data-trigger="focus" data-placement="top" data-original-title="<?php echo returnIntLang('editcon ftp username help', false); ?>" onchange="updateCon('conftp',this.id,this.value);" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -346,7 +354,7 @@ include ("data/include/sidebar.inc.php");
                                                     <div class="col-sm-9">
                                                         <div class="input-group form-group">
                                                             <span class="input-group-addon"><i class="fa fa-asterisk"></i></span>
-                                                            <input type="text" required class="form-control" name="ftp_pass" id="ftp_pass" placeholder="FTP_PASS" value="<?php echo FTP_PASS; ?>" data-toggle="tooltip" data-trigger="focus" data-placement="top" data-original-title="<?php echo returnIntLang('ftp pass help', false); ?>" onchange="updateCon('conftp',this.id,this.value);" />
+                                                            <input type="text" required class="form-control" name="ftp_pass" id="ftp_pass" placeholder="FTP_PASS" value="<?php echo defined('FTP_PASS')?FTP_PASS:''; ?>" data-toggle="tooltip" data-trigger="focus" data-placement="top" data-original-title="<?php echo returnIntLang('ftp pass help', false); ?>" onchange="updateCon('conftp',this.id,this.value);" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -355,7 +363,7 @@ include ("data/include/sidebar.inc.php");
                                                     <div class="col-sm-9">
                                                         <div class="input-group form-group">
                                                             <span class="input-group-addon"><i class="far fa-dot-circle"></i></span>
-                                                            <input type="number" min="1" class="form-control" name="ftp_port" id="ftp_port" placeholder="<?php echo returnIntLang('editcon ftp port', false); ?>" value="<?php echo FTP_PORT; ?>" data-toggle="tooltip" data-trigger="focus" data-placement="top" data-original-title="<?php echo returnIntLang('editcon ftp port help', false); ?>" onchange="updateCon('conftp',this.id,this.value);" />
+                                                            <input type="number" min="1" class="form-control" name="ftp_port" id="ftp_port" placeholder="<?php echo returnIntLang('editcon ftp port', false); ?>" value="<?php echo defined('FTP_PORT')?FTP_PORT:''; ?>" data-toggle="tooltip" data-trigger="focus" data-placement="top" data-original-title="<?php echo returnIntLang('editcon ftp port help', false); ?>" onchange="updateCon('conftp',this.id,this.value);" />
                                                         </div>
                                                     </div>
                                                 </div>

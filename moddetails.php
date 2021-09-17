@@ -600,7 +600,7 @@ require ("./data/include/sidebar.inc.php");
             
                 foreach ($itp_res['set'] AS $irk => $irv) {
                     $defaults = array( 
-                        CURLOPT_URL => ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']=='on')?'https://':'http://').$_SERVER['HTTP_HOST'].'/'.WSP_DIR.'/xajax/ajax.checkclass.php?mk='.base64_encode($irv['guid']), 
+                        CURLOPT_URL => $_SERVER['HTTP_HOST'].'/'.WSP_DIR.'/xajax/ajax.checkclass.php?mk='.base64_encode($irv['guid']), 
                         CURLOPT_HEADER => 0, 
                         CURLOPT_RETURNTRANSFER => true, 
                         CURLOPT_TIMEOUT => 4 

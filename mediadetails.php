@@ -25,13 +25,25 @@ $_SESSION['wspvars']['addpagejs'] = array();
 require ("./data/include/checkuser.inc.php");
 require ("./data/include/siteinfo.inc.php");
 // define page specific vars -----------------
-$mediafolder = array('images' => '/media/images/', 'screen' =>  '/media/screen/', 'download' => '/media/download/', 'video' => '/media/video/', 'fonts' => '/media/fonts/');
-$medialist = array( 'images' => 'imagemanagement.php', 'screen' =>  'screenmanagement.php', 'download' => 'documentmanagement.php', 'video' => 'mediamanagement.php', 'fonts' => 'fontmanagement.php');
+$mediafolder = array(
+    'images' => '/media/images/', 
+    'screen' =>  '/media/screen/', 
+    'download' => '/media/download/', 
+    'video' => '/media/video/', 
+    'fonts' => '/media/fonts/'
+);
+$medialist = array( 
+    'images' => 'imagemanagement.php', 
+    'screen' =>  'screenmanagement.php', 
+    'download' => 'documentmanagement.php', 
+    'video' => 'mediamanagement.php', 
+    'fonts' => 'fontmanagement.php'
+);
 $thumbtypes = $previewtypes = array('png', 'jpg');
 // return to last page if some data is missing
 if (!(isset($_REQUEST['fl']))) {
 	if (isset($_REQUEST['ml'])) {
-        header('location: /'.$medialist[base64_decode($_REQUEST['ml'])]);
+        header('location: /'.WSP_DIR.'/'.$medialist[base64_decode($_REQUEST['ml'])]);
         die();
     }
     else {
@@ -151,36 +163,41 @@ foreach ($previewtypes AS $pk => $pv) {
 }
 
 if ($details['thumbnail']===false && (strtolower($details['filetype'])=='.jpg' || strtolower($details['filetype'])=='.jpeg' || strtolower($details['filetype'])=='.gif' || strtolower($details['filetype'])=='.png')) {
-	// try to generate thumbnail (again)
+    // try to generate thumbnail (again)
     $createthumbpath = cleanPath("/".str_replace($details['filetype'], ".png", strl_replace($mediafolder[base64_decode($_REQUEST['ml'])], $mediafolder[base64_decode($_REQUEST['ml'])]."/thumbs/", cleanPath($details['fullpath']))));
     // setting up thumbnail size
     $thumbsize = intval(getWSPProperties('thumbsize'));
     if ($thumbsize<150) { $thumbsize = 300; }
     // try resizing to tmp folder
     if (resizeGDimage(cleanPath(DOCUMENT_ROOT."/".$details['fullpath']), cleanPath(DOCUMENT_ROOT."/".WSP_DIR."/tmp/".$_SESSION['wspvars']['usevar']."/".$details['filename'].".png"), 0, $thumbsize, $thumbsize, 1)) {
-        // if resizing was succesfull, copy thumbnail to thumbnail location
-        $ftp = doFTP();
-        if ($ftp!==false) {
-            // create thumb directory, if needed
-            createFolder(strr_replace(basename($createthumbpath), '', $createthumbpath));
-            // copy thumb to directory
-            if (ftp_put($ftp, cleanPath($_SESSION['wspvars']['ftp_base']."/".$createthumbpath), cleanPath(DOCUMENT_ROOT."/".WSP_DIR."/tmp/".$_SESSION['wspvars']['usevar']."/".$details['filename'].".png"), FTP_BINARY)) {
-                addWSPMsg('noticemsg', returnIntLang('mediadetails created new thumbnail'));
-                $details['thumbnail'] = $createthumbpath;
-            } else {
-                addWSPMsg('errormsg', returnIntLang('mediadetails could not create new thumbnail'));
-            }
-            ftp_close($ftp);
+        $docopy = copyFile(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR."tmp".DIRECTORY_SEPARATOR.$_SESSION['wspvars']['usevar'].DIRECTORY_SEPARATOR.$details['filename'].".png") , $createthumbpath);
+        if ($docopy) {
+            addWSPMsg('noticemsg', returnIntLang('mediadetails created new thumbnail'));
+            $details['thumbnail'] = $createthumbpath;
         } else {
             addWSPMsg('errormsg', returnIntLang('mediadetails could not create new thumbnail'));
         }
     } else {
-        addWSPMsg('errormsg', returnIntLang('mediadetails could not create new thumbnail'));
+        addWSPMsg('errormsg', returnIntLang('mediadetails could not resize image to new thumbnail'));
     }
 }
 if ($details['preview']===false && $details['filetype']=='.pdf') {
 	// try to generate pdf preview (again)
-    
+    if (class_exists("Imagick")) { 
+        $imagick = new imagick();
+        $imagick->setResolution (144, 144);
+        $imagick->readImage($details['fullpath']);
+        $imagick->flattenImages();
+        $imgfile = $imagick->writeImages($tempfile, false);
+
+        $scale[0] = 900;
+        $scale[1] = 1200;
+        
+        resizeGDimage($tempfile, $workfile, 0, $scale[0], $scale[1], 1);
+
+
+
+    }
 }
 if ($details['preview']===false && ($details['filetype']=='.jpg' || $details['filetype']=='.jpeg' || $details['filetype']=='.gif' || $details['filetype']=='.png')) {
 	$details['preview'] = $details['fullpath'];
@@ -278,7 +295,7 @@ $mediasave_sql = "UPDATE `wspmedia` SET
     filekeys = '".escapeSQL($details['mediakeys'])."',
     filedata = '".escapeSQL(serialize($details['filedata']))."'
     WHERE `filekey` = '".escapeSQL(trim($fl))."'";
-var_export(doSQL($mediasave_sql));
+doSQL($mediasave_sql);
 
 require ("./data/include/header.inc.php");
 require ("./data/include/navbar.inc.php");
@@ -325,7 +342,49 @@ require ("./data/include/sidebar.inc.php");
             
             ?>
             <div class="row">
-                <div class="col-md-8 col-lg-9">
+                <div class="col-md-12 col-lg-3 col-lg-push-9 preview-panel">
+                    <!-- PANEL NO PADDING -->
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <h3 class="panel-title"><?php echo returnIntLang('mediadetails preview', true); ?> <?php if ($details['thumbnail']!==false): ?> &nbsp; <i class="fa fa-refresh" onclick="$('#reloadthumb').submit();"></i><?php endif; ?></h3>
+                        </div>
+                        <div class="panel-body no-padding text-center">
+                            <div class="padding-top-30 padding-bottom-30">
+                                <?php if ($details['thumbnail']!==false): ?>
+                                <a onclick="showImage('<?php echo $details['fullpath']; ?>')"><img src="<?php echo $details['thumbnail']; ?>" class="previewimg" /></a>
+                                <script>
+                                    
+                                function showImage(imgPath) {
+                                    $('.imagepreview').attr('src', imgPath);
+                                    $('.imagepreview').css('background-image', imgPath);
+                                    $('#imagemodal').modal('show');   
+                                };
+                                    
+                                </script>
+                                <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">              
+                                            <div class="modal-body">
+                                                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                                                <img src="" class="imagepreview" style="max-width: 100%;" >
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php else: ?>
+                                    <p><code>upload area coming soon</code></p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <form id="reloadthumb" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+                            <input type="hidden" name="fl" value="<?php echo $fl; ?>" />
+                            <input type="hidden" name="ml" value="<?php echo prepareTextField($_REQUEST['ml']); ?>" />
+                            <input type="hidden" name="action" value="reloadthumb" />
+                        </form>
+                    </div>
+                    <!-- END PANEL NO PADDING -->
+                </div>
+                <div class="col-md-12 col-lg-9 col-lg-pull-3">
                     <div class="row">
                         <div class="col-md-12">
                             <div class="panel" id="mediainfo">
@@ -361,22 +420,12 @@ require ("./data/include/sidebar.inc.php");
                                                 echo returnIntLang('mediadetails filedate unknown', true);
                                             } ?></p></div>
                                     </div>
+                                    <?php if (is_array($details['filedata'])) { ?>
                                     <div class="row">
                                         <div class="col-sm-3"><?php echo returnIntLang('mediadetails measures', true); ?></div>
-                                        <div class="col-sm-9"><pre><?php 
-                                            
-                                        var_export($details);    
-                                            
-                                        ?></pre></div>
+                                        <div class="col-sm-9"><p><?php echo intval($details['filedata']['width']).' '.returnIntLang('mediadetails px').' × '.intval($details['filedata']['height']).' '.returnIntLang('mediadetails px'); ?></p></div>
                                     </div>
-                                    <div class="row">
-                                        <div class="col-sm-3"><?php echo returnIntLang('mediadetails measures', true); ?></div>
-                                        <div class="col-sm-9"><pre><?php 
-                                            
-                                        var_export(mediaDesc($details['fullpath']));    
-                                            
-                                        ?></pre></div>
-                                    </div>
+                                    <?php } ?>
                                 </div>
                             </div>
                         </div>
@@ -451,21 +500,14 @@ require ("./data/include/sidebar.inc.php");
                                         </div>
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <?php
-                                                
-                                                var_export($_REQUEST['fl']);
-                                                echo '<hr>';
-                                                var_export($fl);
-                                                
-                                                ?>
                                                 <input type="hidden" name="action" value="savefile">
                                                 <input type="hidden" name="fl" class="form-control" value="<?php echo prepareTextField($fl); ?>" />
                                                 <input type="hidden" name="ml" value="<?php echo prepareTextField($_REQUEST['ml']); ?>" />
-                                                <p><a href="#" onClick="document.getElementById('mediadescform').submit();" class="btn btn-primary"><?php echo returnIntLang('button save data', false); ?></a></p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                                <p><a href="#" onClick="document.getElementById('mediadescform').submit();" class="btn btn-primary"><?php echo returnIntLang('button save data', false); ?></a></p>
                             </form>
                         </div>
                         
@@ -531,48 +573,6 @@ require ("./data/include/sidebar.inc.php");
                             </div>
                         <?php } ?>
                     </div>
-                </div>
-                <div class="col-md-4 col-lg-3 preview-panel">
-                    <!-- PANEL NO PADDING -->
-                    <div class="panel">
-                        <div class="panel-heading">
-                            <h3 class="panel-title"><?php echo returnIntLang('mediadetails preview', true); ?> <?php if ($details['thumbnail']!==false): ?> &nbsp; <i class="fa fa-refresh" onclick="$('#reloadthumb').submit();"></i><?php endif; ?></h3>
-                        </div>
-                        <div class="panel-body no-padding text-center">
-                            <div class="padding-top-30 padding-bottom-30">
-                                <?php if ($details['thumbnail']!==false): ?>
-                                <a onclick="showImage('<?php echo $details['fullpath']; ?>')"><img src="<?php echo $details['thumbnail']; ?>" class="previewimg" /></a>
-                                <script>
-                                    
-                                function showImage(imgPath) {
-                                    $('.imagepreview').attr('src', imgPath);
-                                    $('.imagepreview').css('background-image', imgPath);
-                                    $('#imagemodal').modal('show');   
-                                };
-                                    
-                                </script>
-                                <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">              
-                                            <div class="modal-body">
-                                                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                                                <img src="" class="imagepreview" style="max-width: 100%;" >
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <?php else: ?>
-                                    <p>upload area</p>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <form id="reloadthumb" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-                            <input type="hidden" name="fl" value="<?php echo $fl; ?>" />
-                            <input type="hidden" name="ml" value="<?php echo prepareTextField($_REQUEST['ml']); ?>" />
-                            <input type="hidden" name="action" value="reloadthumb" />
-                        </form>
-                    </div>
-                    <!-- END PANEL NO PADDING -->
                 </div>
             </div>
             <div class="row hide">
