@@ -65,16 +65,14 @@
                     </li>
                     <?php endif;
                         
-                    if (!(isset($_SESSION['wspvars']['disablenews'])) || $_SESSION['wspvars']['disablenews']==0):
-                    ?>
-                    <!-- legend -->
-                    <li class="dropdown">
-                        <a id="legend-start" onclick="legend.restart();">
-                            <i class="fa fa-question"></i> <span class="hide">Help</span>
-                        </a>
-                    </li>
-                    <?php endif; ?>
-                    <?php
+                    if ((isset($_SESSION['wspvars']['menuposition']) && $_SESSION['wspvars']['menuposition']=='index') && (!(isset($_SESSION['wspvars']['disablenews'])) || $_SESSION['wspvars']['disablenews']==0)) {
+                        print('<!-- legend -->
+                        <li class="dropdown">
+                            <a id="legend-start" onclick="legend.restart();">
+                                <i class="fa fa-question"></i> <span class="hide">Help</span>
+                            </a>
+                        </li>');
+                    }
 
                     $showmodmenu = array();
                     if (array_key_exists('rights', $_SESSION['wspvars'])):
@@ -149,8 +147,10 @@
     <?php } ?>
 </nav>
 <!-- END NAVBAR -->
-<?php if(!(isset($preview)) || (isset($preview) && !($preview))): ?>
-<script type="text/javascript">
+<?php 
+
+if(!(isset($preview)) || (isset($preview) && !($preview))) { 
+    print ('<script type="text/javascript">
     var legend = new Tour();
-</script>
-<?php endif; ?>
+    </script>');
+}
