@@ -60,8 +60,8 @@ $(document).ready(function() {
     
     callBackgroundPublish();
     
-    setTimeout("showReLogin(<?php echo (defined('WSP_DEV')) ? WSP_DEV : 0 ?>);", (60000*<?php echo intval($_SESSION['wspvars']['autologout']); if(isset($_SESSION['wspvars']['noautologout']) && $_SESSION['wspvars']['noautologout']===true): echo "*1000"; endif; ?>));
-    
+    setTimeout("showReLogin(<?php echo (defined('WSP_DEV')) ? WSP_DEV : 0 ?>);", <?php if (isset($_SESSION['wspvars']['lockscreen']) && $_SESSION['wspvars']['lockscreen']===true) { echo 0; } else { ?>(60000*<?php echo intval($_SESSION['wspvars']['autologout']); if(isset($_SESSION['wspvars']['noautologout']) && $_SESSION['wspvars']['noautologout']===true): echo "*1000"; endif; ?>)<?php } ?>);
+
     <?php if(isset($_SESSION['document_jumper']) && trim($_SESSION['document_jumper'])!=''): ?>
     $([document.documentElement, document.body]).animate({
             scrollTop: ($("<?php echo trim($_SESSION['document_jumper']); ?>").offset().top)-parseInt($('.navbar').outerHeight())-20
