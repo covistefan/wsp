@@ -396,8 +396,8 @@ include("./data/include/sidebar.inc.php");
                                         </div>
                                         <div class="col-md-3">
                                             <div class="form-group">
-                                                <select name="templates_id" class="form-control singleselect fullwidth">
-                                                    <option>LIST OF FTP-COnnections</option>
+                                                <select name="ftp_output" class="form-control singleselect fullwidth">
+                                                    <option>list of ftp-connections</option>
                                                 </select>
                                             </div>
                                         </div>
