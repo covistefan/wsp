@@ -146,14 +146,16 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
                                         if ($i_res['num']>0) {
                                             $file = trim($i_res['set'][0]['parsefile']);
                                             $name = trim($i_res['set'][0]['name']);
-                                            include DOCUMENT_ROOT."/".WSP_DIR."/data/interpreter/".$file;
-                                            $clsInterpreter = new $interpreterClass;
-                                            echo "<option value=\"".intval($grsv["id"])."\">".$name;
-                                            $desc = $clsInterpreter->getView($fieldvalue);
-                                            if (trim($desc)!='') {
-                                                echo " - ".trim($desc);
+                                            if (is_file(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR."data".DIRECTORY_SEPARATOR."interpreter".DIRECTORY_SEPARATOR.$file)) {
+                                                include (DOCUMENT_ROOT.DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR."data".DIRECTORY_SEPARATOR."interpreter".DIRECTORY_SEPARATOR.$file);
+                                                $clsInterpreter = new $interpreterClass;
+                                                echo "<option value=\"".intval($grsv["id"])."\">".$name;
+                                                $desc = $clsInterpreter->getView($fieldvalue);
+                                                if (trim($desc)!='') {
+                                                    echo " - ".trim($desc);
+                                                }
+                                                echo "</option>";
                                             }
-                                            echo "</option>";
                                         }
                                         else {
                                             echo "<option value=\"".intval($grsv['id'])."\">".returnIntLang('hint generic wysiwyg', false);

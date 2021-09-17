@@ -8,6 +8,9 @@
  */
 
 session_start();
+
+var_export($_SESSION);
+
 if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
     require("../data/include/globalvars.inc.php");
     require("../data/include/errorhandler.inc.php");
