@@ -45,103 +45,179 @@ $ct = 0; $totalspace = disk_total_space(DOCUMENT_ROOT);
 while ($totalspace>1024): $totalspace = $totalspace/1024; $ct++; endwhile;
 // define page specific funcs ----------------
 
-if (!(function_exists('checkDatabase'))):
-function checkDatabase($own,$dev,$dev_tablename,$own_tablename) {
-	foreach ($own_tablename as $table) {
-		if (in_array($table,$dev_tablename)){
-			$x=0;
-			// anzahl der felder der dev-tabelle und der aktuellen tabelle ueberpruefen
-			if (sizeof($dev[$table]['field']) < sizeof($own[$table]['field'])):
-				$length = sizeof($own[$table]['field']);
-			else:
-				$length = sizeof($dev[$table]['field']);
-			endif;
-			
-			for ($i=0; $i<$length; $i++){
-				$same = true;
-				// pruefen ob neue spalte in der dev-tabelle vorhanden ist
-				if (@(!in_array($dev[$table]['field'][$i],$own[$table]['field']) && $dev[$table]['field'][$i]!="")):
-					$temp[$table][$x]['action']="addnew";
-					$temp[$table][$x]['field']=$dev[$table]['field'][$i];
-					$x++;
-				elseif (in_array($own[$table]['field'][$i],$dev[$table]['field']) && $own[$table]['field'][$i]!=""):
-					// position im dev array bestimmten
-					$key = array_search($own[$table]['field'][$i],$dev[$table]['field']);
-					// check for field type
-					// some mysql-version don't want to change char fields with less than 4 units to varchar fields
-					// so we use a little workaround to check even it is the same fieldlength, then char vs. varchar does
-					// not effect
-					if ($own[$table]['type'][$i]!=$dev[$table]['type'][$key] && (!("var".$own[$table]['type'][$i]==$dev[$table]['type'][$key]) || ($own[$table]['type'][$i]=="var".$dev[$table]['type'][$key]))){
-						
-						$_SESSION['dbchanges'] .= $own[$table]['type'][$i]." : ".$dev[$table]['type'][$key]."<br >";
-						
-						$temp[$table][$x]['field']=$dev[$table]['field'][$key];
-						$temp[$table][$x]['type']="type";
-						$temp[$table][$x]['action']="changed";
-						$same=false;
-					}
-					// unterschiedliche 'Null'-Behandlung abfangen => NO == ""
-					// dieses problem tritt trotz gleicher mysql-client-version auf
-					// wenn der mysql-server 5.x ist, wird NO zurueckgeliefert, davor leer
-					if ($own[$table]['null'][$i]=="NO"):
-						$own[$table]['null'][$i] = "";
-					endif;
-					if ($dev[$table]['null'][$key]=="NO"):
-						$dev[$table]['null'][$key] = "";
-					endif;
-					// test for NULL changes
-					if ($own[$table]['null'][$i]!=$dev[$table]['null'][$key]):
-						$temp[$table][$x]['field']=$dev[$table]['field'][$key];
-						$temp[$table][$x]['null']="null";
-						$temp[$table][$x]['action']="changed";
-						$same=false;
-					endif;
-					// test for key changes
-					if ($own[$table]['key'][$i]!=$dev[$table]['key'][$key]):
-						$temp[$table][$x]['field']=$dev[$table]['field'][$key];
-						$temp[$table][$x]['key']="key";
-						$temp[$table][$x]['action']="changed";
-						$same=false;
-					endif;
-					//
-					// test for default value changes
-					// second if-clause-part depends on problem, that some mysql-version cannot redeclare 
-					// an integer field with default value to empty default, they set to '0'  
-					// 
-					if ($own[$table]['default'][$i]!=$dev[$table]['default'][$key] && !($own[$table]['default'][$i]==0 && strtolower(substr($own[$table]['type'][$i],0,3))=="int")):
-						$temp[$table][$x]['field'] = $dev[$table]['field'][$key];
-						$temp[$table][$x]['default'] = "default";
-						$temp[$table][$x]['action'] = "changed";
-						$same = false;
-					endif;
-					//
-					// test for extra changes
-					//
-					if ($own[$table]['extras'][$i]!=$dev[$table]['extras'][$i]):
-						$temp[$table][$x]['field']=$dev[$table]['field'][$i];
-						$temp[$table][$x]['extras']="extras";
-						$temp[$table][$x]['action']="changed";
-						$same=false;
-					endif;
-				endif;
-				if (!in_array($own[$table]['field'][$i],$dev[$table]['field']) && $i<sizeof($own[$table]['field'])):
-					//
-					// feld geloescht
-					// 
-					$temp[$table][$x]['field']=$own[$table]['field'][$i];
-					$temp[$table][$x]['action']="delete";
-					$x++;
-				endif;
-				if($same===false){
-					$x++;
-				}
+// unserializeBroken is also setup in funcs … this is fallback
+if (!(function_exists('unserializeBroken'))) {
+    function unserializeBroken($value, $arr = true) {
+        if (is_array($value)) {
+            return $value;
+        }
+        else if (trim($value)!='') {
+            $check = @unserialize($value);
+            if (is_array($check)) {
+                return $check;
+            }
+            else {
+                $tmpserialized = '';
+                while (strlen($value)>0) {
+                    $substring = substr($value, 0, 2);
+                    if (strstr($substring, 'a:')) {
+                        $posSemikolon = strpos($value, '{');
+                        $substring2 = substr($value, 0, $posSemikolon+1);
+                        $tmpserialized = $tmpserialized.$substring2;
+                        $value = substr($value, $posSemikolon+1, strlen($value));
+                    }
+                    else if (strstr($substring, 'i:')) {
+                        $posSemikolon = strpos($value, ';');
+                        $substring2 = substr($value, 0, $posSemikolon+1);
+                        $tmpserialized = $tmpserialized.$substring2;
+                        $value = substr($value, $posSemikolon+1, strlen($value));
+                    }
+                    else if (strstr($substring, 's:')) {
+                        $int = preg_match('/";[adis]:/', $value, $treffer, PREG_OFFSET_CAPTURE);
+                        if($int == 1) {
+                            $substring2 = substr($value, 0, $treffer[0][1]+2);
+                            $a = strpos($substring2, ':"');
+                            $substring3 = substr($substring2, $a+2, ($treffer[0][1]));
+                            $substring3 = substr($substring3, 0, strlen($substring3)-2);
+                            $strlaenge = strlen($substring3);
+                            $tmpserialized = $tmpserialized."s:".$strlaenge.":".'"'.$substring3.'";';
+                            $value = substr($value, $treffer[0][1]+2, strlen($value));
+                        }
+                        else {
+                           preg_match('/";}/', $value, $treffer, PREG_OFFSET_CAPTURE);
+                           $substring2 = substr($value, 0, $treffer[0][1]+2);
+                           $a = strpos($substring2, ':"');
+                           $substring3 = substr($substring2, $a+2, ($treffer[0][1]));
+                           $substring3 = substr($substring3, 0, strlen($substring3)-2);
+                           $strlaenge = strlen($substring3);
+                           $tmpserialized = $tmpserialized."s:".$strlaenge.":".'"'.$substring3.'";';
+                           $value = substr($value, $treffer[0][1]+2, strlen($value));
+                        }
+                    }
+                    else if (strstr($substring, 'd:')) {
+                        $posSemikolon = strpos($value, ';');
+                        $substring2 = substr($value, 0, $posSemikolon+1);
+                        $tmpserialized = $tmpserialized.$substring2;
+                        $value = substr($value, $posSemikolon+1, strlen($value));
+                    }
+                    else if (strstr($substring, '}')) {
+                        $tmpserialized = $tmpserialized."}";
+                        $value = substr($value, 1, strlen($value));
+                    }
+                    else {
+                        $tmpserialized = $tmpserialized.substr($value, 0, 1);
+                        $value = substr($value, 1, strlen($value));
+                    }
+                }
+                $return = @unserialize($tmpserialized);
+                if (is_array($return)) {
+                    return $return;
+                }
+                else if ($arr === true) {
+                    return array();    
+                }
+            }
+	   }
+	}
+}
 
+if (!(function_exists('checkDatabase'))) {
+	function checkDatabase($own,$dev,$dev_tablename,$own_tablename) {
+		foreach ($own_tablename as $table) {
+			if (in_array($table,$dev_tablename)){
+				$x=0;
+				// anzahl der felder der dev-tabelle und der aktuellen tabelle ueberpruefen
+				if (sizeof($dev[$table]['field']) < sizeof($own[$table]['field'])):
+					$length = sizeof($own[$table]['field']);
+				else:
+					$length = sizeof($dev[$table]['field']);
+				endif;
+				
+				for ($i=0; $i<$length; $i++){
+					$same = true;
+					// pruefen ob neue spalte in der dev-tabelle vorhanden ist
+					if (@(!in_array($dev[$table]['field'][$i],$own[$table]['field']) && $dev[$table]['field'][$i]!="")):
+						$temp[$table][$x]['action']="addnew";
+						$temp[$table][$x]['field']=$dev[$table]['field'][$i];
+						$x++;
+					elseif (in_array($own[$table]['field'][$i],$dev[$table]['field']) && $own[$table]['field'][$i]!=""):
+						// position im dev array bestimmten
+						$key = array_search($own[$table]['field'][$i],$dev[$table]['field']);
+						// check for field type
+						// some mysql-version don't want to change char fields with less than 4 units to varchar fields
+						// so we use a little workaround to check even it is the same fieldlength, then char vs. varchar does
+						// not effect
+						if ($own[$table]['type'][$i]!=$dev[$table]['type'][$key] && (!("var".$own[$table]['type'][$i]==$dev[$table]['type'][$key]) || ($own[$table]['type'][$i]=="var".$dev[$table]['type'][$key]))){
+							
+							$_SESSION['dbchanges'] .= $own[$table]['type'][$i]." : ".$dev[$table]['type'][$key]."<br >";
+							
+							$temp[$table][$x]['field']=$dev[$table]['field'][$key];
+							$temp[$table][$x]['type']="type";
+							$temp[$table][$x]['action']="changed";
+							$same=false;
+						}
+						// unterschiedliche 'Null'-Behandlung abfangen => NO == ""
+						// dieses problem tritt trotz gleicher mysql-client-version auf
+						// wenn der mysql-server 5.x ist, wird NO zurueckgeliefert, davor leer
+						if ($own[$table]['null'][$i]=="NO"):
+							$own[$table]['null'][$i] = "";
+						endif;
+						if ($dev[$table]['null'][$key]=="NO"):
+							$dev[$table]['null'][$key] = "";
+						endif;
+						// test for NULL changes
+						if ($own[$table]['null'][$i]!=$dev[$table]['null'][$key]):
+							$temp[$table][$x]['field']=$dev[$table]['field'][$key];
+							$temp[$table][$x]['null']="null";
+							$temp[$table][$x]['action']="changed";
+							$same=false;
+						endif;
+						// test for key changes
+						if ($own[$table]['key'][$i]!=$dev[$table]['key'][$key]):
+							$temp[$table][$x]['field']=$dev[$table]['field'][$key];
+							$temp[$table][$x]['key']="key";
+							$temp[$table][$x]['action']="changed";
+							$same=false;
+						endif;
+						//
+						// test for default value changes
+						// second if-clause-part depends on problem, that some mysql-version cannot redeclare 
+						// an integer field with default value to empty default, they set to '0'  
+						// 
+						if ($own[$table]['default'][$i]!=$dev[$table]['default'][$key] && !($own[$table]['default'][$i]==0 && strtolower(substr($own[$table]['type'][$i],0,3))=="int")):
+							$temp[$table][$x]['field'] = $dev[$table]['field'][$key];
+							$temp[$table][$x]['default'] = "default";
+							$temp[$table][$x]['action'] = "changed";
+							$same = false;
+						endif;
+						//
+						// test for extra changes
+						//
+						if ($own[$table]['extras'][$i]!=$dev[$table]['extras'][$i]):
+							$temp[$table][$x]['field']=$dev[$table]['field'][$i];
+							$temp[$table][$x]['extras']="extras";
+							$temp[$table][$x]['action']="changed";
+							$same=false;
+						endif;
+					endif;
+					if (!in_array($own[$table]['field'][$i],$dev[$table]['field']) && $i<sizeof($own[$table]['field'])):
+						//
+						// feld geloescht
+						// 
+						$temp[$table][$x]['field']=$own[$table]['field'][$i];
+						$temp[$table][$x]['action']="delete";
+						$x++;
+					endif;
+					if($same===false){
+						$x++;
+					}
+
+				}
 			}
 		}
-	}
-	return $temp;
-} // checkDatabase
-endif;
+		return $temp;
+	} // checkDatabase
+}
 
 function checkDatabaseNew($own = array(), $dev = array()) {
 	$returnsql = array();
@@ -573,34 +649,39 @@ require ("./data/include/sidebar.inc.php");
             <?php
             
             showWSPMsg($_SESSION['wspvars']['shownotice']);
-            
-            // get update version from update server
-            $updversion = false;
-            if (isCurl()) {
-                $defaults = array( 
-                    CURLOPT_URL => trim(WSP_UPDSRV."/download/version.php?key=".WSP_UPDKEY), 
-                    CURLOPT_HEADER => 0, 
-                    CURLOPT_RETURNTRANSFER => TRUE, 
-                    CURLOPT_TIMEOUT => 4 
-                );
-                $ch = curl_init();
-                curl_setopt_array($ch, $defaults);    
-                if( ! $updversion = curl_exec($ch)) { trigger_error(curl_error($ch)); } 
-                curl_close($ch);
-            } 
-            else {
-                $fh = fopen('http://'.WSP_UPDSRV."/download/version.php?key=".WSP_UPDKEY, 'r');
-                if (intval($fh)!=0):
-                while (!feof($fh)) {
-                    $updversion .= fgets($fh, 4096);
-                }
-                endif;
-                fclose($fh);
-            }
-            
+
+			if (defined('WSP_UPDSRV') && WSP_UPDSRV=='git') {
+				echo 'git';
+
+			} else if (defined('WSP_UPDSRV') && preg_match('#(\w{1,}\.\w{2,})#i', WSP_UPDSRV)>0) {
+				// get update version from update server
+				$updversion = false;
+				if (isCurl()) {
+					$defaults = array( 
+						CURLOPT_URL => trim(WSP_UPDSRV."/download/version.php?key=".WSP_UPDKEY), 
+						CURLOPT_HEADER => 0, 
+						CURLOPT_RETURNTRANSFER => TRUE, 
+						CURLOPT_TIMEOUT => 4 
+					);
+					$ch = curl_init();
+					curl_setopt_array($ch, $defaults);    
+					if( ! $updversion = curl_exec($ch)) { trigger_error(curl_error($ch)); } 
+					curl_close($ch);
+				} 
+				else {
+					$fh = fopen('https://'.WSP_UPDSRV."/download/version.php?key=".WSP_UPDKEY, 'r');
+					if (intval($fh)!=0):
+					while (!feof($fh)) {
+						$updversion .= fgets($fh, 4096);
+					}
+					endif;
+					fclose($fh);
+				}
+			}
+
             ?>
             <div class="row">
-                <div class="col-md-6" <?php echo (compareVersion($_SESSION['wspvars']['localversion'],$updversion)>0)?'':' style="display: none;" '; ?>>
+                <div class="col-md-6" <?php echo (version_compare($updversion, $_SESSION['wspvars']['localversion'])>0)?'':' style="display: none;" '; ?>>
                     <div class="panel">
                         <div class="panel-heading">
                             <h3 class="panel-title"><?php echo returnIntLang('system automatic update'); ?></h3>
