@@ -1129,7 +1129,7 @@ function returnContentStructureItem($datatable = 'menu', $mid = 0, $showsub = fa
         }
         $realtemp = getTemplateID(intval($middata_res['set'][0]['mid']));
         $templatevars = getTemplateVars($realtemp);
-        if (count($templatevars['contentareas'])>0) {
+        if (isset($templatevars['contentareas']) && is_array($templatevars['contentareas']) && count($templatevars['contentareas'])>0) {
             // editable 1 == REALLY editable + editable 9 == setup dynamic contents
             if ($middata_res['set'][0]['editable']==1 || $middata_res['set'][0]['editable']==9) {
                 $item.= ' <a class="toggle-content btn-link" mid="'.$middata_res['set'][0]['mid'].'"><span class="label inline-label label-default">';
@@ -1145,6 +1145,8 @@ function returnContentStructureItem($datatable = 'menu', $mid = 0, $showsub = fa
                 $item.= ' '.getTemplateName($realtemp);
                 $item.= '</span></span> ';
             }
+        } else {
+            $templatevars['contentareas'] = array(0);
         }
         $contentres = getResultSQL("SELECT `cid` FROM `content` WHERE `mid` = ".intval($middata_res['set'][0]['mid'])." AND `trash` = 0 AND (`content_lang` = '".escapeSQL(trim($_SESSION['wspvars']['workspacelang']))."' OR `content_lang` = '') AND `content_area` IN ('".implode("','", $templatevars['contentareas'])."')");
         if ($contentres!==false) {
@@ -1658,26 +1660,18 @@ if (!(function_exists('getTemplateID'))):
 // get template id for given mid up to main template
 function getTemplateID($mid) {
     $templateID = 0;
-    $mid_sql = "SELECT `templates_id`, `connected` FROM `menu` WHERE `mid` = ".$mid;
+    $mid_sql = "SELECT `templates_id`, `connected` FROM `menu` WHERE `mid` = ".intval($mid);
     $mid_res = doSQL($mid_sql);
-    if ($mid_res['num']>0):
+    if ($mid_res['num']>0) {
         $templateID = intval($mid_res['set'][0]['templates_id']);
-        if ($templateID==0 && intval($mid_res['set'][0]['connected'])>0):
+        if ($templateID==0 && intval($mid_res['set'][0]['connected'])>0) {
             $templateID = getTemplateID(intval($mid_res['set'][0]['connected']));
-        elseif ($templateID==0):
-            $sql = "SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'templates_id'";
-            $res = doSQL($sql);
-            if ($res['num']>0):
-                $templateID = intval($res['set'][0]['varvalue']);
-            endif;
-        endif;
-    else:
-        $sql = "SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'templates_id'";
-        $res = doSQL($sql);
-        if ($res['num']>0):
-            $templateID = intval($res['set'][0]['varvalue']);
-        endif;
-    endif;
+        }
+    }
+    // get the base template ID if nothing else was found
+    if ($templateID==0) {
+        $templateID = getWSPProperties('templates_id');
+    }
     return intval($templateID);
     }	// getTemplateID()
 endif;
@@ -1734,8 +1728,10 @@ if (!(function_exists('getTemplateVars'))) {
                     }
                 }
             }
-		}
-        return $tempinfo;
+            return $tempinfo;
+		} else {
+            return false;
+        }
     }	// getTemplateVars()
 }
 

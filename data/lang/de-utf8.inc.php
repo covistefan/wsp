@@ -905,7 +905,8 @@ $lang['de'] = array(
 'contents create new content' => 'Neuen Inhalt anlegen',
 'contents this section is not editable' => 'Die Inhalte dieses Bereichs können nicht bearbeitet werden.',
 'contents this section is dynamic' => 'Die Inhalte dieses Bereichs werden dynamisch verwaltet',
-    
+'contents no template associated to this menupoint' => 'Diesem Menüpunkt ist keine Seitenvorlage zugeordnet. Definiere eine Standardvorlage oder weise diesem Menüpunkt eine eigene Seitenvorlage zu.',
+
 'contents legend' => 'Zeichenerklärung', 
 'contents legend choose workspace lang' => 'Sprache der Arbeitsfläche auswählen (optional)',
 'contents legend workspace options' => 'Arbeitsflächenoptionen',
@@ -969,6 +970,7 @@ $lang['de'] = array(
 'contentedit existing contents for' => 'Bestehende Inhalte für ',
 'contentedit interpreterfile not found1' => 'Die Interpreterdatei ”<b>',
 'contentedit interpreterfile not found2' => '</b>” wurde nicht gefunden. Der Inhalt kann nicht bearbeitet werden.',
+'contentedit failure creating new content' => 'Es gab einen schwerwiegenden Fehler beim Anlegen des neuen Inhaltselementes, der nicht automatisch behoben werden konnte.',
 
 'contentedit content' => 'Inhalte bearbeiten',
 'contentedit content info' => 'Allgemeine Informationen',
