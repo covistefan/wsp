@@ -55,7 +55,7 @@ endif;
 
 if (isset($_SESSION['wspvars']['lockedvar'])):
     // remove temporary data
-    removeDir(str_replace("//","/",str_replace("//","/",WSP_DIR."/tmp/".str_replace("./", "/", str_replace("../", "/", $_SESSION['wspvars']['lockedvar'])))));
+    deleteFolder(cleanPath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR."tmp".DIRECTORY_SEPARATOR.$_SESSION['wspvars']['lockedvar']));
     // make logout from database
     $sql = "DELETE FROM `security` WHERE `usevar` = '".escapeSQL($_SESSION['wspvars']['lockedvar'])."'";
     doSQL($sql);
