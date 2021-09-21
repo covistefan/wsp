@@ -780,6 +780,7 @@ include("./data/include/sidebar.inc.php");
                                             </div>
                                         </div>
                                     </div>
+                                    <?php /*
                                     <div class="row" style="display: _none;">
                                         <div class="col-md-3">
                                             <?php echo returnIntLang('editorprefs login cookie runtime', true); ?>
@@ -802,17 +803,21 @@ include("./data/include/sidebar.inc.php");
                                             </div>
                                         </div>
                                     </div>
+                                    */ ?>
                                     <div class="row">
                                         <div class="col-md-3">
                                             <?php echo returnIntLang('editorprefs forbidden filenames', true); ?>
                                         </div>
                                         <div class="col-md-9">
                                             <div class="form-group">
-                                                <textarea name="nonames" id="nonames" rows="6" class="form-control full growingarea"><?php
+                                                <textarea name="nonames" id="nonames" rows="4" class="form-control full growingarea"><?php
                                                 if (isset($sitedata['nonames'])) {
-                                                    $forbidden = explode(";", $sitedata['nonames']);
-                                                    $forbidden = explode(PHP_EOL, implode(", ", $forbidden));
-                                                    echo implode(", ", $forbidden);
+                                                    $forbiddentmp = implode(",", explode(";", $sitedata['nonames']));
+                                                    $forbiddentmp = implode(",", explode(PHP_EOL, $forbiddentmp));
+                                                    $forbiddentmp = explode(",", $forbiddentmp);
+                                                    $forbiddentxt = array();
+                                                    foreach ($forbiddentmp AS $fbk => $fbv) { if (trim($fbv)!='') { $forbiddentxt[] = trim($fbv); }}
+                                                    echo implode(", ", $forbiddentxt);
                                                 }
                                                 ?></textarea>
                                             </div>
