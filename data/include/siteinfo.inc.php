@@ -3,12 +3,13 @@
  *
  * @author stefan@covi.de
  * @since 3.1
- * @version 7.0
- * @lastchange 2021-06-02
+ * @version 7.0.1
+ * @lastchange 2021-09-21
  */
 
 // redirect to secure connection
 if (intval(getWSPProperties('sslmode'))==1 && $_SERVER['REQUEST_SCHEME']=='http') { header('location: https://'.str_replace("//", "/", $_SERVER['HTTP_HOST'].'/'.$_SERVER['SCRIPT_URL'])); }
+
 if (isset($_REQUEST['night']) && $_REQUEST['night']=='off') { $_SESSION['wspvars']['daily'] = true; }
 
 $_SESSION['wspvars']['workspaceurl'] = doResultSQL("SELECT `varvalue` FROM `wspproperties` WHERE `varname` = 'devurl'");

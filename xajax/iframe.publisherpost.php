@@ -154,7 +154,7 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='' && DEFINED('
                         foreach ($_POST['publishlang'] AS $plk => $plv) {
                             $pucnum = getNumSQL("SELECT `id` FROM `wspqueue` WHERE `action` = '".$publishaction."', `param` = '".intval($pvalue)."' AND `lang` = '".trim($plv)."' AND `done` = 0");
                             if (intval($pucnum)==0) {
-                                $pubsql = doSQL("INSERT INTO `wspqueue` SET `uid` = ".intval($_SESSION['wspvars']['userid']).", `set` = '".$setuptime."', `action` = '".$publishaction."', `param` = '".intval($pvalue)."', `timeout` = 0, `done` = 0, `priority` = 0, `outputuid` = ".intval($_SESSION['wspvars']['userid']).", `lang` = '".trim($plv)."', `output` = ''");
+                                $pubsql = doSQL("INSERT INTO `wspqueue` SET `uid` = ".intval($_SESSION['wspvars']['userid']).", `set` = '".$setuptime."', `action` = '".$publishaction."', `param` = '".intval($pvalue)."', `timeout` = 0, `done` = 0, `priority` = 0, `outputuid` = ".intval($_SESSION['wspvars']['userid']).", `lang` = ".isset($plv)?"'".trim($plv)."'":'NULL'.", `output` = 'NULL'");
                                 if (!($pubsql['res'])) {
                                     addWSPMsg('errormsg', returnIntLang('publisher error setup queue'));
                                 }
@@ -165,9 +165,9 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='' && DEFINED('
                         $publishlang = unserializeBroken($_SESSION['wspvars']['sitelanguages']);
                         if (is_array($publishlang) && count($publishlang)>0) {
                             foreach ($publishlang['shortcut'] AS $sk => $sv) {
-                                $pucnum = getNumSQL("SELECT `id` FROM `wspqueue` WHERE `action` = '".$publishaction."', `param` = '".intval($pvalue)."' AND `lang` = '".trim($plv)."' AND `done` = 0");
+                                $pucnum = getNumSQL("SELECT `id` FROM `wspqueue` WHERE `action` = '".$publishaction."', `param` = '".intval($pvalue)."' AND `lang` ".(isset($plv)?" = '".trim($plv)."'":' IS NULL ')." AND `done` = 0");
                                 if (intval($pucnum)==0) {
-                                    $pubsql = doSQL("INSERT INTO `wspqueue` SET `uid` = ".intval($_SESSION['wspvars']['userid']).", `set` = '".$setuptime."', `action` = '".$publishaction."', `param` = '".intval($pvalue)."', `timeout` = 0, `done` = 0, `priority` = 1, `outputuid` = ".intval($_SESSION['wspvars']['userid']).", `lang` = '".trim($sv)."', `output` = ''");
+                                    $pubsql = doSQL("INSERT INTO `wspqueue` SET `uid` = ".intval($_SESSION['wspvars']['userid']).", `set` = '".$setuptime."', `action` = '".$publishaction."', `param` = '".intval($pvalue)."', `timeout` = 0, `done` = 0, `priority` = 1, `outputuid` = ".intval($_SESSION['wspvars']['userid']).", `lang` = ".(isset($plv)?"'".trim($plv)."'":'NULL').", `output` = 'NULL'");
                                     if (!($pubsql['res'])) {
                                         addWSPMsg('errormsg', returnIntLang('publisher error setup queue'));
                                     }
@@ -232,7 +232,7 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='' && DEFINED('
         
         echo "<script type='text/javascript'>\n";
         if (count($publisher)>0) { echo "parent.updatePublish(".json_encode($publisher).");\n"; }
-        echo "parent.updateQueue(".intval(getNumSQL("SELECT `id` FROM `wspqueue` WHERE `done` = 0 GROUP BY CONCAT(`param`,`lang`)")).");\n";
+        echo "parent.updateQueue(".intval(getWSPqueue()).");\n";
         echo "parent.callBackgroundPublish();";
         echo "</script>\n";
     }

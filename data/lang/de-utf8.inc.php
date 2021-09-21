@@ -1998,7 +1998,7 @@ $lang['de'] = array(
 'editorprefs show hidden media folders as download target' => 'Ausnahmen im Download-Dropdown',
 
 'editorprefs security' => 'Fehlerbehandlung & Sicherheit',
-'editorprefs autologout' => 'Automatische Abmeldung in Minuten',
+'editorprefs autologout' => 'LockScreen-Anzeige nach Minuten',
 'editorprefs cookie based autologin' => 'Dauerhafte Anmeldung erlauben',
 'editorprefs handling login failures' => '<em>deprecated</em>',
 'editorprefs send login failures to admin' => 'Administrator bei fehlerhaften Logins benachrichtigen',

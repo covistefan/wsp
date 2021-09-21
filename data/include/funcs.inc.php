@@ -150,34 +150,107 @@ if (!(function_exists('escapeSQL'))) {
 
 // do sql statement
 // returns array with resultset and complete information
-if (!(function_exists('doSQL'))):
-function doSQL($statement = '') {
+if (!(function_exists('doSQL'))) {
+function doSQL( $statement = '' ) {
 	$set = array('res'=>false,'aff'=>0,'num'=>0,'set'=>array(),'sql'=>$statement,'inf'=>'','err'=>'');
-	if ($_SESSION['wspvars']['db']):
-		$res = $_SESSION['wspvars']['db']->query($statement);
-		if ($res===true):
+	$groupby = false;
+    if ($_SESSION['wspvars']['db']) {
+        if (isset($_SESSION['wspvars']['sqlmode']) && is_array($_SESSION['wspvars']['sqlmode']) && in_array('ONLY_FULL_GROUP_BY', $_SESSION['wspvars']['sqlmode'])) {
+            // first we try to run the statement without replacement
+            $res = $_SESSION['wspvars']['db']->query($statement);
+            // false res means there is the option the request could not be handled while using GROUP BY in statement
+            if ($res===false) {
+                // grep the group by part WITH following ORDER BY 
+                $grp = '/group[ ]{1,}by[ ]{1,}\({0,1}[`(),a-zA-Z_\-0-9\. ]*\){0,1}(?= order)/i';
+                $grpfnd = preg_match($grp, $statement, $grpmatches, PREG_OFFSET_CAPTURE, 0);
+                if (intval($grpfnd)==0) {
+                    // grep the group by part WITHOUT following ORDER BY 
+                    $grp = '/group[ ]{1,}by[ ]{1,}\({0,1}[`(),\.a-zA-Z_\-0-9 ]*\){0,1}/i';
+                    $grpfnd = preg_match($grp, $statement, $grpmatches, PREG_OFFSET_CAPTURE, 0);
+                }
+                if ($grpfnd>0) {
+                    if (defined('WSP_DEV') && WSP_DEV) {
+                        addWSPMsg('errormsg', 'Statement "'.$statement.'" automatically converted with GROUPBY');
+                    }
+                    // some group statement was found so we replace the group by part with empty string
+                    // and do grouping later with result ;)
+                    $statement = str_replace($grpmatches[0][0], '', $statement);
+                    $groupby = getGROUPBY($grpmatches[0][0]);
+                }
+            }
+        }
+        $res = $_SESSION['wspvars']['db']->query($statement);
+		if ($res===true) {
 			$set['res'] = true;
 			$set['aff'] = $_SESSION['wspvars']['db']->affected_rows;
-		elseif ($res):
+		} else if ($res) {
 			$set['res'] = true;
 			$set['aff'] = $_SESSION['wspvars']['db']->affected_rows;
 			$set['num'] = $res->num_rows;
-		else:
+		} else {
 			$set['err'] = $_SESSION['wspvars']['db']->error_list;
-		endif;
-		if ($set['res']):
+        }
+		if ($set['res']) {
 			$set['inf'] = $_SESSION['wspvars']['db']->insert_id;
-		endif;
-		if ($set['num'] && $set['num']>0):
-			for($n=0; $n<$set['num']; $n++):
+        }
+		if ($set['num'] && $set['num']>0) {
+			for($n=0; $n<$set['num']; $n++) {
 				$set['set'][$n] = mysqli_fetch_assoc($res);
-			endfor;
+            }
+            // handle the late groupby
+            if ($groupby!==false) {
+                $tmpgrp = array();
+                $grpval = array();
+                foreach ($groupby AS $gbk => $gbv) {
+                    if (array_key_exists($gbv, $set['set'][array_key_first($set['set'])])) {
+                        $grpval[] = $gbv;
+                    }
+                }
+                if (count($grpval)>0) {
+                    rsort($set['set']);
+                    foreach ($set['set'] AS $sk => $sv) {
+                        $key = array();
+                        foreach($grpval AS $gvk => $gvv) {
+                            $key[] = $sv[$gvv];
+                        }
+                        $tmpgrp[implode(':', $key)] = $sk;
+                    }
+                    rsort($set['set']);
+                    foreach ($set['set'] AS $sk => $sv) {
+                        if (!(in_array($sk, $tmpgrp))) {
+                            unset($set['set'][$sk]);
+                        }
+                    }
+                    $set['set'] = array_values($set['set']);
+                    $set['num'] = (intval($set['num'])>0) ? count($set['set']) : $set['num'];
+                    $set['aff'] = (intval($set['aff'])>0) ? count($set['set']) : $set['aff'];
+                    unset($tmpgrp);
+                    unset($grpval);
+                }
+            }
 			mysqli_free_result($res);
-		endif;
-	endif;
+		}
+	}
 	return $set;
 	}
-endif;
+}
+
+// helping function to use group by statements
+if (!(function_exists('getGROUPBY'))) {
+    function getGROUPBY( $groupbystring ) {
+        $grpfnd = preg_match_all('/`[a-zA-Z0-9_]*`/i', $groupbystring, $grpfld, PREG_OFFSET_CAPTURE, 0);
+        if ($grpfnd>0) {
+            $grpflds = array();
+            foreach ($grpfld[0] AS $gfk => $gfv) {
+                $grpfldtmp = trim(str_replace('`', '', trim($gfv[0])));
+                if (!(strstr($grpfldtmp, ' '))) {
+                    $grpflds[] = $grpfldtmp;
+                }
+            }
+            return $grpflds;
+        }
+    }
+}
 
 // returns ONE result with a given statement that SHOULD return ONE result 
 if (!(function_exists('doResultSQL'))):
@@ -194,15 +267,15 @@ function doResultSQL($statement) {
 endif;
 
 if (!(function_exists('getNumSQL'))) {
-    function getNumSQL($statement) { $tmp = doSQL($statement); if ($tmp['num']>0): return($tmp['num']); else: return 0; endif; }
+    function getNumSQL($statement) { $tmp = doSQL($statement); return ($tmp['num']>0) ? intval($tmp['num']) : 0; }
 }
 // does statement and returns affected rows 
 if (!(function_exists('getAffSQL'))) {
-    function getAffSQL($statement) { $tmp = doSQL($statement); if ($tmp['aff']>0): return(intval($tmp['aff'])); else: return 0; endif; }
+    function getAffSQL($statement) { $tmp = doSQL($statement); return ($tmp['aff']>0) ? intval($tmp['aff']) : 0; }
 }
 
 if (!(function_exists('getInsSQL'))) {
-    function getInsSQL($statement) { $tmp = doSQL($statement); if ($tmp['inf']>0): return($tmp['inf']); else: return 0; endif; }
+    function getInsSQL($statement) { $tmp = doSQL($statement); return ($tmp['inf']>0) ? intval($tmp['inf']) : 0; }
 }
 
 // returns an result ARRAY with a given statement that SHOULD return only ONE row 
@@ -287,11 +360,6 @@ if (!(function_exists('mysqli_wsp_client_version'))) {
             return "-";
         }
     }
-}
-
-// test CURL functionality
-function isCurl(){
-    return function_exists('curl_version');
 }
 
 // getWSPProperties returns an array with wsp properties for multiple values or a string for ONE requested value
@@ -6199,6 +6267,25 @@ if (!(function_exists('showWSPWidget'))) {
             echo '</div>';
             echo '</div>';
         }
+    }
+}
+
+function getWSPqueue( $uid = null ) {
+    // param uid if only user related publishing is requested
+    $op_res = doSQL("SELECT DISTINCT `param` FROM `wspqueue` WHERE `done` = 0".(($uid!==null)?" AND `uid` = ".intval($uid):''));
+    if (intval($op_res['num'])>0) {
+        $param = array();
+        foreach ($op_res['set'] AS $oprk => $oprv) {
+            $param[] = intval($oprv['param']);
+        }
+        if (count($param)>0) {
+            $q_res = doSQL("SELECT `id` FROM `wspqueue` WHERE `done` = 0".(($uid!==null)?" AND `uid` = ".intval($uid):'')." AND `param` IN ('".implode("','", $param)."')");
+            return($q_res['num']);
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
     }
 }
 
