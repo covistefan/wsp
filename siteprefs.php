@@ -15,6 +15,7 @@ require("./data/include/globalvars.inc.php");
 // define page params ------------------------
 $_SESSION['wspvars']['lockstat'] = 'siteprops';
 $_SESSION['wspvars']['pagedesc'] = array('fa fa-wrench',returnIntLang('menu siteprefs'),returnIntLang('menu siteprefs generell'));
+$_SESSION['wspvars']['menuposition'] = 'siteprops';
 $_SESSION['wspvars']['mgroup'] = 3;
 $_SESSION['wspvars']['mpos'] = 1;
 $_SESSION['wspvars']['fpos'] = $_SERVER['PHP_SELF'];

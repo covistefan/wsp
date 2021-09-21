@@ -1544,6 +1544,9 @@ $lang['de'] = array(
 'menutmp template properties saved' => 'Die Einstellungen zur Menüvorlage wurden gespeichert.',
 'menutmp template removed' => 'Die Menüvorlage wurde gelöscht',
 
+'menutmp previewmenu' => 'Menüvorschau',
+'menutmp previewmenu desc' => 'Hier siehst du, welche Menüpunkte deiner aktuellen Menüstruktur mit deiner Vorlage dargestellt werden.', 
+
 //Gestaltung -> Eigene Variablen
 'selfvars headline' => 'Eigene Variablen',
 'selfvars info' => 'Eigene Variablen finden Verwendung in Vorlagen. Sie k&ouml;nnen einfache Scripte, aber auch reine Inhalte sein. Der Vorteil eigener Variablen ist die aus der reinen Vorlage ausgelagerte kompakte Struktur und die M&ouml;glichkeit, eine eigene Variable in mehreren Vorlagen einzusetzen, bei Änderungen aber nur einmalig die eigene Variable ändern zu müssen. <strong><em>Eigene Variablen werden beim Veröffentlichen zuerst verarbeitet.</em></strong>',
@@ -1995,7 +1998,7 @@ $lang['de'] = array(
 'editorprefs show hidden media folders as download target' => 'Ausnahmen im Download-Dropdown',
 
 'editorprefs security' => 'Fehlerbehandlung & Sicherheit',
-'editorprefs autologout' => 'Automatische Abmeldung in Minuten',
+'editorprefs autologout' => 'LockScreen-Anzeige nach Minuten',
 'editorprefs cookie based autologin' => 'Dauerhafte Anmeldung erlauben',
 'editorprefs handling login failures' => '<em>deprecated</em>',
 'editorprefs send login failures to admin' => 'Administrator bei fehlerhaften Logins benachrichtigen',

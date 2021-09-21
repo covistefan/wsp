@@ -207,19 +207,14 @@ if(isset($_POST) && is_array($_POST) && count($_POST)>0): foreach ($_POST AS $dk
                         </div>
                         <div class="panel-body">
                             <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" id="sqltest" style="margin: 0px;">
-	
-                                <ul class="tablelist">
-                                <li class="tablecell two">SQL query</li>
-                                <li class="tablecell six"><textarea name="sqlquery" class="full large" ><?php echo $sqlquery; ?></textarea></li>
-                                <?php if ($sqlresult!=''): ?>
-                                <li class="tablecell two">SQL result</li>
-                                <li class="tablecell six"><?php echo $sqlresult; ?></li>
-                                <li class="tablecell six"><?php echo $sqlresultdata; ?></li>
-
-                                <?php endif; ?>
-                                </ul>
+                                <p>SQL statement</p>
+                                <p><textarea name="sqlquery" class="form-control large" ><?php echo isset($sqlquery)?$sqlquery:''; ?></textarea></p>
+                                <?php if (isset($sqlresult) && trim($sqlresult)!='') { ?>
+                                    <p>SQL result</p>
+                                    <pre><?php echo isset($sqlresult)?$sqlresult:''; ?></pre>
+                                    <pre><?php echo isset($sqlresultdata)?$sqlresultdata:''; ?></pre>
+                                <?php } ?>
                                 <p><a href="#" onclick="document.getElementById('sqltest').submit(); return false;" class="greenfield">submit</a></p>
-
                             </form>
                         </div>
                     </div>

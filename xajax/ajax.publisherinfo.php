@@ -10,8 +10,13 @@
 if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
     session_start();
     if (isset($_SESSION) && isset($_SESSION['wspvars']) && isset($_SESSION['wspvars']['lockscreen']) && $_SESSION['wspvars']['lockscreen']===false) {
-        echo "return";
+        // if ANYTHING is in queue, we have to lower the time limit
+        echo '600000' ;
+    } else {
+        echo '-1';
     }
+} else {
+    echo '-1';
 }
 
 // EOF

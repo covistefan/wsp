@@ -12,7 +12,7 @@ session_start();
 /* base includes ----------------------------- */
 require ("../data/include/usestat.inc.php");
 require ("../data/include/globalvars.inc.php");
-// define actual system position - not required
+// define actual system position - not required for ajax and iframe
 // second includes ---------------------------
 require ("../data/include/checkuser.inc.php");
 require ("../data/include/errorhandler.inc.php");

@@ -146,25 +146,31 @@ require ("./data/include/sidebar.inc.php");
                     }
                 }
 
+                function clearQueue() {
+                    document.getElementById('clearqueue').submit();
+                    $('#queueinfo').hide();
+                    $('.queue-num-badge').hide();
+                    $('tr.publisheritem.info').removeClass('info');
+                }
+
             </script>
             <?php 
                 
                 $_SESSION['publishrun'] = 0;
-	
-                $queue_sql = "SELECT `id` FROM `wspqueue` WHERE `done` = 0 GROUP BY CONCAT(`param`,`lang`)";
-                $queue_res = doSQL($queue_sql);
-                if ($queue_res['num']>0) {
+                $queue_num = getWSPqueue();
+
+                if ($queue_num>0) {
             ?>
-            <div class="row">
+            <div class="row" id="queueinfo">
                 <div class="col-md-12">
-                    <div class="panel" id="mediainfo">
+                    <div class="panel" id="queueinfo">
                         <div class="panel-heading">
                             <h3 class="panel-title"><?php echo returnIntLang('publisher queue', true); ?></h3>
                         </div>
                         <div class="panel-body">
-                            <p><?php echo (($queue_res['num']==1)?(returnIntLang('publisher job in queue1')." <span class='queue-num-badge'>1</span> ".returnIntLang('publisher job in queue2')):(returnIntLang('publisher jobs in queue1')." <span class='queue-num-badge'>".(intval($queue_res['num']))."</span> ".returnIntLang('publisher jobs in queue2'))); ?></p>
+                            <p><?php echo (($queue_num==1)?(returnIntLang('publisher job in queue1')." <span class='queue-num-badge'>1</span> ".returnIntLang('publisher job in queue2')):(returnIntLang('publisher jobs in queue1')." <span class='queue-num-badge'>".(intval($queue_num))."</span> ".returnIntLang('publisher jobs in queue2'))); ?></p>
                             <form action="./xajax/iframe.publisherpost.php" id="clearqueue" method="post" target="publisherpost"><input type="hidden" name="op" id="queueop" value="clearqueue" /></form>
-                            <p><a onclick="document.getElementById('clearqueue').submit();" class="btn btn-danger"><?php echo returnIntLang('publisher clear queue'); ?></a> <?php if ($_SESSION['wspvars']['usertype']=='admin'): ?><a onclick="document.getElementById('queueop').value = 'clearallqueues'; document.getElementById('clearqueue').submit();" class="redfield"><?php echo returnIntLang('publisher clear all queues'); ?></a><?php endif; ?></p>
+                            <p><a onclick="clearQueue();" class="btn btn-danger"><?php echo returnIntLang('publisher clear queue'); ?></a> <?php if ($_SESSION['wspvars']['usertype']=='admin'): ?><a onclick="document.getElementById('queueop').value = 'clearallqueues'; document.getElementById('clearqueue').submit();" class="redfield"><?php echo returnIntLang('publisher clear all queues'); ?></a><?php endif; ?></p>
                         </div>
                     </div>
                 </div>
@@ -539,7 +545,7 @@ require ("./data/include/sidebar.inc.php");
                                             // show only breaktree = 0
                                             // breaktree != 0 » structure affected menupoints (like dynamic or forwarding) 
                                             if (intval($mpointdata['set'][0]['breaktree'])==0) {
-                                                echo "<tr id='mid-".$sv."' onclick='togglePublish(".$sv.",".$r.")' class='".$changeclasses[intval($mpointdata['set'][0]['contentchanged'])]."'>";
+                                                echo "<tr id='mid-".$sv."' onclick='togglePublish(".$sv.",".$r.")' class='publisheritem ".$changeclasses[intval($mpointdata['set'][0]['contentchanged'])]."'>";
 
                                                 echo "<td class='desktop text-center'>".$changetypes[intval($mpointdata['set'][0]['contentchanged'])]."</td>";
                                                 echo "<td class='col-md-4 singleline'>";
@@ -707,4 +713,6 @@ require ("./data/include/sidebar.inc.php");
         </div>
     </div>
 </div>
-<?php include ("./data/include/footer.inc.php"); ?>
+<?php
+
+include ("./data/include/footer.inc.php");

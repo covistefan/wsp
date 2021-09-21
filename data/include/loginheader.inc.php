@@ -36,6 +36,4 @@ ksort($_SESSION);
 		<script src="<?php echo cleanPath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR); ?>data/script/wspbase.min.js"></script>       
         <script src="<?php echo cleanPath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR); ?>data/script/bootstrap/bootstrap.min.js"></script>
 	</head>
-<body id="wspbody" class="authareae">
-    <?php
-// EOF ?>
+<body id="wspbody" class="autharea">

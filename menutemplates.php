@@ -62,6 +62,10 @@ if (checkparamvar('op')=="new") {
     $res = doSQL($sql);
     if ($res['aff']) {
         addWSPMsg('noticemsg', returnIntLang('menutmp template created'));
+    } else {
+        if (defined('WSP_DEV') && WSP_DEV) {
+            addWSPMsg('errormsg', var_export($res, true));
+        }
     }
 }
 else if (checkparamvar('op')=="save") {
@@ -152,7 +156,7 @@ include ("data/include/sidebar.inc.php");
                 $menutpl_sql = "SELECT * FROM `templates_menu` ORDER BY `title`";
                 $menutpl_data = doSQL($menutpl_sql);
                 
-                if ($menutpl_data['num']>0) {
+                if ($menutpl_data['num']>0 && trim(checkParamVar('op'))=='') {
                 ?>
                 <div class="col-md-12">
                     <div class="panel" id="existingmenutemplates">
@@ -213,7 +217,7 @@ include ("data/include/sidebar.inc.php");
                                         echo "</td>";
                                         echo "<td>".$mtdv['startlevel']." <form id=\"editform".intval($mtdv['id'])."\" method=\"post\"><input type=\"hidden\" name=\"op\" value=\"edit\"><input type=\"hidden\" name=\"id\" value=\"".intval($mtdv['id'])."\"></form><form id=\"editsourceform".intval($mtdv['id'])."\" method=\"post\"><input type=\"hidden\" name=\"op\" value=\"editsource\"><input type=\"hidden\" name=\"id\" value=\"".intval($mtdv['id'])."\"></form></td>";
                                         
-                                        echo "<td class='text-right'><a style=\"cursor: pointer;\" onclick=\"document.getElementById('editform".intval($mtdv['id'])."').submit();\"><i class='fa fa-pencil-alt fa-btn'></i></a> ";
+                                        echo "<td class='text-right' nowrap='nowrap'><a style='cursor: pointer;' onclick=\"document.getElementById('editform".intval($mtdv['id'])."').submit();\"><i class='fa fa-pencil-alt fa-btn'></i></a> ";
                                         if ($mtdv['parser']=="") {
                                             echo "<a style=\"cursor: pointer;\" onclick=\"$('#editsourceform".intval($mtdv['id'])."').submit();\"><i class='fas fa-code fa-btn'></i></a> ";
                                         }
@@ -283,17 +287,19 @@ include ("data/include/sidebar.inc.php");
                 }
             
                 if (checkParamVar('op')=='editsource') {
-                    $title = trim($_POST['menu_title']);
-                    $desc = trim($_POST['menu_describ']);
-                    $slevel = intval($_POST['menu_slevel']);
-                    $code = '';
-                    foreach ($_POST['item'] AS $pik => $piv) {
-                        $code.= "LEVEL {\n";
-                        ksort($piv);
-                        foreach ($piv AS $pivck => $pivcv) {
-                            $code.= "\t".$pivck." = '".trim($pivcv)."'\n";
+                    $title = isset($_POST['menu_title'])?trim($_POST['menu_title']):$title;
+                    $desc = isset($_POST['menu_describ'])?trim($_POST['menu_describ']):$desc;
+                    $slevel = isset($_POST['menu_slevel'])?intval($_POST['menu_slevel']):$slevel;
+                    if (isset($_POST['item'])) {
+                        $code = '';
+                        foreach ($_POST['item'] AS $pik => $piv) {
+                            $code.= "LEVEL {\n";
+                            ksort($piv);
+                            foreach ($piv AS $pivck => $pivcv) {
+                                $code.= "\t".$pivck." = '".trim($pivcv)."'\n";
+                            }
+                            $code.= "}\n\n"; 
                         }
-                        $code.= "}\n\n"; 
                     }
                 }
             
@@ -326,9 +332,12 @@ include ("data/include/sidebar.inc.php");
                                     <?php 
                                     
                                     $mncd = showMenuDesign(trim($code));
-                                    $prvmid = doResultSQL('SELECT `mid` FROM `menu` WHERE `level` = '.$slevel.' LIMIT 0,1');
+                                    $prvmid = doResultSQL('SELECT `mid` FROM `menu` WHERE `level` = '.$slevel);
                                     include_once('./data/include/menuparser.inc.php');
                                     $prvmenu = buildMenu($mncd, $slevel, 0, $prvmid, 'de', 0, 0, true);
+
+                                    var_Export($prvmenu);
+
                                     echo $prvmenu['menucode'];
                     
                                     ?>

@@ -136,8 +136,8 @@ $isextended = getWSPProperties('extendedmenu');
                 <?php $mp = 7; if ((array_key_exists('wspvars', $_SESSION) && array_key_exists('usertype', $_SESSION['wspvars']) && $_SESSION['wspvars']['usertype']==1) || (array_key_exists('wspvars', $_SESSION) && array_key_exists('rights', $_SESSION['wspvars']) && array_key_exists('publisher', $_SESSION['wspvars']['rights']) && $_SESSION['wspvars']['rights']['publisher']!=0 && $_SESSION['wspvars']['rights']['publisher']<100)): if ($standardtemp>0): // allow preview/publisher only with defined standard template ?>
                     <?php 
                     
-                    $queue_num = getNumSQL("SELECT `id` FROM `wspqueue` WHERE `done` = 0 GROUP BY CONCAT(`param`,`lang`)");
-				    
+                    $queue_num = getWSPqueue();
+
                     ?>
                     <?php if ($isextended==1): ?>
                         <li class="panel">

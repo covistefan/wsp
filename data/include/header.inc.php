@@ -23,7 +23,6 @@ ksort($_SESSION);
     <!-- get fonts -->
     <link rel="stylesheet" href="<?php echo cleanpath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR); ?>media/layout/fontface.css" />
     <link rel="stylesheet" href="<?php echo cleanpath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR); ?>media/layout/font-awesome-5-7-2.css" />
-    <link rel="stylesheet" href="<?php echo cleanpath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR); ?>media/layout/themify-icons.css" />
     <!-- extended desktop stylesheets -->
     <link rel="stylesheet" href="<?php echo cleanpath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR); ?>media/layout/bootstrap-tour.min.css" />
     <!-- get page based stylesheets -->

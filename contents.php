@@ -400,14 +400,15 @@ function doEdit(cid) {
 function setupPublisher(mid) {
     $.post("xajax/ajax.contentpublish.php", { 'mid': mid })
             .done (function(data) {
-                if (data==0) {
+                if (parseInt(data)==0) {
                     $('span.queue-num-badge').hide();
                 } 
-                else if (data>0) {
+                else if (parseInt(data)>0) {
                     $('#toggledirectpublish-' + mid).html('<i class="fas fa-spinner fa-spin"></i>');
                     $('span.queue-num-badge').text(data);
                     $('span.queue-num-badge').show();
                 }
+                console.info('sent ' + parseInt(data) + ' pages to publisher');
             });
 }
     

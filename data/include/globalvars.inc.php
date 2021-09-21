@@ -3,8 +3,8 @@
  * global WSP variables 
  * @author stefan@covi.de
  * @since 3.1
- * @version 7.0
- * @lastchange 2021-09-15
+ * @version 7.0.1
+ * @lastchange 2021-09-21
  */
 
 @header_remove('X-Powered-By');
@@ -34,11 +34,17 @@ if (is_file(str_replace("//", "/", __DIR__."/wspconf.inc.php"))) {
 	if (!(defined('WSP_DIR'))) {
 		define('WSP_DIR', str_replace("//", "/", str_replace(basename($_SERVER['PHP_SELF']), '', $_SERVER['PHP_SELF'])));
 	}
+	if (!(defined('DB_PREFIX'))) {
+		define ('DB_PREFIX', '');
+	}
 } else {
 	// move to setup
 	if (!(defined('WSP_DIR'))) {
         define('WSP_DIR', str_replace("//", "/", str_replace(basename($_SERVER['PHP_SELF']), '', $_SERVER['PHP_SELF'])));
     }
+	if (!(defined('DB_PREFIX'))) {
+		define ('DB_PREFIX', '');
+	}
 	header("location: ".str_replace("//", "/", str_replace("//", "/", "/".WSP_DIR."/wspsetup.php")));
 	die();
 }
@@ -76,4 +82,12 @@ if (is_file(str_replace("//", "/", __DIR__."/funcs.inc.php"))) {
 	include_once(str_replace("//", "/", __DIR__."/funcs.inc.php"));
 }
 
-?>
+// get information about used sql mode
+$_SESSION['wspvars']['sqlmode'] = false;
+if (function_exists('doSQL')) {
+    $sqlmode_res = doSQL('SELECT @@SESSION.sql_mode AS sqlmode');
+    if ($sqlmode_res['res'] && isset($sqlmode_res['set'][0]['sqlmode'])) {
+		$_SESSION['wspvars']['sqlmode'] = explode(',', $sqlmode_res['set'][0]['sqlmode']);
+	}
+}
+

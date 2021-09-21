@@ -410,11 +410,7 @@ if (!(function_exists('createMenu'))) {
                 }
 
                 // replace menutmp with include code if ftp copy of menu file was done
-/*
-                if ($returnstat) {
-                    $mnutmp = "<"."?"."php @include(DOCUMENT_ROOT.\"/data/menu/".$menufile.".php\"); ?>\n";
-                }
-*/
+
 
                 $tmp.= $mnutmp.substr($buf, $pos+2);
                 $buf = $tmp;
@@ -525,21 +521,21 @@ if (!(function_exists('buildMenu'))) {
         $str_sql = '';
         $not_sql = '';
         $tgt = ($preview?' target="_top" ':'');
-        if (array_key_exists('MENU.HIDE',$code[0]) && trim($code[0]['MENU.HIDE'])!=''):
+        if (isset($code[0]) && is_array($code[0]) && array_key_exists('MENU.HIDE',$code[0]) && trim($code[0]['MENU.HIDE'])!='') {
             $tmpdenymidlist = explode(";", $code[0]['MENU.HIDE']);
-            if (is_array($tmpdenymidlist) && count($tmpdenymidlist)>0):
+            if (is_array($tmpdenymidlist) && count($tmpdenymidlist)>0) {
                 $not_sql = " AND `mid` NOT IN ('".implode("','", $tmpdenymidlist)."') ";
-            endif;
-        endif;
-        if (array_key_exists('MENU.SHOW',$code[0]) && trim($code[0]['MENU.SHOW'])!=''):
+            }
+        }
+        if (isset($code[0]) && is_array($code[0]) && array_key_exists('MENU.SHOW',$code[0]) && trim($code[0]['MENU.SHOW'])!='') {
             $str_res = doSQL("SELECT `mid` FROM `menu` WHERE `mid` IN ('".implode("','", explode(";", $code[0]['MENU.SHOW']))."') ".$not_sql." AND `trash` = 0 AND (`denylang` NOT LIKE '%2:\"".$lang."\"%' OR `denylang` = NULL)");
             $str_num = intval($str_res['num']);
             $actl = 1;
             $maxl = 1;
-        elseif ($actl<$maxl):
+        } else if ($actl<$maxl) {
             $str_res = doSQL("SELECT `mid`, `level` FROM `menu` WHERE `connected` = ".intval($basemid)." ".$not_sql." AND `trash` = 0 AND `visibility` = 1 ORDER BY `position` ASC");
             $str_num = intval($str_res['num']);
-        endif;
+        }
         $buf = array();
         $buf['data'] = array(
             'code' => $code,
