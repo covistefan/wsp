@@ -9,9 +9,8 @@
 
 session_start();
 
-var_export($_SESSION);
-
 if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
+
     require("../data/include/globalvars.inc.php");
     require("../data/include/errorhandler.inc.php");
     require("../data/include/siteinfo.inc.php");
@@ -51,17 +50,12 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
                         </div>
                     </div>
                 </div>
-        </div><?php
+        </div>
+        <script> $('#cfc').val(0); </script><?php
     }
     else {
         ?>
-        <script>
-
-            window.location.assign("./logout.php");
-            
-        </script>
+        <script> window.location.assign("./logout.php"); </script>
         <?php
     }
 }
-
-?>
