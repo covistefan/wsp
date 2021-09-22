@@ -10,7 +10,10 @@
 
 session_start();
 
+die('bgp is not supported in wsp7');
+
 if (isset($_SESSION['wspvars'])) {
+
 	include $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/include/globalvars.inc.php";
 	include $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/include/wsplang.inc.php";
 	include $_SERVER['DOCUMENT_ROOT'].'/'.$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir'].'/data/include/errorhandler.inc.php';
@@ -36,27 +39,15 @@ if (isset($_SESSION['wspvars'])) {
     
 	if ($publish_res['num']>0) {
 
+        $ftp = false; $srv = false;
         // do ftp connect to establish only ONE ftp-connection while publishing
-        $ftp = false; $ftpt = 0; $usedirect = false;
-        if (isset($_SESSION['wspvars']['directwriting']) && $_SESSION['wspvars']['directwriting']===true) {
-            $usedirect = true;
-        }
-        else {
-            while ($ftp===false && $ftpt<3) {
-                $ftp = ((isset($_SESSION['wspvars']['ftpssl']) && $_SESSION['wspvars']['ftpssl']===true)?ftp_ssl_connect($_SESSION['wspvars']['ftphost'], intval($_SESSION['wspvars']['ftpport'])):ftp_connect($_SESSION['wspvars']['ftphost'], intval($_SESSION['wspvars']['ftpport'])));
-                if ($ftp!==false) {
-                    if (!ftp_login($ftp, $_SESSION['wspvars']['ftpuser'], $_SESSION['wspvars']['ftppass'])) { 
-                        $ftp = false; 
-                    }
-                }
-                if (isset($_SESSION['wspvars']['ftppasv']) && $ftp!==false) { 
-                    ftp_pasv($ftp, $_SESSION['wspvars']['ftppasv']); 
-                }
-                $ftpt++;
-            }
+        if (isset($_SESSION['wspvars']['ftp']) && $_SESSION['wspvars']['ftp']!==false) {
+            $ftp = doFTP();
+        } else if (isset($_SESSION['wspvars']['srv']) && $_SESSION['wspvars']['srv']!==false) {
+            $srv = true;
         }
 
-        if ($ftp!==false || $usedirect===true) {
+        if ($ftp!==false || $srv===true) {
             foreach ($publish_res['set'] AS $prsk => $prsv) {
 
                 $newendmenu = false; if($publish_res['num']==1): $newendmenu = true; endif;
@@ -77,16 +68,14 @@ if (isset($_SESSION['wspvars'])) {
                     }
                     // call publisher function
                     $returnpublish = publishSites(intval($prsv['param']), 'publish', $prsv['lang'], $newendmenu);
-                }
-                elseif (trim($prsv['action'])=='publishcontent') {
+                } else if (trim($prsv['action'])=='publishcontent') {
                     // include base cls class definition
                     if (is_file(str_replace("//", "/", str_replace("//", "/", str_replace("//", "/", $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/include/clsinterpreter.inc.php"))))) {
                         include(str_replace("//", "/", str_replace("//", "/", str_replace("//", "/", $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/include/clsinterpreter.inc.php"))));
                     }
                     // call publisher function
                     $returnpublish = publishSites(intval($prsv['param']), 'publish', $prsv['lang'], $newendmenu);
-                }
-                elseif (trim($prsv['action'])=='publishstructure') {
+                } else if (trim($prsv['action'])=='publishstructure') {
 
                     // update long term elements to be published
                     // only if structure is affected
@@ -99,8 +88,7 @@ if (isset($_SESSION['wspvars'])) {
                     }
                     // call publisher function
                     $returnpublish = publishMenu(intval($prsv['param']), 'publish', $prsv['lang'], $newendmenu, false);
-                }
-                elseif (trim($prsv['action'])=='renamestructure') {
+                } else if (trim($prsv['action'])=='renamestructure') {
 
                     // update long term elements to be published
                     // only if structure is affected
@@ -113,16 +101,13 @@ if (isset($_SESSION['wspvars'])) {
                     }
                     // call publisher function
                     $returnpublish = publishMenu(intval($prsv['param']), 'publish', $prsv['lang'], $newendmenu, true);
-                }
-                elseif (trim($prsv['action'])=='publishcss') {
+                } else if (trim($prsv['action'])=='publishcss') {
                     require_once ($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/include/cssparser.inc.php");
                     $returnpublish = publishCSS(intval($prsv['param']), $ftp);
-                }
-                elseif (trim($prsv['action'])=='publishjs') {
+                } else if (trim($prsv['action'])=='publishjs') {
                     require_once ($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/include/jsparser.inc.php");
                     $returnpublish = publishJS(intval($prsv['param']), $ftp);
-                }
-                elseif (trim($prsv['action'])=='publishrss') {
+                } else if (trim($prsv['action'])=='publishrss') {
                     // call publisher function
                     require ($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/include/rssparser.inc.php");
                     $returnpublish = publishRSS(intval($prsv['param']), $ftp);
@@ -146,7 +131,7 @@ if (isset($_SESSION['wspvars'])) {
 
             }
         } else {
-            addWSPMsg('errormsg', 'publisher could not connect to ftp');
+            addWSPMsg('errormsg', 'publisher could not connect to system');
         }
     }
 
@@ -155,4 +140,4 @@ if (isset($_SESSION['wspvars'])) {
     
 }
 
-// EOF ?>
+// EOF

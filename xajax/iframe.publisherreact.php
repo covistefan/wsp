@@ -28,8 +28,15 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
         $publish_sql = "SELECT `id`, `action`, `param`, `lang` FROM `wspqueue` WHERE `done` = 0 AND `timeout` < ".time()." ORDER BY `priority` DESC, `set` ASC LIMIT 0, 5";
         $publish_res = doSQL($publish_sql);
         if ($publish_res['num']>0) {
-            $ftp = doFTP();
-            if ($ftp!==false) {
+            
+            $con = false;
+            if (isset($_SESSION['wspvars']['ftp']) && $_SESSION['wspvars']['ftp']!==false) {
+                $con = true;
+            } else if (isset($_SESSION['wspvars']['srv']) && $_SESSION['wspvars']['srv']!==false) {
+                $con = true;
+            }
+
+            if ($con===true) {
                 foreach ($publish_res['set'] AS $presk => $presv) {
 				    // update end_menu-table if less than 5 entries are given
                     $newendmenu = ($publish_res['num']<5)?true:false;
@@ -47,7 +54,7 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
                         require ("../data/include/menuparser.inc.php");
                         require ("../data/include/clsinterpreter.inc.php");
                         // call publisher function
-                        $returnpublish = publishSites(intval($presv['param']), 'publish', trim($presv['lang']), $newendmenu, $ftp);
+                        $returnpublish = publishSites(intval($presv['param']), 'publish', trim($presv['lang']), $newendmenu, true);
                         if ($returnpublish===true) {
                             doSQL("UPDATE `wspqueue` SET `done` = ".time().", `priority` = 0 WHERE `id` = ".intval($presv['id']));
                             doSQL("UPDATE `menu` SET `contentchanged` = 0, `structurechanged` = 0, `lastpublish` = ".time()." WHERE `mid` = ".intval($presv['param']));
@@ -59,7 +66,7 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
                         require ("../data/include/menuparser.inc.php");
                         require ("../data/include/clsinterpreter.inc.php");
                         // call publisher function
-                        $returnpublish = publishSites(intval($presv['param']), 'publish', trim($presv['lang']), $newendmenu, $ftp);
+                        $returnpublish = publishSites(intval($presv['param']), 'publish', trim($presv['lang']), $newendmenu, true);
                         if ($returnpublish===true) {
                             doSQL("UPDATE `wspqueue` SET `done` = ".time().", `priority` = 0 WHERE `id` = ".intval($presv['id']));
                             doSQL("UPDATE `menu` SET `contentchanged` = 0, `lastpublish` = ".time()." WHERE `mid` = ".intval($presv['param']));
@@ -71,7 +78,7 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
                         require ("../data/include/menuparser.inc.php");
                         require ("../data/include/clsinterpreter.inc.php");
                         // call publisher function
-                        $returnpublish = publishMenu(intval($presv['param']), 'publish', trim($presv['lang']), $newendmenu, false, $ftp);
+                        $returnpublish = publishMenu(intval($presv['param']), 'publish', trim($presv['lang']), $newendmenu, false);
                         if ($returnpublish===true) {
                             doSQL("UPDATE `wspqueue` SET `done` = ".time().", `priority` = 0 WHERE `id` = ".intval($presv['id']));
                             doSQL("UPDATE `menu` SET `structurechanged` = 0, `lastpublish` = ".time()." WHERE `mid` = ".intval($presv['param']));
@@ -83,21 +90,21 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
                         require ("../data/include/menuparser.inc.php");
                         require ("../data/include/clsinterpreter.inc.php");
                         // call publisher function
-                        $returnpublish = publishMenu(intval($presv['param']), 'publish', trim($presv['lang']), $newendmenu, true, $ftp);
+                        $returnpublish = publishMenu(intval($presv['param']), 'publish', trim($presv['lang']), $newendmenu, true);
                         if ($returnpublish===true) {
                             doSQL("UPDATE `wspqueue` SET `done` = ".time().", `priority` = 0 WHERE `id` = ".intval($presv['id']));
                         }
                     }
                     else if ($presv['action']=='publishcss') {
                         require_once ("../data/include/cssparser.inc.php");
-                        $returnpublish = publishCSS(intval($presv['param']), $ftp);
+                        $returnpublish = publishCSS(intval($presv['param']), true);
                         if ($returnpublish===true) {
                             doSQL("UPDATE `wspqueue` SET `done` = ".time().", `priority` = 0 WHERE `id` = ".intval($presv['id']));
                         }
                     }
                     else if ($presv['action']=='publishjs') {
                         require_once ("../data/include/jsparser.inc.php");
-                        $returnpublish = publishJS(intval($presv['param']), $ftp);
+                        $returnpublish = publishJS(intval($presv['param']), true);
                         if ($returnpublish===true) {
                             doSQL("UPDATE `wspqueue` SET `done` = ".time().", `priority` = 0 WHERE `id` = ".intval($presv['id']));
                         }
@@ -105,7 +112,7 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
                     else if ($presv['action']=='publishrss') {
                         // call publisher function
                         require ("../data/parser/rssparser.inc.php");
-                        $returnpublish = publishRSS(intval($presv['param']), $ftp);
+                        $returnpublish = publishRSS(intval($presv['param']), true);
                         if ($returnpublish===true) {
                             doSQL("UPDATE `wspqueue` SET `done` = ".time().", `priority` = 0 WHERE `id` = ".intval($presv['id']));
                         }
@@ -114,7 +121,7 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
                         echo "<script> parent.cT = 60000; </script>";
                     }
                     
-                    $qnum = intval(getNumSQL("SELECT `id` FROM `wspqueue` WHERE `done` = 0 GROUP BY CONCAT(`param`,`lang`)"));
+                    $qnum = intval(getWSPqueue());
                     echo "<script> parent.updateQueue(".$qnum."); </script>\n";
                     echo "<script> parent.removeQueue(".intval($presv['id'])."); </script>\n";
                     if ($qnum>0) {
@@ -126,10 +133,9 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
                         echo "<script> parent.cT = 604800000; </script>";
                     }
                 }
-                ftp_close($ftp);
             }
             else {
-                echo "<script> parent.addPMsg('ftp connection could not be established'); </script>\n";
+                echo "<script> parent.addPMsg('publishing connection could not be established'); </script>\n";
                 echo "<script> parent.cT = 60000; </script>";
             }
         } else {

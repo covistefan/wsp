@@ -105,7 +105,10 @@ if (!(function_exists('createNewMP'))) {
             }
         }
         else {
-            $_SESSION['wspvars']['errormsg'] = "<p>".returnIntLang('structure error creating new menupoint', true)."</p>";
+            addWSPMsg('errormsg', returnIntLang('structure error creating new menupoint'));
+            if (defined('WSP_DEV') && WSP_DEV) {
+                addWSPMsg('errormsg', var_export($res, true));
+            }
             return false;
         }
     }

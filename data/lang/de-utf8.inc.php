@@ -1853,6 +1853,8 @@ $lang['de'] = array(
 'publisher published files message2' => ' Datei(en) im Hintergrund veröffentlicht.',
 'publisher error setup queue' => 'Fehler beim Einstellen der Inhalt in die Warteschlange',
 
+'publisher copied menu file1' => 'Die Menüdatei',
+'publisher copied menu file2' => 'wurde erstellt.',
 
 'queue headline' => 'Warteschlange',
 'queue info' => 'Auf dieser Seite können Sie kontrolliert Jobs aus der Warteschlange löschen, wenn diese z. B. auf Grund eines Fehlers nicht veröffentlicht werden.',

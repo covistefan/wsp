@@ -6143,8 +6143,7 @@ if (!(function_exists('showWSPMsg'))) {
             unset($_SESSION['wspvars']['errormsg']);
             unset($_SESSION['wspvars']['resultmsg']);
             echo "</div></div>";
-        }
-        else if (!(isset($_SESSION['wspvars']['shownotice'])) || isset($_SESSION['wspvars']['shownotice']) && $_SESSION['wspvars']['shownotice']==0 && $msgtarget==0) {
+        } else if (!(isset($_SESSION['wspvars']['shownotice'])) || isset($_SESSION['wspvars']['shownotice']) && $_SESSION['wspvars']['shownotice']==0 && $msgtarget==0) {
 			echo "<div id='alert-holder' style='position: fixed; top: 1vh; right: 1vw; width: 98%; max-width: 400px; display: block; z-index: 1999; min-height: 1px; max-height: 98vh; overflow-y: auto; display: none;'>";
             if (isset($_SESSION['wspvars']['noticemsg'])) {
                 echo "<div class='alert alert-info alert-dismissible' role='alert'>";
@@ -6179,7 +6178,32 @@ if (!(function_exists('showWSPMsg'))) {
             unset($_SESSION['wspvars']['errormsg']);
             unset($_SESSION['wspvars']['resultmsg']);
             echo "</div>";
-		}
+		} else if ($msgtarget==2 && defined('WSP_DEV') && WSP_DEV) {
+            if (isset($_SESSION['wspvars']['noticemsg'])) {
+                echo "noticemsg<hr />";
+                echo $_SESSION['wspvars']['noticemsg'];
+                echo "<br/>";
+                unset($_SESSION['wspvars']['noticemsg']);
+            }
+            if (isset($_SESSION['wspvars']['errormsg'])) {
+                echo "errormsg<hr />";
+                echo $_SESSION['wspvars']['errormsg'];
+                echo "<br/>";
+                unset($_SESSION['wspvars']['errormsg']);
+            }
+            if (isset($_SESSION['wspvars']['resultmsg'])) {
+                echo "resultmsg<hr />";
+                echo $_SESSION['wspvars']['resultmsg'];
+                echo "<br/>";
+                unset($_SESSION['wspvars']['resultmsg']);
+            }
+            if (isset($_SESSION['wspvars']['devmsg'])) {
+                echo "devmsg<hr />";
+                echo $_SESSION['wspvars']['devmsg'];
+                echo "<br/>";
+                unset($_SESSION['wspvars']['devmsg']);
+            }
+        }
     }
 }
 

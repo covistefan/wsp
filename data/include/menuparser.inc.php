@@ -388,30 +388,32 @@ if (!(function_exists('createMenu'))) {
 					$fh = fopen($tmpfile, "r+");
 					fwrite($fh, trim($mnutmp));
 					fclose($fh);
-                    // do the ftp thing
-                    $ftp = doFTP();
-                    if ($ftp) {
+                    // do the final copy thing
+                    $con = false;
+                    if (isset($_SESSION['wspvars']['ftp']) && $_SESSION['wspvars']['ftp']!==false) {
+                        $con = true;
+                    } else if (isset($_SESSION['wspvars']['srv']) && $_SESSION['wspvars']['srv']!==false) {
+                        $con = true;
+                    }
+                    if ($con===true) {
                         // create /data/menu/ directory if not avaiable
-                        createFolder('/data/menu/');
-                        // copy tmp file from user dir to final menu destination
-                        $ftpreturn = ftp_nb_put($ftp, cleanPath(FTP_BASE.'/data/menu/'.$menufile.'.php'), $tmpfile, FTP_BINARY);
-                        if ($ftpreturn) {
-                            $returnstat = true;
+                        if (createFolder('/data/menu/')) {
+                            // copy tmp file from user dir to final menu destination
+                            if (!copyFile($tmpfile, '/data/menu/'.$menufile.'.php')) {
+                                addWSPMsg('errormsg', returnIntLang('publisher could not copy menu file to final destination', false));
+                            }
+                        } else {
+                            addWSPMsg('errormsg', returnIntLang('publisher could not create menu directory', false));
                         }
-                        else {
-                            addWSPMsg('errormsg', returnIntLang('publisher cant upload menufile1', false)." \"".$menufile."\" ".returnIntLang('publisher cant upload menufile2', false)."<br />");
-                            $returnstat = false;
-                        }
+                    } else {
+                        addWSPMsg('errormsg', returnIntLang('publisher cant upload menufile1', false)." \"".$menufile."\" ".returnIntLang('publisher cant upload menufile2 no connect', false));
                     }
-                    else {
-                        addWSPMsg('errormsg', returnIntLang('publisher cant upload menufile1', false)." \"".$menufile."\" ".returnIntLang('publisher cant upload menufile2 false ftp', false));
-                    }
-                    unlink($tmpfile);
+                    // unlinking is only nessessary, if the file was copied by ftp
+                    // otherwise it was already moved bei srv part of copy function
+                    @unlink($tmpfile);
                 }
 
-                // replace menutmp with include code if ftp copy of menu file was done
-
-
+                // replace menutmp with include code if copying of menu file was done
                 $tmp.= $mnutmp.substr($buf, $pos+2);
                 $buf = $tmp;
             }
@@ -684,7 +686,7 @@ if (!(function_exists('buildMenu'))) {
                             // create internal links
                             else {
                                 $pathdata = fileNamePath(intval($midfacts_res['set'][0]['mid']), 0, 0, 0);
-                                if (intval($_SESSION['wspvars']['publisherdata']['parsedirectories'])==1 || $parsedir==1) {
+                                if ((isset($_SESSION['wspvars']['publisherdata']['parsedirectories']) && intval($_SESSION['wspvars']['publisherdata']['parsedirectories'])==1) || $parsedir==1) {
                                     $buf['menucode'].= cleanPath('/'.(($lang!=WSP_LANG)?$lang:'').'/'.$pathdata['path']);
                                 }
                                 else {
