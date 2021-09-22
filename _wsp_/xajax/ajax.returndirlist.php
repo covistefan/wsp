@@ -46,7 +46,6 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
             if (is_array($subdirlist)): $dirlist = array_merge($dirlist, $subdirlist); endif;
 
             // create tmp user directory (again) if it doesnt exist 
-            if (createFolder(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR.'tmp'.DIRECTORY_SEPARATOR.$_SESSION['wspvars']['usevar'].DIRECTORY_SEPARATOR)) {
                 $handle = fopen($medialist, "w");
                 fwrite($handle, json_encode($dirlist));
                 fclose($handle);

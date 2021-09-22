@@ -536,7 +536,7 @@ if (isset($_POST['doupdate'])) {
         }
         // try to copy file to tmp user directory
         $tmpdir = cleanPath(DOCUMENT_ROOT.'/'.WSP_DIR.'/tmp/'.$_SESSION['wspvars']['usevar'].'/');
-        if (createDirFTP('/'.WSP_DIR.'/tmp/')===false) {
+        if (createFolder('/'.WSP_DIR.'/tmp/')===false) {
             addWSPMsg('errormsg', returnIntLang('system update could not create tmp directory'));
             $install = false;
         }
@@ -554,64 +554,55 @@ if (isset($_POST['doupdate'])) {
         // extract zip archive
         $zip = new ZipArchive;
         if ($zip->open($sysfile)===true) {        
-            // run archive for files
-            if ($zip->open($sysfile)===true) {        
-                // run archive for files
-                for($i = 0; $i < $zip->numFiles; $i++) {
-                    $filename = $zip->getNameIndex($i);
-                    $fileinfo = pathinfo($filename);
-                    // dont use hidden files
-                    
-                    var_export($fileinfo);
-                    echo '<br />';
-                    die();
-
-                    if (substr($fileinfo['basename'],0,1)=='.') {
-                        // entry will be ignored
-                    } 
-                    else if ($fileinfo['basename']=='database.xml') {
-                        @copy("zip://".$sysfile."#".$filename, cleanPath(DOCUMENT_ROOT.'/'.WSP_DIR.'/'.$_SESSION['wspvars']['usevar'].'/database.xml'));
-                    }
-                    // dont use double underscore stuff
-                    else if (substr($fileinfo['dirname'],0,2)=='__' || substr($fileinfo['basename'],0,2)=='__') {
-                        // entry will be ignored
-                    }
-                    // rename _wsp_ folder to WSP_DIR
-                    else if (substr($fileinfo['dirname'],0,5)=='_wsp_') {
-                        if ($fileinfo['basename']==$fileinfo['filename'] && !(isset($fileinfo['extension']))) {
-                            // it's a directory and the entry will be ignored
-                        } else {
-                            if (!(is_dir(cleanPath(DOCUMENT_ROOT.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']))))) {
-                                $createdir = createDirFTP('/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/');
-                            }
-                            // try to make backup of file (but only once per day)
-                            if (!(is_file(cleanPath(DOCUMENT_ROOT.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/'.$fileinfo['basename'].'.backup-'.((defined('WSP_BETA') && WSP_BETA)?time():date('Ymd')))))) {
-                                ftp_put($ftp, cleanPath(FTP_BASE.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/'.$fileinfo['basename'].'.backup-'.((defined('WSP_BETA') && WSP_BETA)?time():date('Ymd'))), cleanPath(DOCUMENT_ROOT.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/'.$fileinfo['basename']));
-                            }
-                            @copy("zip://".$sysfile."#".$filename, cleanPath(DOCUMENT_ROOT.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/'.$fileinfo['basename']));
-                        }
-                    }
-                    else {
-                        if ($fileinfo['basename']==$fileinfo['filename'] && !(isset($fileinfo['extension']))) {
-                            // it's a directory and the entry will be ignored
-                        } else {
-                            if (!(is_dir(DOCUMENT_ROOT.'/'.$fileinfo['dirname']))) {
-                                createDirFTP('/'.$fileinfo['dirname'].'/');
-                            }
-                            @copy("zip://".$sysfile."#".$filename, cleanPath(DOCUMENT_ROOT.'/'.$fileinfo['dirname'].'/'.$fileinfo['basename']));
-                        }
-                    }
-                }      
-                $zip->close();
-                $_SESSION['msg'][] = returnIntLang('install copied all install files');
-                // finaly remove file from tmp
-                unlink($sysfile);
-            } else {
-                $_SESSION['msg'][] = returnIntLang('install could not open zip file');
-                $error = true;
-            }
-            addWSPMsg('resultmsg', returnIntLang('system update all files were copied'));
+            // get the name of the zip main folder
+			$foldername = basename($zip->getNameIndex(0));
+			// run archive for files
+			for($i = 0; $i < $zip->numFiles; $i++) {
+				$filename = $zip->getNameIndex($i);
+				$fileinfo = pathinfo($filename);
+				$fileinfo['dirname'] = substr($fileinfo['dirname'], strlen($foldername));
+				// dont use hidden files
+				if (substr($fileinfo['basename'],0,1)=='.') {
+					// entry will be ignored
+				} 
+				else if ($fileinfo['basename']=='database.xml') {
+					@copy("zip://".$sysfile."#".$filename, cleanPath(DOCUMENT_ROOT.'/'.WSP_DIR.'/'.$_SESSION['wspvars']['usevar'].'/database.xml'));
+				}
+				// dont use double underscore stuff
+				else if (substr($fileinfo['dirname'],0,2)=='__' || substr($fileinfo['basename'],0,2)=='__') {
+					// entry will be ignored
+				}
+				// rename _wsp_ folder to WSP_DIR
+				else if (substr($fileinfo['dirname'],0,5)=='_wsp_') {
+					if ($fileinfo['basename']==$fileinfo['filename'] && !(isset($fileinfo['extension']))) {
+						// it's a directory and the entry will be ignored
+					} else {
+						if (!(is_dir(cleanPath(DOCUMENT_ROOT.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']))))) {
+							createFolder('/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/');
+						}
+						// try to make backup of file (but only once per day)
+						if (!(is_file(cleanPath(DOCUMENT_ROOT.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/'.$fileinfo['basename'].'.backup-'.((defined('WSP_BETA') && WSP_BETA)?time():date('Ymd')))))) {
+							var_export('backup for '.cleanPath(DOCUMENT_ROOT.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/'.$fileinfo['basename']));
+							ftp_put($ftp, cleanPath(FTP_BASE.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/'.$fileinfo['basename'].'.backup-'.((defined('WSP_BETA') && WSP_BETA)?time():date('Ymd'))), cleanPath(DOCUMENT_ROOT.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/'.$fileinfo['basename']));
+						}
+						@copy("zip://".$sysfile."#".$filename, cleanPath(DOCUMENT_ROOT.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/'.$fileinfo['basename']));
+					}
+				}
+				else {
+					if ($fileinfo['basename']==$fileinfo['filename'] && !(isset($fileinfo['extension']))) {
+						// it's a directory and the entry will be ignored
+					} else {
+						if (!(is_dir(DOCUMENT_ROOT.'/'.$fileinfo['dirname']))) {
+							createFolder('/'.$fileinfo['dirname'].'/');
+						}
+						@copy("zip://".$sysfile."#".$filename, cleanPath(DOCUMENT_ROOT.'/'.$fileinfo['dirname'].'/'.$fileinfo['basename']));
+					}
+				}
+			}      
+			$zip->close();
+			addWSPMsg('resultmsg', returnIntLang('system update all files were copied'));
             // finaly remove file from tmp
+			unlink($sysfile);
         } else {
             addWSPMsg('errormsg', returnIntLang('system update could not open zip file'));
         }
@@ -625,7 +616,6 @@ if (isset($_POST['doupdate'])) {
             addWSPMsg('errormsg', returnIntLang('system update ran database update'));
             deleteFile(WSP_DIR.DIRECTORY_SEPARATOR.'sqlupdate.php');
         }
-        ftp_close($ftp);
     }
 }
 
@@ -786,4 +776,6 @@ $(document).ready(function() {
 // -->
 </script>
 
-<?php require ("./data/include/footer.inc.php"); ?>
+<?php 
+
+require ("./data/include/footer.inc.php");
