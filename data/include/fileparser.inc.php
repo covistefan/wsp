@@ -1410,7 +1410,7 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
                             addWSPMsg('errormsg', returnIntLang('publisher directory could not be created1', false)." \"".$dirpath."\" ".returnIntLang('publisher directory could not be created2', false));
                         }
                     }
-                    $copyfile = copyFile($tmpfile, $filepath);
+                    $copyfile = copyFile(str_replace(DOCUMENT_ROOT, '', $tmpfile), $filepath);
                     if ($copyfile===false) {
                         addWSPMsg('errormsg', returnIntLang('publisher file could not be created1', false)." \"".$filepath."\" ".returnIntLang('publisher file could not be created2', false));
                     }
@@ -1427,12 +1427,12 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
                     fwrite($fh, $frwbuf);
                     // (over)write an (existing) file ONE directory step UPWARDS with header location
                     // e.g. folder is /info/privacy/ the file /info/privacy.php will be overwritten with a header location to folder
-                    $copyfile = copyFile($tmpfile, $frwdir);
+                    $copyfile = copyFile(str_replace(DOCUMENT_ROOT, '', $tmpfile), $frwdir);
                     if (!$copyfile) { $returnstat = false; }
                     // AND, if this file is the index.php of home directory -
                     // 
                     if ($pathdata['filefolder']=='' && $pathdata['file']=='/index.php') { 
-                        $copyfile = copyFile($tmpfile, cleanPath('/'.$frwpath.'/index.php'));
+                        $copyfile = copyFile(str_replace(DOCUMENT_ROOT, '', $tmpfile), cleanPath('/'.$frwpath.'/index.php'));
                     }
                     // remove tmp file
                     @unlink($tmpfile);
