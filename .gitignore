@@ -1,7 +1,8 @@
-data/include/wspconf.inc.php
-updater.php
-versions.php
-testfile-wsp.txt
+_wsp_/data/include/wspconf.inc.php
+_wsp_/updater.php
+_wsp_/testfile-wsp.txt
+_wsp_/versions.php
+_wsp_/tmp/[0-9]*
+_wsp_/tmp/[a-f]*
+
 .editorconfig
-tmp/[0-9]*
-tmp/[a-f]*

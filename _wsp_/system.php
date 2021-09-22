@@ -498,7 +498,7 @@ if (isset($_POST['doupdate'])) {
         if ($_FILES['uploadsystem']['type']=='application/zip' && intval($_FILES['uploadsystem']['error'])==0) {
             $tmpdir = cleanPath(DOCUMENT_ROOT.'/'.WSP_DIR.'/tmp/'.$_SESSION['wspvars']['usevar'].'/');
             $sysfile = cleanPath($tmpdir.'/'.$sysfilename);
-            if (createDirFTP('/'.WSP_DIR.'/tmp/')===false) {
+            if (createFolder('/'.WSP_DIR.'/tmp/')===false) {
                 addWSPMsg('errormsg', returnIntLang('system update could not create tmp directory'));
                 $install = false;
             }
@@ -551,7 +551,6 @@ if (isset($_POST['doupdate'])) {
     }
     // if file could be copied
     if ($install===true && is_file($sysfile) && filesize($sysfile)>2048) {
-        $ftp = doFTP();
         // extract zip archive
         $zip = new ZipArchive;
         if ($zip->open($sysfile)===true) {        
@@ -562,12 +561,17 @@ if (isset($_POST['doupdate'])) {
                     $filename = $zip->getNameIndex($i);
                     $fileinfo = pathinfo($filename);
                     // dont use hidden files
+                    
+                    var_export($fileinfo);
+                    echo '<br />';
+                    die();
+
                     if (substr($fileinfo['basename'],0,1)=='.') {
                         // entry will be ignored
                     } 
                     else if ($fileinfo['basename']=='database.xml') {
                         @copy("zip://".$sysfile."#".$filename, cleanPath(DOCUMENT_ROOT.'/'.WSP_DIR.'/'.$_SESSION['wspvars']['usevar'].'/database.xml'));
-                    } 
+                    }
                     // dont use double underscore stuff
                     else if (substr($fileinfo['dirname'],0,2)=='__' || substr($fileinfo['basename'],0,2)=='__') {
                         // entry will be ignored
