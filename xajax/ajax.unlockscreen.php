@@ -26,76 +26,36 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
                 // login allowed
                 if (isset($_SESSION['wspvars']['lockedvar'])) {
                     $_SESSION['wspvars']['usevar'] = $_SESSION['wspvars']['lockedvar'];
-                    if (!(isset($_SESSION['wspvars']['ftp'])) || $_SESSION['wspvars']['ftp']!==true) {
-                        $_SESSION['wspvars']['ftp_host'] = trim(FTP_HOST);
-                        $_SESSION['wspvars']['ftp_user'] = trim(FTP_USER);
-                        $_SESSION['wspvars']['ftp_pass'] = trim(FTP_PASS);
-                        $_SESSION['wspvars']['ftp_base'] = trim(FTP_BASE);
-                        $_SESSION['wspvars']['ftp_port'] = (defined('FTP_PORT')?intval(FTP_PORT):21);
-                        $_SESSION['wspvars']['ftp_ssl'] = (defined('FTP_SSL')?FTP_SSL:false);
-                        $_SESSION['wspvars']['ftp_pasv'] = (defined('FTP_PASV')?FTP_PASV:false);
-                        $_SESSION['wspvars']['ftp'] = true;
-                    }
-                    if ($_SESSION['wspvars']['ftp']===true) {
-                        // normal ftp-connection OR temporary ftp-connection are true
-                        // check, if basedir is set correct by checking, if wsp-basefolder is found     
-                        $ftp = doFTP();
-                        // create user directory with normal ftp-connection
-                        $mkdir = @ftp_mkdir($ftp, $_SESSION['wspvars']['ftp_base'].'/'.WSP_DIR.'/tmp/'.$_SESSION['wspvars']['usevar']);
-                        if ($mkdir):
-                            $chmod = @ftp_chmod($ftp, 0777, $mkdir);
-                        endif;
-                        @ftp_close($ftp);
-                        unset($_SESSION['wspvars']['lockedvar']);
-                        doSQL("UPDATE `security` SET `timevar` = ".time()." WHERE `usevar` = '".$_SESSION['wspvars']['usevar']."'");
-                        $_SESSION['wspvars']['lockscreen'] = false;
-                        echo 'true';
-                    } else {
-                        echo 'false';
-                    }
-                }
-                else {
+                } else {
                     $_SESSION['wspvars']['usevar'] = trim($_POST['reuser']);
-                    if (!(isset($_SESSION['wspvars']['ftp'])) || $_SESSION['wspvars']['ftp']!==true) {
-                        $_SESSION['wspvars']['ftp_host'] = trim(FTP_HOST);
-                        $_SESSION['wspvars']['ftp_user'] = trim(FTP_USER);
-                        $_SESSION['wspvars']['ftp_pass'] = trim(FTP_PASS);
-                        $_SESSION['wspvars']['ftp_base'] = trim(FTP_BASE);
-                        $_SESSION['wspvars']['ftp_port'] = (defined('FTP_PORT')?intval(FTP_PORT):21);
-                        $_SESSION['wspvars']['ftp_ssl'] = (defined('FTP_SSL')?FTP_SSL:false);
-                        $_SESSION['wspvars']['ftp_pasv'] = (defined('FTP_PASV')?FTP_PASV:false);
-                        $_SESSION['wspvars']['ftp'] = true;
-                    }
-                    if ($_SESSION['wspvars']['ftp']===true) {
-                        // normal ftp-connection OR temporary ftp-connection are true
-                        // check, if basedir is set correct by checking, if wsp-basefolder is found     
-                        $ftp = doFTP();
-                        // create user directory with normal ftp-connection
-                        $mkdir = @ftp_mkdir($ftp, $_SESSION['wspvars']['ftp_base'].'/'.WSP_DIR.'/tmp/'.$_SESSION['wspvars']['usevar']);
-                        if ($mkdir):
-                            $chmod = @ftp_chmod($ftp, 0777, $mkdir);
-                        endif;
-                        @ftp_close($ftp);
+                }
+                // if some connection is avaiable
+                if ((isset($_SESSION['wspvars']['ftp']) && $_SESSION['wspvars']['ftp']!==false) || (isset($_SESSION['wspvars']['srv']) && $_SESSION['wspvars']['srv']!==false)) {
+                    $createfolder = createFolder('/'.WSP_DIR.'/tmp/'.$_SESSION['wspvars']['usevar']);
+                    if ($createfolder) {
                         unset($_SESSION['wspvars']['lockedvar']);
                         doSQL("UPDATE `security` SET `timevar` = ".time()." WHERE `usevar` = '".$_SESSION['wspvars']['usevar']."'");
                         $_SESSION['wspvars']['lockscreen'] = false;
                         echo 'true';
                     } else {
-                        echo 'false';
+                        // tmp folder could not be created so we cant do anything
+                        echo (defined('WSP_DEV') && WSP_DEV) ? 'connection exists but temporary folder cannot be created' : 'false';
                     }
+                } else {
+                    echo (defined('WSP_DEV') && WSP_DEV) ? 'no connection to srv avaiable' : 'false';
                 }
             }
             else {
                 // login not allowed
-                echo (defined('WSP_DEV')) ? 'login_num != 1' : 'false';
+                echo (defined('WSP_DEV') && WSP_DEV) ? 'login_num != 1' : 'false';
             }
         }
         else {
-            echo (defined('WSP_DEV')) ? 'session_wspvars_userid not set or empty' : 'false';
+            echo (defined('WSP_DEV') && WSP_DEV) ? 'session_wspvars_userid not set or empty' : 'false';
         }
     }
     else {
-        echo (defined('WSP_DEV')) ? 'post_repass ('.trim($_POST['repass']).') or post_reuser ('.trim($_POST['reuser']).') not set or empty' : 'false';
+        echo (defined('WSP_DEV') && WSP_DEV) ? 'post_repass ('.trim($_POST['repass']).') or post_reuser ('.trim($_POST['reuser']).') not set or empty' : 'false';
     }
 }
 else {

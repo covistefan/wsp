@@ -170,7 +170,7 @@ if ($details['thumbnail']===false && (strtolower($details['filetype'])=='.jpg' |
     if ($thumbsize<150) { $thumbsize = 300; }
     // try resizing to tmp folder
     if (resizeGDimage(cleanPath(DOCUMENT_ROOT."/".$details['fullpath']), cleanPath(DOCUMENT_ROOT."/".WSP_DIR."/tmp/".$_SESSION['wspvars']['usevar']."/".$details['filename'].".png"), 0, $thumbsize, $thumbsize, 1)) {
-        $docopy = copyFile(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR."tmp".DIRECTORY_SEPARATOR.$_SESSION['wspvars']['usevar'].DIRECTORY_SEPARATOR.$details['filename'].".png") , $createthumbpath);
+        $docopy = copyFile(cleanPath(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR."tmp".DIRECTORY_SEPARATOR.$_SESSION['wspvars']['usevar'].DIRECTORY_SEPARATOR.$details['filename'].".png") , $createthumbpath);
         if ($docopy) {
             addWSPMsg('noticemsg', returnIntLang('mediadetails created new thumbnail'));
             $details['thumbnail'] = $createthumbpath;

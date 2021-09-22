@@ -399,7 +399,7 @@ if (!(function_exists('createMenu'))) {
                         // create /data/menu/ directory if not avaiable
                         if (createFolder('/data/menu/')) {
                             // copy tmp file from user dir to final menu destination
-                            if (!copyFile($tmpfile, '/data/menu/'.$menufile.'.php')) {
+                            if (!copyFile(str_replace(DOCUMENT_ROOT, '', $tmpfile), '/data/menu/'.$menufile.'.php')) {
                                 addWSPMsg('errormsg', returnIntLang('publisher could not copy menu file to final destination', false));
                             }
                         } else {

@@ -34,11 +34,11 @@ require ("./data/include/siteinfo.inc.php");
 
 // jump from modules ..
 if (isset($_REQUEST['mjid']) && intval($_REQUEST['mjid'])>0):
-	$_SESSION['wspvars']['editmenuid'] = intval($_REQUEST['mjid']);
+	$_SESSION['wspvars']['editcontentid'] = intval($_REQUEST['mjid']);
 endif;
 // jump from globalcontents
 if (isset($_REQUEST['sgc']) && intval($_REQUEST['sgc'])>0):
-	$_SESSION['wspvars']['editmenuid'] = intval($_REQUEST['sgc']);
+	$_SESSION['wspvars']['editcontentid'] = intval($_REQUEST['sgc']);
 endif;
 /* page specific includes */
 require ("./data/include/clsinterpreter.inc.php");
@@ -83,7 +83,7 @@ if (isset($_POST['contentfilter'])) {
         $_SESSION['wspvars']['contentfilter'] = trim($_POST['contentfilter']);
     }
 }
-// set open path by last edited content
+// set open path by last edited or given content
 if (isset($_SESSION['wspvars']['editcontentid']) && intval($_SESSION['wspvars']['editcontentid'])>0) {
     $ecsql = "SELECT DISTINCT `mid` FROM `content` WHERE `cid` = ".intval($_SESSION['wspvars']['editcontentid']);
     $ecres = doResultSQL($ecsql);

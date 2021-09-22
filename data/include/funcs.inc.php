@@ -179,7 +179,10 @@ function doSQL( $statement = '' ) {
                 }
             }
         }
-        $res = $_SESSION['wspvars']['db']->query($statement);
+        // second try of statement ONLY if the first try in ONLY_FULL_GROUP_BY did not work
+        if (!isset($res) || $res===false) {
+            $res = $_SESSION['wspvars']['db']->query($statement);
+        }
 		if ($res===true) {
 			$set['res'] = true;
 			$set['aff'] = $_SESSION['wspvars']['db']->affected_rows;
@@ -5131,7 +5134,7 @@ if (!(function_exists('scandirs'))) {
 // scans a directory for FILES only (on the other hand SAME usability as scandir)
 // array scanfiles ( string $directory [, int $sorting_order = SCANDIR_SORT_ASCENDING [, resource $context ]] )
 if (!(function_exists('scanfiles'))) {
-    function scanfiles($directory, $sorting_order = SCANDIR_SORT_ASCENDING, $showhidden = false) {
+    function scanfiles($directory , $sorting_order = SCANDIR_SORT_ASCENDING , $showhidden = false , $fileending = null ) {
         $values = @scandir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$directory), $sorting_order);
         if (is_array($values)) {
             foreach ($values AS $vk => $cv) {
@@ -5140,6 +5143,22 @@ if (!(function_exists('scanfiles'))) {
                 }
                 if (!$showhidden && substr($cv,0,1)=='.') {
                     unset($values[$vk]);
+                }
+            }
+            // check for given file ending (a small filetype check)
+            if ($fileending!==null) {
+                // create array from fileending, if only a string is given
+                if (!(is_array($fileending))) { $fileending = array($fileending); }
+                // only do loops, when it's really an array with elements
+                if (count($fileending)>0) {
+                    // run the $fileending array and remove false positive dots
+                    foreach ($fileending AS $fk => $fv) { $fileending[$fk] = str_replace('.', '', $fv); }
+                    foreach ($values AS $vk => $vv) {
+                        $ending = substr(basename($vv), (strrpos(basename($vv), '.')+1));
+                        if (!(in_array($ending, $fileending))) {
+                            unset($values[$vk]);
+                        }
+                    }
                 }
             }
             $values = array_values($values);
@@ -5448,43 +5467,23 @@ if (!(function_exists('clearFolder'))) {
 if (!(function_exists('copyFolder'))) {
     // copies real file system folder, folder can be a ftp-folder OR in temporary structure
     // optionally with an existing ftp connection
-    function copyFolder($frompath = '/', $targetpath = '/', $ftp = false, $move = false) {
-        $fromdir = cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$frompath.DIRECTORY_SEPARATOR);
-        $targetdir = cleanPath(FTP_BASE.DIRECTORY_SEPARATOR.cleanPath($targetpath).DIRECTORY_SEPARATOR);
-        $ftp = doFTP();
+    function copyFolder($frompath = '/', $targetpath = '/', $move = true) {
+        $fromdir = cleanPath(DIRECTORY_SEPARATOR.$frompath.DIRECTORY_SEPARATOR);
+        $targetdir = cleanPath(DIRECTORY_SEPARATOR.cleanPath($targetpath).DIRECTORY_SEPARATOR);
         // do copy for every file
-        if ($ftp!==false) {
-            $folderlist = scandirs($frompath);
-            $filelist = scanfiles($frompath);
-            createFolder($targetpath);
-            foreach ($folderlist AS $fk => $fv) {
-                copyFolder(cleanPath($frompath."/".$fv), cleanPath($targetpath."/".$fv));
-            }
-            // set put to true and make it false if some putting fails
-            $put = true;
-            if (is_array($filelist)) {
-                foreach ($filelist AS $fk => $fv) {
-                    if (ftp_put($ftp, cleanPath($targetdir."/".$fv), cleanPath($fromdir."/".$fv), FTP_BINARY)) {
-                        // remove file
-                        if ($move) {
-                            deleteFile(cleanPath($frompath."/".$fv));
-                        }
-                    } else {
-                        $put = false;
-                    }
-                }
-            }
-            if ($put) {
-                if ($move) {
-                    deleteFolder($frompath, false);
-                }
-            }
-            ftp_close($ftp);
-            return $put;
+        $folderlist = scandirs($frompath);
+        $filelist = scanfiles($frompath);
+        // setup return var
+        $return = true;
+        foreach ($filelist AS $flk => $flv) {
+            $copyfile = copyFile(cleanPath($fromdir.DIRECTORY_SEPARATOR.$flv), cleanPath($targetdir.DIRECTORY_SEPARATOR.$flv));
+            if (!$copyfile) { $return = false; }
         }
-        else if (WSP_DEV) {
-            addWSPMsg('errormsg', 'copyFolder could not connect to FTP');
+        foreach ($folderlist AS $fldk => $fldv) {
+            $copyfolder = copyFolder(cleanPath($fromdir.DIRECTORY_SEPARATOR.$fldv.DIRECTORY_SEPARATOR), cleanPath($targetdir.DIRECTORY_SEPARATOR.$fldv.DIRECTORY_SEPARATOR), $move);
+            if (!$copyfolder) { $return = false; }
         }
+        return $return;
     }
 }
 
@@ -5706,10 +5705,10 @@ if (!(function_exists('copyFile'))) {
                 return false;
             }
         } else if ($return && isset($_SESSION['wspvars']['srv']) && $_SESSION['wspvars']['srv']!==false) {
-            if (@move_uploaded_file($from, cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.cleanPath($to)))) {
+            if (move_uploaded_file(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$from), cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.cleanPath($to)))) {
                 return true;
             } else {
-                if (@rename($from, cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.cleanPath($to)))) {
+                if (rename(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$from), cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.cleanPath($to)))) {
                     return true;
                 } else {
                     if (defined('WSP_DEV') && WSP_DEV) {

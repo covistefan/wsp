@@ -56,16 +56,19 @@ if ($mod_res['num']>0) {
 $loadmodule = false;
 
 if ($_SESSION['wspvars']['usertype']!=1 && (!(isset($_SESSION['wspvars']['wspmodmenu'])) || (isset($_SESSION['wspvars']['wspmodmenu']) && !(is_array($_SESSION['wspvars']['wspmodmenu']))) || (isset($_SESSION['wspvars']['wspmodmenu']) && count($_SESSION['wspvars']['wspmodmenu'])<1))) {
-    addWSPMsg('errormsg', returnIntLang('module no modules access allowed'));
+    addWSPMsg('errormsg', returnIntLang('modules no modules access allowed'));
 }
 else if ($_SESSION['wspvars']['usertype']!=1 && (!(array_key_exists($_SESSION['wspvars']['lockstat'], $_SESSION['wspvars']['wspmodmenu'])))) {
-    addWSPMsg('errormsg', returnIntLang('module no access to this module allowed'));
+    addWSPMsg('errormsg', returnIntLang('modules no access to this module allowed'));
 }
 else if (($mod_res['num']>0 && !(is_file(DOCUMENT_ROOT."/".WSP_DIR."/data/modules/".$mod_res['set'][0]['link'])))) {
-    addWSPMsg('errormsg', returnIntLang('module no associated contents found'));
+    addWSPMsg('errormsg', returnIntLang('modules no associated contents found'));
 }
 else if ($mod_res['num']==0) {
-    addWSPMsg('errormsg', returnIntLang('module called wrong id'));
+    addWSPMsg('errormsg', returnIntLang('modules called wrong id'));
+    if (defined('WSP_DEV') && WSP_DEV) {
+        addWSPMsg('errormsg', var_export($mod_res, true));
+    }
 }
 else {
     $moddir = explode("/", $mod_res['set'][0]['link']);
@@ -80,11 +83,11 @@ else {
                 $lang[$_SESSION['wspvars']['locallang']] = array_merge($lang[$_SESSION['wspvars']['locallang']], $modlang[$_SESSION['wspvars']['locallang']]);
             }
             else {
-                addWSPMsg('noticemsg', returnIntLang('module not localized language', true));
+                addWSPMsg('noticemsg', returnIntLang('modules not localized language', true));
             }
         }
         else {
-            addWSPMsg('noticemsg', returnIntLang('module not localized file', true));
+            addWSPMsg('noticemsg', returnIntLang('modules not localized file', true));
         }
         // get module funcs file
         if (is_file(DOCUMENT_ROOT."/".WSP_DIR."/data/modules/".$moddir[0]."/funcs.inc.php")) {
@@ -96,7 +99,7 @@ else {
         $lang[$_SESSION['wspvars']['locallang']]['modinterpreter modlanginfo'] = cleanPath('/'.WSP_DIR.'/data/modules/'.$mod_res['set'][0]['link']);
     }
     if (!(is_file($loadmodule))) {
-        addWSPMsg('errormsg', returnIntLang('module no associated contents found', true));
+        addWSPMsg('errormsg', returnIntLang('modules no associated contents found', true));
     }
 }
 

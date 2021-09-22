@@ -35,19 +35,12 @@ require ("./data/include/siteinfo.inc.php");
 // define page specific vars -----------------
 
 // define page specific funcs ----------------
-// jump to menuedit
-if ((isset($_REQUEST['action']) && $_REQUEST['action']=="menuedit") && intval($_GET['id']>0) && (strpos($_SERVER['HTTP_REFERER'], $_SERVER['HTTP_HOST'])) && (strpos($_SERVER['HTTP_REFERER'], $wspvars['wspbasedir'])) && (strpos($_SERVER['HTTP_REFERER'], $_SERVER['PHP_SELF']))) {
-	$_SESSION['getvars']['mid'] = intval($_GET['id']);
-	$_SESSION['getvars']['op'] = "edit";
-	header ("location: menuedit.php");
-    die();
-}
+
 // page actions
 if (isset($_POST['op']) &&  trim($_POST['op'])=="save" && trim($_POST['file'])!='') {
-	// update javascript FILE
     $timestamp = time();
     if (intval($_POST['id'])>0) {
-		// JavaScript updaten
+		// update exisiting file
 		$sql = "UPDATE `javascript` SET 
 			`file` = '".escapeSQL(trim($_POST['file']))."',
             `cfolder` = '".$timestamp."',
@@ -75,22 +68,23 @@ if (isset($_POST['op']) &&  trim($_POST['op'])=="save" && trim($_POST['file'])!=
     }
 }
 else if (isset($_POST['op']) &&  trim($_POST['op'])=="savefolder" && isset($_POST['id']) && intval($_POST['id'])>0) {
-    // update javascript FOLDER
-    $scriptcode = NULL;
-    if (array_key_exists('scriptcode', $_POST)) { $scriptcode = serialize($_POST['scriptcode']); }
+    // update javascript folder
+    $scriptcode = null;
+    if (array_key_exists('scriptcode', $_POST)) { 
+        $scriptcode = serialize($_POST['scriptcode']);
+    }
     $sql = "UPDATE `javascript` SET 
-        `file` = '',
         `scriptcode` = '".escapeSQL($scriptcode)."',
         `describ` = '".escapeSQL(trim($_POST['describfolder']))."',
         `lastchange` = ".time()."
         WHERE `id` = ".intval($_POST['id']);
     $res = doSQL($sql);
-	if ($res['aff']==1):
+	if ($res['aff']==1) {
         addWSPMsg('noticemsg', returnIntLang('saved changes to jsfolder', false));	
-	else:
+	} else {
 		addWSPMsg('errormsg', returnIntLang('error saving changes to jsfolder', false));
         $_POST['op'] = 'editfolder';
-	endif;
+	}
 }
 else if (isset($_FILES['uploadfile']) && trim($_FILES['uploadfile']['tmp_name'])!="") {
     if (intval($_FILES['uploadfile']['error'])==0 && intval($_FILES['uploadfile']['size'])>0) {
@@ -130,31 +124,35 @@ else if (isset($_FILES['uploadfolder']) && trim($_FILES['uploadfolder']['tmp_nam
                 // extract all files
                 $phar = new PharData(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$filename));
                 $phar->extractTo(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$foldername));
-                $emptyextract = clearFolder($foldername, array('.js'));
+                $emptyextract = clearFolder($foldername, array('.js','.css','.map','.png','.gif','.svg','.jpg','.rb','.less','.scss','.eot','.ttf','.woff','.woff2','.md'));
                 if ($emptyextract===true) {
                     deleteFolder($foldername, false);
                     addWSPMsg('errormsg', returnIntLang('folder upload was empty or had false contents', false));
                 } else {
-                    copyFolder($foldername, cleanPath('/data/script/'.$scriptname.'/'));
-                    deleteFolder($foldername, false);
-                    deleteFile(cleanPath($filename));
-                    // check for existing folder
-                    $sql = "SELECT `id` FROM `javascript` WHERE `cfolder` = '".escapeSQL(urltext($scriptname))."'";
-                    $res = doResultSQL($sql);
-                    if ($res===false) {
-                        // insert some data to database for a new entry
-                        $sql = "INSERT INTO `javascript` SET `file` = '', `cfolder` = '".escapeSQL(urltext($scriptname))."', `describ` = '".escapeSQL(urltext($scriptname)." ".returnIntLang('str folder', false))."', `lastchange` = ".time();
-                        $res = doSQL($sql);
-                        if ($res['inf']>0) {
-                            addWSPMsg('resultmsg', returnIntLang('folder upload done', false));
+                    $copyfolder = copyFolder($foldername, cleanPath('/data/script/'.$scriptname.'/'));
+                    if ($copyfolder) {
+                        deleteFolder($foldername, false);
+                        deleteFile(cleanPath($filename));
+                        // check for existing folder
+                        $sql = "SELECT `id` FROM `javascript` WHERE `cfolder` = '".escapeSQL($scriptname)."'";
+                        $res = doResultSQL($sql);
+                        if ($res===false) {
+                            // insert some data to database for a new entry
+                            $sql = "INSERT INTO `javascript` SET `file` = '', `cfolder` = '".escapeSQL($scriptname)."', `describ` = '".escapeSQL($scriptname." ".returnIntLang('str folder', false))."', `lastchange` = ".time();
+                            $res = doSQL($sql);
+                            if ($res['inf']>0) {
+                                addWSPMsg('resultmsg', returnIntLang('js folder upload done', false));
+                            }
                         }
-                    }
-                    else {
-                        $sql = "UPDATE `javascript` SET `lastchange` = ".time()." WHERE `cfolder` = '".escapeSQL(urltext($scriptname))."'";
-                        $res = doSQL($sql);
-                        if ($res['aff']>0) {
-                            addWSPMsg('resultmsg', returnIntLang('folder upload update done', false));
+                        else {
+                            $sql = "UPDATE `javascript` SET `lastchange` = ".time()." WHERE `cfolder` = '".escapeSQL($scriptname)."'";
+                            $res = doSQL($sql);
+                            if ($res['aff']>0) {
+                                addWSPMsg('resultmsg', returnIntLang('js folder upload update done', false));
+                            }
                         }
+                    } else {
+                        addWSPMsg('errormsg', returnIntLang('js folder upload error uploading file', false));
                     }
                 }
             } 
@@ -208,7 +206,7 @@ else if (isset($_REQUEST['op']) && isset($_REQUEST['id']) && $_REQUEST['op']=='r
 
 // run folder for files
 if (is_dir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR."data".DIRECTORY_SEPARATOR."script".DIRECTORY_SEPARATOR))) {
-    $scanfiles = scanfiles(cleanPath(DIRECTORY_SEPARATOR."data".DIRECTORY_SEPARATOR."script".DIRECTORY_SEPARATOR));   
+    $scanfiles = scanfiles(cleanPath(DIRECTORY_SEPARATOR."data".DIRECTORY_SEPARATOR."script".DIRECTORY_SEPARATOR), SCANDIR_SORT_ASCENDING , false , array('js') ); 
 } else {
     $created = createFolder(DIRECTORY_SEPARATOR."data".DIRECTORY_SEPARATOR."script".DIRECTORY_SEPARATOR);
     if ($created===true) {
@@ -219,10 +217,10 @@ if (is_dir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR."data".DIRECTORY_SEPARATO
     }
 }
 
-// head der datei
-require ("./data/include/header.inc.php");
-require ("./data/include/navbar.inc.php");
-require ("./data/include/sidebar.inc.php");
+// head of file - first regular output -------
+require("./data/include/header.inc.php");
+require("./data/include/navbar.inc.php");
+require("./data/include/sidebar.inc.php");
 
 ?>
 <!-- MAIN -->
@@ -258,12 +256,11 @@ require ("./data/include/sidebar.inc.php");
             // run database for saved files
             $js_sql = "SELECT `file` FROM `javascript` WHERE `cfolder` = `lastchange` ORDER BY `file`";
             $js_res = getResultSQL($js_sql);
+
             $sysjsfiles = array();
             if (is_array($js_res) && count($js_res)>0) {
                 foreach ($js_res AS $jk => $jv) {
-                    if (in_array(trim($jv).".js", $foundjsfiles)) {
-                        $sysjsfiles[] = trim($jv).".js";
-                    }
+                    $sysjsfiles[] = trim($jv).".js";
                 }
             }
 	

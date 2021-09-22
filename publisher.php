@@ -86,6 +86,7 @@ require ("./data/include/sidebar.inc.php");
             </ul>
         </div>
         <div class="container-fluid">
+            <?php showWSPMsg(1); ?>
             <?php
             
             if (isset($aNum) && $aNum>0) {
@@ -103,7 +104,7 @@ require ("./data/include/sidebar.inc.php");
                     $("." + selectType + "publish").addClass('publish');
                     $("." + selectType + "publishbox").prop('checked', true);
                     $("#checkall" + selectType).prop('checked', true);
-
+                    $('tr.publisheritem').removeClass('info').removeClass('success').addClass('success');
                     $('.itempublish').each(function() {
                         if ($(this).css('display')=='none') {
                             $(this).removeClass('publish');
@@ -128,6 +129,7 @@ require ("./data/include/sidebar.inc.php");
                     $("." + selectType + "publish").removeClass('publish');
                     $("." + selectType + "publishbox").prop('checked', false);
                     $("#checkall" + selectType).prop('checked', false);
+                    $('tr.publisheritem').removeClass('success');
                 }	// deselectAllPublish()
 	
                 function checkallpublish(selectType) {
@@ -150,7 +152,7 @@ require ("./data/include/sidebar.inc.php");
                     document.getElementById('clearqueue').submit();
                     $('#queueinfo').hide();
                     $('.queue-num-badge').hide();
-                    $('tr.publisheritem.info').removeClass('info');
+                    $('tr.publisheritem.info').removeClass('info').removeClass('success');
                 }
 
             </script>
@@ -183,6 +185,7 @@ require ("./data/include/sidebar.inc.php");
                 $showpanel['css'] = 0;
                 // check css-files to be published
                 $aCSS = array();
+                $cssfiles_res = doSQL("SELECT `id` FROM `stylesheets` WHERE ");
                 $csschanges_sql = "SELECT `id`, `describ`, `file`, `cfolder`, `lastchange`, (`lastchange` > `lastpublish`) AS `changed` FROM `stylesheets` ORDER BY `lastchange` < `lastpublish`, `describ`";
                 $csschanges_res = doSQL($csschanges_sql);
                 if ($csschanges_res['num']>0) {
@@ -204,23 +207,30 @@ require ("./data/include/sidebar.inc.php");
                 $showpanel['js'] = 0;
                 // check js-files to be published
                 $aJS = array();
-                $jschanges_sql = "SELECT `id`, `describ`, `file`, `cfolder`, `lastchange`, (`lastchange` > `lastpublish`) AS `changed` FROM `javascript` ORDER BY `lastchange` < `lastpublish`, `describ`";
-                $jschanges_res = doSQL($jschanges_sql);
-                if ($jschanges_res['num']>0) {
-                    foreach ($jschanges_res['set'] AS $jsk => $jsv) {
-                        $aJS[] = array(
-                            'id' => $jsv['id'], 
-                            'description' => $jsv['describ'], 
-                            'lastchange' => $jsv['lastchange'], 
-                            'changed' => $jsv['changed'], 
-                            'filename' => $jsv['file'],
-                            'foldername' => trim($jsv['cfolder'])
-                        );
-                        if (intval($jsv['changed'])==1 && $jsv['cfolder']==$jsv['lastchange']): $showpanel['js']++; endif;
+
+                $jsfiles_res = doSQL("SELECT `id` FROM `javascript`");
+                if ($jsfiles_res['num']>0) {
+                    $jschanges_sql = "SELECT `id`, `describ`, `file`, `cfolder`, `lastchange`, (`lastchange` > `lastpublish`) AS `changed` FROM `javascript` ORDER BY `lastchange` < `lastpublish`, `describ`";
+                    $jschanges_res = doSQL($jschanges_sql);
+                    if ($jschanges_res['num']>0) {
+                        foreach ($jschanges_res['set'] AS $jsk => $jsv) {
+                            $aJS[] = array(
+                                'id' => $jsv['id'], 
+                                'description' => $jsv['describ'], 
+                                'lastchange' => $jsv['lastchange'], 
+                                'changed' => $jsv['changed'], 
+                                'filename' => $jsv['file'],
+                                'foldername' => trim($jsv['cfolder'])
+                            );
+                            if (intval($jsv['changed'])==1 && $jsv['cfolder']==$jsv['lastchange']): $showpanel['js']++; endif;
+                        }
+                    } else {
+                        unset($showpanel['js']);
                     }
                 } else {
                     unset($showpanel['js']);
                 }
+
             }
             
             /*
@@ -274,7 +284,7 @@ require ("./data/include/sidebar.inc.php");
                         <div class="col-md-<?php echo (12/count($showpanel)); ?>" id="panel-publish-css">
                             <div class="panel" id="mediainfo">
                                 <div class="panel-heading">
-                                    <h3 class="panel-title"><?php echo returnIntLang('publisher css-files', true); echo " <span class='badge inline-badge'>".intval($showpanel['css'])."</span>"; ?></h3>
+                                    <h3 class="panel-title"><?php echo returnIntLang('publisher css-files', true); echo ((intval($showpanel['css'])>0) ? " <span class='badge inline-badge'>".intval($showpanel['css'])."</span>" : '') ; ?></h3>
                                     <?php panelOpener(true, array(), false, 'panel-publish-css'); ?>
                                 </div>
                                 <div class="panel-body">
@@ -336,7 +346,7 @@ require ("./data/include/sidebar.inc.php");
                         <div class="col-md-<?php echo (12/count($showpanel)); ?>" id="panel-publish-js">
                             <div class="panel" id="mediainfo">
                                 <div class="panel-heading">
-                                    <h3 class="panel-title"><?php echo returnIntLang('publisher js-files', true); echo " <span class='badge inline-badge'>".$showpanel['js']."</span>"; ?></h3>
+                                    <h3 class="panel-title"><?php echo returnIntLang('publisher js-files', true); echo ((intval($showpanel['js'])>0) ? " <span class='badge inline-badge'>".intval($showpanel['js'])."</span>" : ''); ?></h3>
                                     <?php panelOpener(true, array(), false, 'panel-publish-js'); ?>
                                 </div>
                                 <div class="panel-body">
