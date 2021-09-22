@@ -34,6 +34,8 @@ require ("./data/include/errorhandler.inc.php");
 require ("./data/include/siteinfo.inc.php");
 // define page specific vars -----------------
 // define page specific funcs ----------------
+
+// page actions
 if (isset($_POST['op']) && $_POST['op']=="save" && trim($_POST['file'])!='') {
     $timestamp = time();
     if (intval($_POST['id'])>0) {
@@ -70,14 +72,14 @@ if (isset($_POST['op']) && $_POST['op']=="save" && trim($_POST['file'])!='') {
 }
 else if (isset($_POST['op']) && $_POST['op']=="savefolder" && isset($_POST['id']) && intval($_POST['id'])>0) {
     // update css folder
-    $stylesheet = NULL;
+    $stylesheet = null;
     if (array_key_exists('stylesheet', $_POST)) {
         $stylesheet = serialize($_POST['stylesheet']);
     }
     $sql = "UPDATE `stylesheets` SET 
         `stylesheet` = '".escapeSQL($stylesheet)."',
         `describ` = '".escapeSQL(trim($_POST['describfolder']))."',
-        `lastchange` = '".time()."'
+        `lastchange` = ".time()."
         WHERE `id` = ".intval($_POST['id']);
     $res = doSQL($sql);
     if ($res['aff']==1) {
@@ -126,7 +128,7 @@ else if (isset($_FILES['uploadfolder']) && trim($_FILES['uploadfolder']['tmp_nam
                 // extract all files
                 $phar = new PharData(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$filename));
                 $phar->extractTo(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$foldername));
-                $emptyextract = clearFolder($foldername, array('.css'));
+                $emptyextract = clearFolder($foldername, array('.css','.map','.png','.gif','.svg','.jpg','.otf','.woff','.woff2','.eot','.ttf','.md'));
                 if ($emptyextract===true) {
                     deleteFolder($foldername, false);
                     addWSPMsg('errormsg', returnIntLang('folder upload was empty or had false contents', false));
@@ -230,7 +232,7 @@ $browserarray = array(
 
 // run folder for files
 if (is_dir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR."media".DIRECTORY_SEPARATOR."layout".DIRECTORY_SEPARATOR))) {
-    $scanfiles = scanfiles(cleanPath(DIRECTORY_SEPARATOR."media".DIRECTORY_SEPARATOR."layout".DIRECTORY_SEPARATOR));
+    $scanfiles = scanfiles(cleanPath(DIRECTORY_SEPARATOR."media".DIRECTORY_SEPARATOR."layout".DIRECTORY_SEPARATOR), SCANDIR_SORT_ASCENDING , false , array('css') );
 } else {
     $created = createFolder(DIRECTORY_SEPARATOR."media".DIRECTORY_SEPARATOR."layout".DIRECTORY_SEPARATOR);
     if ($created===true) {
@@ -284,9 +286,7 @@ require("./data/include/sidebar.inc.php");
             $syscssfiles = array();
             if (is_array($css_res) && count($css_res)>0) {
                 foreach ($css_res AS $ck => $cv) {
-                    if (in_array(trim($cv).".css", $foundcssfiles)) {
-                        $syscssfiles[] = trim($cv).".css";
-                    }
+                    $syscssfiles[] = trim($cv).".css";
                 }
             }
             

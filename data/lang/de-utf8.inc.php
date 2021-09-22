@@ -1473,7 +1473,7 @@ $lang['de'] = array(
 
 //Gestaltung -> JavaScript
 'js headline' => 'JavaScript-Dateien und Dateisammlungen verwalten',
-'js info' => 'Verwalten Sie hier JavaScripte und JavaScript-Sammlungen wie Scriptaculous.',
+'js info' => 'Verwalten Sie hier JavaScripte und JavaScript-Sammlungen wie jQuery.',
 'js found files' => 'Im Dateisystem gefundene JavaScript-Dateien', 
 'js existingfolder' => 'Bestehende JavaScript-Sammlungen',
 'js existingfiles' => 'Bestehende JavaScript-Dateien',
@@ -1486,6 +1486,7 @@ $lang['de'] = array(
 'js editfile' => 'JavaScript-Datei bearbeiten',
 'js folderfiles' => 'Dateien der JavaScript-Sammlung',
 'js movefileshint' => 'Dateien per Drag & Drop in die gew&uuml;nschte Reihenfolge bewegen',
+'js move activated files to correct order by drag and drop' => 'Aktive Dateien können per Drag&Drop in die gewünschte Ladereihenfolge gebracht werden.',
 'js nofolder' => 'Es existieren noch keine JavaScript-Ordner',
 'js confirmdeletefolder' => 'Soll der JavaScript-Ordner wirklich entfernt werden?',
 'js saved js-file' => 'Die JavaScript-Daten wurden gespeichert',
@@ -1493,6 +1494,8 @@ $lang['de'] = array(
 'js upload files' => 'JavaScript-Datei hochladen',
 'js upload folder zip' => 'Ordner hochladen',
 'js createfile' => 'Neue JavaScript-Datei anlegen',
+'js folder upload error uploading file' => 'Der JavaScript-Ordner konnte nicht hochgeladen werden.',
+'js error saving js-file' => 'Fehler beim Speichern der JavaScript-Datei',
     
 //Gestaltung -> MenueTemplates
 'menutmp headline' => 'Menüvorlage Editor',
