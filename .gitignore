@@ -3,6 +3,7 @@
 /_wsp_/testfile-wsp.txt
 /_wsp_/versions.php
 /_wsp_/tmp/*
+/_wsp_/.*
 
 /media/*
 /[a-z]*/*
@@ -15,3 +16,4 @@
 /*.php
 
 .editorconfig
+
