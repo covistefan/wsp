@@ -67,6 +67,8 @@ if (isset($_POST['op']) && $_POST['op']=='new' && isset($_POST['newmenuitem']) &
 		`filename` = '".escapeSQL($newfilename)."',
 		`templates_id` = ".intval($_POST['template']).",
 		`contentchanged` = 4,
+		`structurechanged` = ".time().",
+		`menuchangetime`= ".time().",
 		`changetime` = ".time().",
 		`isindex` = ".intval($newindex);
 	$sqlsuccess = doSQL($sql);
@@ -80,6 +82,9 @@ if (isset($_POST['op']) && $_POST['op']=='new' && isset($_POST['newmenuitem']) &
 		endif;
 	else:
 		$_SESSION['wspvars']['errormsg'] = "<p>".returnIntLang('structure error creating new menupoint', true)."</p>";
+		if (defined('WSP_DEV') && WSP_DEV):
+			addWSPMsg('errormsg', var_export($sqlsuccess, true));
+		endif;
 	endif;
 elseif (isset($_POST['op']) && $_POST['op']=='new' && trim($_POST['newmenuitemlist'])!=""):
 	// create new list of menupoints
