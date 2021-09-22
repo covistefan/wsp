@@ -138,22 +138,19 @@ else if (isset($_FILES['uploadfolder']) && trim($_FILES['uploadfolder']['tmp_nam
                         // check for existing folder
                         $sql = "SELECT `id` FROM `stylesheets` WHERE `cfolder` = '".escapeSQL($scriptname)."'";
                         $res = doResultSQL($sql);
-
-                        var_export($res);
-
                         if ($res===false) {
                             // insert some data to database for a new entry
                             $sql = "INSERT INTO `stylesheets` SET `file` = '', `cfolder` = '".escapeSQL($scriptname)."', `describ` = '".escapeSQL($scriptname." ".returnIntLang('str folder', false))."', `lastchange` = ".time();
                             $res = doSQL($sql);
                             if ($res['inf']>0) {
-                                addWSPMsg('resultmsg', returnIntLang('folder upload done', false));
+                                addWSPMsg('resultmsg', returnIntLang('css folder upload done', false));
                             }
                         }
                         else {
                             $sql = "UPDATE `stylesheets` SET `lastchange` = ".time()." WHERE `cfolder` = '".escapeSQL($scriptname)."'";
                             $res = doSQL($sql);
                             if ($res['aff']>0) {
-                                addWSPMsg('resultmsg', returnIntLang('folder upload update done', false));
+                                addWSPMsg('resultmsg', returnIntLang('css folder upload update done', false));
                             }
                         }
                     } else {

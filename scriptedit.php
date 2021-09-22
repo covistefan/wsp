@@ -135,26 +135,30 @@ else if (isset($_FILES['uploadfolder']) && trim($_FILES['uploadfolder']['tmp_nam
                     deleteFolder($foldername, false);
                     addWSPMsg('errormsg', returnIntLang('folder upload was empty or had false contents', false));
                 } else {
-                    copyFolder($foldername, cleanPath('/data/script/'.$scriptname.'/'));
-                    deleteFolder($foldername, false);
-                    deleteFile(cleanPath($filename));
-                    // check for existing folder
-                    $sql = "SELECT `id` FROM `javascript` WHERE `cfolder` = '".escapeSQL(urltext($scriptname))."'";
-                    $res = doResultSQL($sql);
-                    if ($res===false) {
-                        // insert some data to database for a new entry
-                        $sql = "INSERT INTO `javascript` SET `file` = '', `cfolder` = '".escapeSQL(urltext($scriptname))."', `describ` = '".escapeSQL(urltext($scriptname)." ".returnIntLang('str folder', false))."', `lastchange` = ".time();
-                        $res = doSQL($sql);
-                        if ($res['inf']>0) {
-                            addWSPMsg('resultmsg', returnIntLang('folder upload done', false));
+                    $copyfolder = copyFolder($foldername, cleanPath('/media/layout/'.$scriptname.'/'));
+                    if ($copyfolder) {
+                        deleteFolder($foldername, false);
+                        deleteFile(cleanPath($filename));
+                        // check for existing folder
+                        $sql = "SELECT `id` FROM `javascript` WHERE `cfolder` = '".escapeSQL($scriptname)."'";
+                        $res = doResultSQL($sql);
+                        if ($res===false) {
+                            // insert some data to database for a new entry
+                            $sql = "INSERT INTO `javascript` SET `file` = '', `cfolder` = '".escapeSQL($scriptname)."', `describ` = '".escapeSQL($scriptname." ".returnIntLang('str folder', false))."', `lastchange` = ".time();
+                            $res = doSQL($sql);
+                            if ($res['inf']>0) {
+                                addWSPMsg('resultmsg', returnIntLang('js folder upload done', false));
+                            }
                         }
-                    }
-                    else {
-                        $sql = "UPDATE `javascript` SET `lastchange` = ".time()." WHERE `cfolder` = '".escapeSQL(urltext($scriptname))."'";
-                        $res = doSQL($sql);
-                        if ($res['aff']>0) {
-                            addWSPMsg('resultmsg', returnIntLang('folder upload update done', false));
+                        else {
+                            $sql = "UPDATE `javascript` SET `lastchange` = ".time()." WHERE `cfolder` = '".escapeSQL($scriptname)."'";
+                            $res = doSQL($sql);
+                            if ($res['aff']>0) {
+                                addWSPMsg('resultmsg', returnIntLang('js folder upload update done', false));
+                            }
                         }
+                    } else {
+                        addWSPMsg('errormsg', returnIntLang('js folder upload error uploading file', false));
                     }
                 }
             } 
