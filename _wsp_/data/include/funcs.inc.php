@@ -4081,22 +4081,6 @@ if (!(function_exists('delTree'))):
 	}	// delTree()
 endif;
 
-if (!(function_exists('createUsevarDir'))) {
-    function createUsevarDir($usevar) {
-        if (is_dir(DOCUMENT_ROOT."/".WSP_DIR."/tmp/".$usevar."/")) {
-            return true;
-        }
-        else {
-            if (isset($_SESSION['wspvars']['usevar']) && $_SESSION['wspvars']['usevar']==$usevar) {
-                return createDirFTP(cleanPath("/".WSP_DIR."/tmp/".$usevar), '0777');
-            }
-            else {
-                return false;
-            }
-        }
-    }
-}
-
 // $path = full path from actual tmp directory with leading slash
 if (!(function_exists('createDir'))):
 function createDir($path) {
