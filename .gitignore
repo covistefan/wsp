@@ -1,7 +1,17 @@
-_wsp_/data/include/wspconf.inc.php
-_wsp_/updater.php
-_wsp_/testfile-wsp.txt
-_wsp_/versions.php
-_wsp_/tmp/*
+/_wsp_/data/include/wspconf.inc.php
+/_wsp_/updater.php
+/_wsp_/testfile-wsp.txt
+/_wsp_/versions.php
+/_wsp_/tmp/*
+
+/media/*
+/[a-z]*/*
+
+!/_wsp_/*
+!/data/*
+
+/data/menu/*
+
+/*.php
 
 .editorconfig
