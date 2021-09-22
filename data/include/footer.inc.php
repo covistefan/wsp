@@ -42,7 +42,7 @@ echo '<div class="clearfix"></div>';
 echo '<footer>';
 echo '<div class="container-fluid">';
 echo '<p class="copyright">';
-echo '<a href="http://www.websitepreview.de" target="_blank">WebSitePreview</a> © 2001 - 2020 ';
+echo '<a href="http://www.websitepreview.de" target="_blank">WebSitePreview</a> © 2001 - 2021 ';
 echo '<a href="http://www.covi.de" target="_blank">COVI.DE</a>';
 // echo ', Theme © 2017 <a href="https://www.themeineed.com" target="_blank">Theme I Need</a>';
 echo '</p>';
