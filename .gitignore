@@ -2,4 +2,6 @@ data/include/wspconf.inc.php
 updater.php
 versions.php
 testfile-wsp.txt
-tmp/*
+.editorconfig
+tmp/[0-9]*
+tmp/[a-f]*
