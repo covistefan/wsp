@@ -399,17 +399,17 @@ function doEdit(cid) {
 
 function setupPublisher(mid) {
     $.post("xajax/ajax.contentpublish.php", { 'mid': mid })
-            .done (function(data) {
-                if (parseInt(data)==0) {
-                    $('span.queue-num-badge').hide();
-                } 
-                else if (parseInt(data)>0) {
-                    $('#toggledirectpublish-' + mid).html('<i class="fas fa-spinner fa-spin"></i>');
-                    $('span.queue-num-badge').text(data);
-                    $('span.queue-num-badge').show();
-                }
-                console.info('sent ' + parseInt(data) + ' pages to publisher');
-            });
+        .done (function(data) {
+            if (parseInt(data)==0) {
+                $('span.queue-num-badge').hide();
+            } 
+            else if (parseInt(data)>0) {
+                $('#toggledirectpublish-' + mid).html('<i class="fas fa-spinner fa-spin"></i>');
+                $('span.queue-num-badge').text(data);
+                $('span.queue-num-badge').show();
+            }
+            console.info('sent ' + parseInt(data) + ' pages to publisher');
+        });
 }
     
 // sets up the contents of #newcontent by ajax call and call the modal to show
