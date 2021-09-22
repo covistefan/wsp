@@ -1462,6 +1462,7 @@ $lang['de'] = array(
 
 'css editfolder' => 'CSS-Ordner bearbeiten',
 'css folderfiles' => 'Dateien im Ordner',
+'css folder upload error uploading file' => 'Der CSS-Ordner konnte nicht hochgeladen werden.',
 'css editclasses' => 'Klassennamen definieren',
 'css contentclasses description' => 'Definieren Sie hier, welche Klassennamen dem Benutzer für Inhaltselemente zur Verfügung stehen können. Die Definition erfolgt ohne den für Klassennamen üblichen ".". Schreiben Sie die Klassennamen kommasepariert in das erste Textfeld. Auf die Klassennamen für Contentholder können Sie beim Anlegen/Bearbeiten von Inhaltselementen zugreifen, wenn Sie den Inhalt mit einem "Rahmenelement" umgeben. Auch hier können Sie mehrere Klassennamen kommasepariert eingeben.',
 'css classnames content' => 'Klassennamen für Inhaltselemente',
@@ -1848,6 +1849,7 @@ $lang['de'] = array(
 'publisher cant upload file2 connect' => 'konnte wegen eines Verbindungsfehlers nicht angelegt werden.',
 'publisher cant upload file2 login' => 'konnte wegen eines Loginfehlers nicht angelegt werden.',
 
+'publisher filter input and return' => 'Suchbegriff eingeben und mit ENTER ⏎ bestätigen',
 
 'publisher published files message1' => 'Es wurden ',
 'publisher published files message2' => ' Datei(en) im Hintergrund veröffentlicht.',
@@ -1855,6 +1857,13 @@ $lang['de'] = array(
 
 'publisher copied menu file1' => 'Die Menüdatei',
 'publisher copied menu file2' => 'wurde erstellt.',
+
+'publisher could not copy menu file to final destination' => 'Die Menüdatei konnte nicht erstellt werden.',
+'publisher file could not be created1' => 'Die Datei',
+'publisher file could not be created2' => 'konnte nicht erstellt werden.',
+
+'publishlog headline' => 'Publisher Log',
+'publishlog info' => 'Hier können Sie die Aufrufe an den Publisher verfolgen und ggf. auf Fehler prüfen.',
 
 'queue headline' => 'Warteschlange',
 'queue info' => 'Auf dieser Seite können Sie kontrolliert Jobs aus der Warteschlange löschen, wenn diese z. B. auf Grund eines Fehlers nicht veröffentlicht werden.',
@@ -2060,7 +2069,9 @@ $lang['de'] = array(
     
 'modules removed module1' => 'Das Modul »',
 'modules removed module2' => '« wurde deinstalliert.',    
-    
+
+'modules called wrong id' => 'Das aufgerufene Modul hat eine falsche ID und kann deshalb nicht zugeordnet werden.',
+
 'modules modinstall' => 'Modul installieren | aktualisieren',
 'modules parser' => 'Interpreter',
 
@@ -2211,12 +2222,12 @@ $lang['de'] = array(
 
 'modules' => 'Module',
 'modules modinterpreter' => 'Inhaltsverwaltung',
-'module not localized' => 'Die Inhalte des installierten Moduls sind nicht multilingual angelegt. Möglicherweise werden die Inhalte in einer anderen Sprache als der von Ihnen gewählten angezeigt.',
-'module not localized file' => 'Für das Modul ist keine Sprachdatei vorhanden. Möglicherweise sind die Inhalte des installierten Moduls nicht multilingual angelegt und werden ggf. in einer anderen Sprache als der von Ihnen gewählten angezeigt.',
-'module no associated contents found' => 'Die zugehörigen Dateien des Moduls konnten nicht gefunden werden.',
-'module no modules access allowed' => 'Sie haben keine Zugriffsberechtigung auf Module.',
-'module no access to this module allowed' => 'Sie haben keine Zugriffsberechtigung auf dieses Modul.',
-'module not localized language' => 'Für die gewählte Sprache steht keine Übersetzung des Moduls zur Verfügung.',
+'modules not localized' => 'Die Inhalte des installierten Moduls sind nicht multilingual angelegt. Möglicherweise werden die Inhalte in einer anderen Sprache als der von Ihnen gewählten angezeigt.',
+'modules not localized file' => 'Für das Modul ist keine Sprachdatei vorhanden. Möglicherweise sind die Inhalte des installierten Moduls nicht multilingual angelegt und werden ggf. in einer anderen Sprache als der von Ihnen gewählten angezeigt.',
+'modules no associated contents found' => 'Die zugehörigen Dateien des Moduls konnten nicht gefunden werden.',
+'modules no modules access allowed' => 'Sie haben keine Zugriffsberechtigung auf Module.',
+'modules no access to this module allowed' => 'Sie haben keine Zugriffsberechtigung auf dieses Modul.',
+'modules not localized language' => 'Für die gewählte Sprache steht keine Übersetzung des Moduls zur Verfügung.',
 
 // modinterpreter
 
@@ -2430,6 +2441,7 @@ $lang['de'] = array(
 'str doaction' => 'Ausführen',
 'str install' => 'Installieren',
 'str upload' => 'Hochladen',
+'str do upload' => 'Hochladen',
 'str installed' => 'installiert',
 'str lastchange' => 'Letzte Aktualisierung',
 'str cancel' => 'Abbrechen',
