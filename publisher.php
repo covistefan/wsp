@@ -185,6 +185,7 @@ require ("./data/include/sidebar.inc.php");
                 $showpanel['css'] = 0;
                 // check css-files to be published
                 $aCSS = array();
+                $cssfiles_res = doSQL("SELECT `id` FROM `stylesheets` WHERE ");
                 $csschanges_sql = "SELECT `id`, `describ`, `file`, `cfolder`, `lastchange`, (`lastchange` > `lastpublish`) AS `changed` FROM `stylesheets` ORDER BY `lastchange` < `lastpublish`, `describ`";
                 $csschanges_res = doSQL($csschanges_sql);
                 if ($csschanges_res['num']>0) {
@@ -208,9 +209,6 @@ require ("./data/include/sidebar.inc.php");
                 $aJS = array();
 
                 $jsfiles_res = doSQL("SELECT `id` FROM `javascript`");
-
-                var_export($jsfiles_res);
-
                 if ($jsfiles_res['num']>0) {
                     $jschanges_sql = "SELECT `id`, `describ`, `file`, `cfolder`, `lastchange`, (`lastchange` > `lastpublish`) AS `changed` FROM `javascript` ORDER BY `lastchange` < `lastpublish`, `describ`";
                     $jschanges_res = doSQL($jschanges_sql);
