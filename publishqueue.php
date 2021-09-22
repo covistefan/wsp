@@ -172,8 +172,8 @@ include ("./data/include/sidebar.inc.php");
                                     <?php } ?>
                                 </tbody>
                             </table>
-                            <form name="killjob" id="killjob" method="post"><input type="_hidden" name="killjobid" id="killjobid" value="" /></form>
-                            <form action="./xajax/iframe.publisherreact.php" id="priojob" method="post" target="publisherpost"><input type="_hidden" name="priojobid" id="priojobid" value="" /></form>
+                            <form name="killjob" id="killjob" method="post"><input type="hidden" name="killjobid" id="killjobid" value="" /></form>
+                            <form action="./xajax/iframe.publisherreact.php" id="priojob" method="post" target="publisherpost"><input type="hidden" name="priojobid" id="priojobid" value="" /></form>
                         </div>
                     </div>
                 </div>
