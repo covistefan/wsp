@@ -65,7 +65,7 @@ if (!(defined('DB_PORT'))) define('DB_PORT', intval(ini_get("mysqli.default_port
 // create new mysql-connection
 if (defined('DB_USER') && defined('DB_PASS') && defined('DB_NAME')) {
 	$_SESSION['wspvars']['db'] = @new mysqli(DB_HOST,DB_USER,DB_PASS,DB_NAME,intval(DB_PORT));
-	if (@mysqli_ping($_SESSION['wspvars']['db'])==false) {
+	if ($_SESSION['wspvars']['db'] && @mysqli_ping($_SESSION['wspvars']['db'])==false) {
 		header("location: ".str_replace("//", "/", str_replace("//", "/", "/".WSP_DIR."/wspsetup.php?error=nodatabase")));
 		die();
 	}

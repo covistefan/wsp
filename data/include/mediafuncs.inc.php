@@ -110,13 +110,8 @@ if (isset($opm) && $opm=='changedir'):
 		ftp_close($ftpnewd);
 
 		//menu
-		$sqlmenu = doSQL("SELECT `mid`, `header_img`, `imageon`, `imageoff` FROM `menu`");
+		$sqlmenu = doSQL("SELECT `mid`, `imageon`, `imageoff` FROM `menu`");
 		foreach ($sqlmenu['set'] AS $smk => $smv) {
-			if (strstr(trim($smv["header_img"]),$_POST['renpath'])) {
-				$string = str_replace(basename($_POST['renpath']),removeSpecialChar($_POST['newdirname']),trim($smv["header_img"]));
-				doSQL("UPDATE `menu` SET `header_img` = '".escapeSQL($string)."', `contentchanged` = 1 WHERE `mid` = ".intval($smv["mid"]));
-                doSQL("UPDATE `end_menu` SET `header_img` = '".escapeSQL($string)."', `contentchanged` = 1 WHERE `mid` = ".intval($smv["mid"]));
-			}
 			if (strstr(trim($smv["imageon"]),$_POST['renpath'])) {
 				$string = str_replace(basename($_POST['renpath']),removeSpecialChar($_POST['newdirname']),trim($smv["imageon"]));
 				doSQL("UPDATE `menu` SET `imageon` = '".escapeSQL($string)."', `contentchanged` = 1 WHERE `mid` = ".intval($smv["mid"]));
