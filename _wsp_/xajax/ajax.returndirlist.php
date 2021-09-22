@@ -12,6 +12,7 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
     require("../data/include/globalvars.inc.php");
     require("../data/include/errorhandler.inc.php");
     require("../data/include/siteinfo.inc.php");
+    
     if (isset($_REQUEST['path']) && trim($_REQUEST['path'])!='' && cleanPath($_REQUEST['path'])==$_REQUEST['path'] && isset($_SESSION['wspvars']['usevar']) && trim($_SESSION['wspvars']['usevar'])!='') {
         
         $tmplist = explode(DIRECTORY_SEPARATOR, trim(cleanPath($_REQUEST['path'])));
@@ -45,7 +46,7 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
             if (is_array($subdirlist)): $dirlist = array_merge($dirlist, $subdirlist); endif;
 
             // create tmp user directory (again) if it doesnt exist 
-            if (createUsevarDir($_SESSION['wspvars']['usevar'])) {
+            if (createFolder(DIRECTORY_SEPARATOR.WSP_DIR.DIRECTORY_SEPARATOR.'tmp'.DIRECTORY_SEPARATOR.$_SESSION['wspvars']['usevar'].DIRECTORY_SEPARATOR)) {
                 $handle = fopen($medialist, "w");
                 fwrite($handle, json_encode($dirlist));
                 fclose($handle);
