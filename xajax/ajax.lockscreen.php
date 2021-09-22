@@ -51,7 +51,7 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
                     </div>
                 </div>
         </div>
-        <script> $('#cfc').val(0); </script><?php
+        <?php
     }
     else {
         ?>
