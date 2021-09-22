@@ -3,14 +3,14 @@
  * javascript parser-functions
  * @author stefan@covi.de
  * @since 6.0
- * @version 7.0
- * @lastchange 2019-09-02
+ * @version 7.0.1
+ * @lastchange 2021-09-22
  */
 
 if (!(function_exists('publishJS'))) {
-    function publishJS($jsid, $ftp = false) {
+    function publishJS($jsid, $con = false) {
         $returnstat = false;
-        if ($ftp) { 
+        if ($con!==false) { 
             $js_sql = 'SELECT `id`, `file`, `scriptcode` FROM `javascript` WHERE `id` = '.intval($jsid);
             $js_res = doSQL($js_sql);
             if ($js_res['num']>0) {
@@ -19,20 +19,20 @@ if (!(function_exists('publishJS'))) {
                 $fh = fopen($tmpfile, "r+");
                 fwrite($fh, stripslashes(trim($js_res['set'][0]['scriptcode'])));
                 fclose($fh);
-                if (!ftp_put($ftp, FTP_BASE."/data/script/".trim($js_res['set'][0]['file']).'.js', $tmpfile, FTP_BINARY)) {
+                if (!copyFile($tmpfile, '/data/script/'.trim($js_res['set'][0]['file']).'.css')) {
+                    addWSPMsg('errormsg', returnIntLang('js could not be uploaded1').' <strong>'.$js_res['set'][0]['file'].'.js</strong> '.returnIntLang('js could not be uploaded2'));
                     $returnstat = false;
-                    $_SESSION['wspvars']['errormsg'] .= "<p>Kann erzeugte Datei <strong>".trim($js_res['set'][0]['file']).".js</strong> nicht hochladen. (Put)</p>";
-                }
-                else {
+                } else {
+                    doSQL("UPDATE `javascript` SET `lastpublish` = ".time()." WHERE `id` = ".intval($cssid));
                     $returnstat = true;
-                    $timestamp = time();
-                    doSQL("UPDATE `javascript` SET `lastpublish` = ".$timestamp." WHERE `id` = ".intval($jsid));
                 }
+                // unlinking is only nessessary, if the file was copied by ftp
+			    // otherwise it was already moved bei srv part of copy function
                 unlink($tmpfile);
             }
             return $returnstat;
         }
-	}	// publishJS()
+	}
 }
 
 ?>
