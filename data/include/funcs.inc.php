@@ -5134,7 +5134,7 @@ if (!(function_exists('scandirs'))) {
 // scans a directory for FILES only (on the other hand SAME usability as scandir)
 // array scanfiles ( string $directory [, int $sorting_order = SCANDIR_SORT_ASCENDING [, resource $context ]] )
 if (!(function_exists('scanfiles'))) {
-    function scanfiles($directory, $sorting_order = SCANDIR_SORT_ASCENDING, $showhidden = false) {
+    function scanfiles($directory , $sorting_order = SCANDIR_SORT_ASCENDING , $showhidden = false , $fileending = null ) {
         $values = @scandir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$directory), $sorting_order);
         if (is_array($values)) {
             foreach ($values AS $vk => $cv) {
@@ -5143,6 +5143,22 @@ if (!(function_exists('scanfiles'))) {
                 }
                 if (!$showhidden && substr($cv,0,1)=='.') {
                     unset($values[$vk]);
+                }
+            }
+            // check for given file ending (a small filetype check)
+            if ($fileending!==null) {
+                // create array from fileending, if only a string is given
+                if (!(is_array($fileending))) { $fileending = array($fileending); }
+                // only do loops, when it's really an array with elements
+                if (count($fileending)>0) {
+                    // run the $fileending array and remove false positive dots
+                    foreach ($fileending AS $fk => $fv) { $fileending[$fk] = str_replace('.', '', $fv); }
+                    foreach ($values AS $vk => $vv) {
+                        $ending = substr(basename($vv), (strrpos(basename($vv), '.')+1));
+                        if (!(in_array($ending, $fileending))) {
+                            unset($values[$vk]);
+                        }
+                    }
                 }
             }
             $values = array_values($values);
