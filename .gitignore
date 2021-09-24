@@ -4,7 +4,8 @@ _wsp_/testfile-wsp.txt
 _wsp_/versions.php
 _wsp_/tmp/*
 _wsp_/.*
-_wsp_/.DS_Store
+
+.DS_Store
 
 media/*
 [a-z]*/*
