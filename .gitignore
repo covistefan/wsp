@@ -5,8 +5,6 @@ _wsp_/versions.php
 _wsp_/tmp/*
 _wsp_/.*
 
-.DS_Store
-
 media/*
 [a-z]*/*
 
@@ -21,3 +19,6 @@ data/script/fsopt.js
 /*.html
 
 .editorconfig
+.DS_Store
+_wsp_/.DS_Store
+data/.DS_Store
