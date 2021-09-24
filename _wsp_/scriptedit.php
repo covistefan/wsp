@@ -192,7 +192,6 @@ else if (isset($_REQUEST['op']) &&  trim($_REQUEST['op'])=="deletefolder" && int
         addWSPMsg('noticemsg', returnIntLang('js removed js-data and folder'));
 	}
 }
-
 else if (isset($_REQUEST['op']) && isset($_REQUEST['id']) && $_REQUEST['op']=='deletelost') {
     // remove 'lost' CSS-files from filesystem FINALLY
     deleteFile(base64_decode(trim($_POST['id'])));
@@ -642,12 +641,12 @@ require("./data/include/sidebar.inc.php");
                     $readsource = DOCUMENT_ROOT.base64_decode(trim($_REQUEST['sourcefile']));
                     if (is_file($readsource)) {
                         $sourcename = substr($readsource, (strrpos($readsource, "/")+1));
-                        $describ = $file = substr($sourcename, 0, -4);
+                        $describ = $file = substr($sourcename, 0, -3);
                         $scriptcode = file_get_contents($readsource);
                     }
                 }
                 else if (isset($readsource) && $readsource!==false) {
-                    $describ = $file = substr(basename($readname), 0, -4);
+                    $describ = $file = substr(basename($readname), 0, -3);
                     $scriptcode = $readsource;
                 }
                 else if (intval($_REQUEST['id'])>0):
