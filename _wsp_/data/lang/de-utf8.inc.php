@@ -273,6 +273,7 @@ $lang['de'] = array(
 'home widget free space' => 'Freier Speicher',
 'home widget total space' => 'Gesamt',
 'home widget pdf-support' => 'PDF-zu-Bild-Konvertierung',
+'home widget sys lastdate' => 'Stand: ',
     
 'home mediafuncs' => 'Verf&uuml;gbare Mediafunktionen',
 'home mediafuncs pdf' => 'PDF-Erzeugung',

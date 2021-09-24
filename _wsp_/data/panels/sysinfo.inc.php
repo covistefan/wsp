@@ -7,6 +7,7 @@ if (WSP_UPDSRV=='git') {
             <span class="icon-wrapper custom-bg-<?php echo ($_SESSION['wspvars']['updatesystem']===true)?'red':'green'; ?>"><i class="fab fa-github"></i></span>
             <div class="right">
                 <span class="value"><?php echo returnIntLang('home widget sys info'); ?> <small><?php echo $_SESSION['wspvars']['localversion']; ?></small></span>
+                <span class="title"><?php echo returnIntLang('home widget sys lastdate').' '.date(returnIntLang('format date time'), getWSPProperties('lastupdate')); ?> </span>
                 <span class="title"><?php echo returnIntLang('home widget sys git update').' '.date(returnIntLang('format date time'), $_SESSION['wspvars']['updatedate']); ?> </span>
             </div>
         </div>

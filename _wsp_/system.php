@@ -514,6 +514,10 @@ if (isset($_POST['doupdate'])) {
     // UPDATE VOM SERVER FERTIG MACHEN !!! 2019-10-21
     else if ($_POST['doupdate']=='server') {
         if (isCurl()) {
+			
+			// https://github.com/covistefan/wsp/archive/refs/heads/master.zip
+			// http://update.wsp-server.info/versions/system/?ile=
+
             $defaults = array( 
                 CURLOPT_URL => trim('https://'.WSP_UPDSRV.'/versions/system/?file='.trim($_POST['getversion'])),
                 CURLOPT_HEADER => 0, 
@@ -645,8 +649,8 @@ require ("./data/include/sidebar.inc.php");
             showWSPMsg($_SESSION['wspvars']['shownotice']);
 
 			if (defined('WSP_UPDSRV') && WSP_UPDSRV=='git') {
-				echo 'git';
-
+				echo date(returnIntLang('format date time'), $_SESSION['wspvars']['updatedate']);
+				$updversion = time();
 			} else if (defined('WSP_UPDSRV') && preg_match('#(\w{1,}\.\w{2,})#i', WSP_UPDSRV)>0) {
 				// get update version from update server
 				$updversion = false;
