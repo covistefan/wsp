@@ -10,10 +10,11 @@ media/*
 
 !_wsp_/*
 !data/*
+!data/script/covifuncs.js
+!data/script/jquery/*
 
 data/menu/*
-data/script/slick/*
-data/script/fsopt.js
+data/script/*
 
 /*.php
 /*.html
@@ -22,3 +23,4 @@ data/script/fsopt.js
 .DS_Store
 _wsp_/.DS_Store
 data/.DS_Store
+
