@@ -1,20 +1,22 @@
-/_wsp_/data/include/wspconf.inc.php
-/_wsp_/updater.php
-/_wsp_/testfile-wsp.txt
-/_wsp_/versions.php
-/_wsp_/tmp/*
-/_wsp_/.*
+_wsp_/data/include/wspconf.inc.php
+_wsp_/updater.php
+_wsp_/testfile-wsp.txt
+_wsp_/versions.php
+_wsp_/tmp/*
+_wsp_/.*
+_wsp_/.DS_Store
 
-/media/*
-/[a-z]*/*
+media/*
+[a-z]*/*
 
-!/_wsp_/*
-!/data/*
+!_wsp_/*
+!data/*
 
-/data/menu/*
+data/menu/*
+data/script/slick/*
+data/script/fsopt.js
 
 /*.php
+/*.html
 
 .editorconfig
-
-_wsp_/.DS_Store
