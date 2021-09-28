@@ -149,7 +149,7 @@ function fileinuse($path, $file) {
                 $content[$data['mid']][] = $data['cid'];
             endforeach;
         endif;
-		$sql = "SELECT c.`mid` AS mid, g.`id` AS gid FROM `globalcontent` AS g, `content` AS c WHERE g.`trash` = 0 AND c.`trash` = 0 AND g.`id` = c.`globalcontent_id` AND (g.`valuefield` LIKE '%".escapeSQL(trim($checkfile))."%')";
+		$sql = "SELECT c.`mid` AS mid, g.`id` AS gid FROM `content_global` AS g, `content` AS c WHERE g.`trash` = 0 AND c.`trash` = 0 AND g.`id` = c.`globalcontent_id` AND (g.`valuefield` LIKE '%".escapeSQL(trim($checkfile))."%')";
 		$res = doSQL($sql);
 		$cnum+= $res['num'];
 		if ($res['num']>0):

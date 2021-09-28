@@ -749,7 +749,7 @@ require ("./data/include/sidebar.inc.php");
                                                                 echo '<i class="fas fa-sitemap"></i> ';
                                                             }
                 
-                                                            $gcon_sql = "SELECT `id` AS gid, `trash` FROM `globalcontent` WHERE `trash` = 0 AND `interpreter_guid` IN ('".implode("','", $itp_set)."')";   
+                                                            $gcon_sql = "SELECT `id` AS gid, `trash` FROM `content_global` WHERE `trash` = 0 AND `interpreter_guid` IN ('".implode("','", $itp_set)."')";   
                                                             $gcon_res = doSQL($gcon_sql);
                                                             
                                                             if ($gcon_res['num']>0) {

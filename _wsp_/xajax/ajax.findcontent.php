@@ -58,7 +58,7 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
         }
         // search by CONTENT in globalcontents
         if (intval($_REQUEST['searchval'])==0) {
-            $gc_sql = "SELECT id FROM `globalcontent` WHERE ((`valuefield` LIKE '%".escapeSQL(strtolower(trim($_REQUEST['searchval'])))."%') ";
+            $gc_sql = "SELECT id FROM `content_global` WHERE ((`valuefield` LIKE '%".escapeSQL(strtolower(trim($_REQUEST['searchval'])))."%') ";
             $gc_sql.= " AND `trash` = 0 AND (`content_lang` = '".trim($_REQUEST['searchlang'])."' OR c.`content_lang` = ''))";
             $gc_res = doSQL($gc_sql);
             if ($gc_res['num']>0):

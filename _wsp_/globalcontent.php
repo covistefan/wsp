@@ -37,7 +37,7 @@ $worklang = unserialize($_SESSION['wspvars']['sitelanguages']);
 
 if (isset($_POST['op']) && $_POST['op']=='save'):
 	// insert new global content
-	$sql = "INSERT INTO `globalcontent` SET `interpreter_guid` = '".escapeSQL($_POST['sid'])."', `content_lang` = '".$_SESSION['wspvars']['workspacelang']."'";
+	$sql = "INSERT INTO `content_global` SET `interpreter_guid` = '".escapeSQL($_POST['sid'])."', `content_lang` = '".$_SESSION['wspvars']['workspacelang']."'";
 	$ins = doSQL($sql);
 	$_SESSION['wspvars']['editglobalcontentid'] = intval($ins['inf']);
 	header('location: globalcontentedit.php');
@@ -62,7 +62,7 @@ if (isset($_POST['op']) && $_POST['op']=='delete' && isset($_POST['gcid']) && in
 			addWSPMsg('errormsg', '<p>'.returnIntLang('globalcontent not deleted from contents', true).'</p>');
 		endif;
 		// delete global contents from global content table by given id
-		$trash_sql = "UPDATE `globalcontent` SET `trash` = 1 WHERE `id` = ".intval($_POST['gcid']);
+		$trash_sql = "UPDATE `content_global` SET `trash` = 1 WHERE `id` = ".intval($_POST['gcid']);
         $trash_res = doSQL($trash_sql);
 		if ($trash_res['aff']):
 			addWSPMsg('resultmsg', '<p>'.returnIntLang('globalcontent deleted from globalcontents', true).'</p>');
@@ -115,7 +115,7 @@ include ("data/include/wspmenu.inc.php");
 	</fieldset>
 	<?php
 	
-	$globalcontents_sql = "SELECT * FROM `globalcontent` WHERE `trash` = 0 AND (`content_lang` = '".$_SESSION['wspvars']['workspacelang']."' || `content_lang` = '') ORDER BY `interpreter_guid`";
+	$globalcontents_sql = "SELECT * FROM `content_global` WHERE `trash` = 0 AND (`content_lang` = '".$_SESSION['wspvars']['workspacelang']."' || `content_lang` = '') ORDER BY `interpreter_guid`";
 	$globalcontents_res = doSQL($globalcontents_sql);
 
     if ($globalcontents_res['num']>0):

@@ -88,7 +88,7 @@ if (isset($_REQUEST['op']) && trim($_REQUEST['op'])=="localtoglobal" && isset($_
 	$convert_sql = "SELECT * FROM `content` WHERE `cid` = ".intval($_REQUEST['cid']);
 	$convert_res = doSQL($convert_sql);
 	if ($convert_res['num']>0) {
-		$sql = "INSERT INTO `globalcontent` SET `id`='', `content_lang` = '".$_SESSION['wspvars']['workspacelang']."', `valuefield` = '".escapeSQL(trim($convert_res['set'][0]['valuefields']))."', `interpreter_guid` = '".escapeSQL(trim($convert_res['set'][0]['interpreter_guid']))."'";
+		$sql = "INSERT INTO `content_global` SET `id`='', `content_lang` = '".$_SESSION['wspvars']['workspacelang']."', `valuefields` = '".escapeSQL(trim($convert_res['set'][0]['valuefields']))."', `interpreter_guid` = '".escapeSQL(trim($convert_res['set'][0]['interpreter_guid']))."'";
         $res = doSQL($sql);
 		if ($res['aff']>0) {
 			$lastid = $res['inf'];
@@ -107,7 +107,7 @@ if (isset($_REQUEST['op']) && trim($_REQUEST['op'])=="globaltolocal" && isset($_
 	$convert_res = doSQL($convert_sql);
 	if ($convert_res['num']>0) {
 		if (intval($convert_res['set'][0]['globalcontent_id'])!=0) {
-			$gc_sql = "SELECT * FROM `globalcontent` WHERE `id` = ".intval($convert_res['set'][0]['globalcontent_id']);
+			$gc_sql = "SELECT * FROM `content_global` WHERE `id` = ".intval($convert_res['set'][0]['globalcontent_id']);
 			$gc_res = doSQL($gc_sql);
 			if ($gc_res['num']>0) {
 				$res = doSQL("UPDATE `content` SET `globalcontent_id` = 0, `valuefields` = '".escapeSQL(trim($gc_res['set'][0]['valuefield']))."', `lastchange` = '".time()."', `interpreter_guid` = '".escapeSQL(trim($gc_res['set'][0]['interpreter_guid']))."' WHERE `cid` = ".intval($_REQUEST['cid']));
@@ -196,7 +196,7 @@ if (isset($_POST) && array_key_exists('op', $_POST) && trim($_POST['op'])=='save
 	// global content
 	if(isset($_POST['gcid']) && intval($_POST['gcid'])>0) {
 		// update global content table
-		doSQL("UPDATE `globalcontent` SET `valuefield` = '".escapeSQL($data)."' WHERE `id` = ".intval($_POST['gcid']));
+		doSQL("UPDATE `content_global` SET `valuefields` = '".escapeSQL($data)."' WHERE `id` = ".intval($_POST['gcid']));
 		// setup content table
 		$content_sql = "UPDATE `content` SET ";
 		// uid 2015-10-14
@@ -350,7 +350,7 @@ if ((isset($_POST['op']) && $_POST['op']=='add') && isset($_POST['sid']) && isse
 	$interpreterguid = trim($_POST['sid']);
     $globalcontentid = 0;
 	if ($_POST['sid']=='0' && intval($_POST['gcid'])>0) {
-		$gc_sql = "SELECT `id`, `interpreter_guid` FROM `globalcontent` WHERE `id` = ".intval($_POST['gcid'])." LIMIT 0,1";
+		$gc_sql = "SELECT `id`, `interpreter_guid` FROM `content_global` WHERE `id` = ".intval($_POST['gcid'])." LIMIT 0,1";
 		$gc_res = doSQL($gc_sql);
 		if ($gc_res['num']>0) {
             $interpreterguid = trim($gc_res['set'][0]['interpreter_guid']); 
@@ -444,7 +444,7 @@ if($contenteditallowed) {
     $gcid = intval($contentinfo_res['set'][0]['globalcontent_id']);
     if($gcid>0) {
         // select values from global content
-        $gcinfo_sql = "SELECT `description`, `valuefields` FROM `globalcontent` WHERE `id` = ".$gcid." AND `trash` = 0";
+        $gcinfo_sql = "SELECT `description`, `valuefields` FROM `content_global` WHERE `id` = ".$gcid." AND `trash` = 0";
         $gcinfo_res = doSQL($gcinfo_sql);
         if ($gcinfo_res['num']>0) {
             $description = trim($gcinfo_res['set'][0]['description']);

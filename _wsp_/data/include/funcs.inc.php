@@ -1416,7 +1416,7 @@ function insertContent($mid, $op = 'add', $lang = '', $carea = 0, $posvor = 0, $
     // check for globalcontent
     if (intval($gcid)>0) {
         // if global content was choosen, check what global content was choosen and insert THIS into content table
-		$gc_sql = "SELECT `id`, `interpreter_guid` FROM `globalcontent` WHERE `id` = ".intval($gcid)." LIMIT 0,1";
+		$gc_sql = "SELECT `id`, `interpreter_guid` FROM `content_global` WHERE `id` = ".intval($gcid)." LIMIT 0,1";
 		$gc_res = doSQL($gc_sql);
 		if ($gc_res['num']>0) {
             $interpreterguid = trim($gc_res['set'][0]['interpreter_guid']); 
@@ -1482,7 +1482,7 @@ if (!(function_exists('returnContentItem'))) {
         // get content description from interpreter values
         $contentvalue = array();
         if (intval($contentdata['globalcontent_id'])>0):
-            $globalcontent = doResultSQL("SELECT `valuefield` FROM `globalcontent` WHERE `id` = ".intval($contentdata['globalcontent_id']));
+            $globalcontent = doResultSQL("SELECT `valuefield` FROM `content_global` WHERE `id` = ".intval($contentdata['globalcontent_id']));
             if (trim($globalcontent)!=''):
                 $contentinfo[] = '<i class="fa fa-globe"></i>';
                 $jsinfo[] = returnIntLang('global content', false);
@@ -5244,7 +5244,7 @@ function showMediaFiles($directory = '', $filelist = array(), $sorting = 'filena
             // 3. get usage ?!?!?!
             $filecontent_sql = "SELECT `cid` FROM `content` WHERE `valuefields` LIKE '%".escapeSQL(cleanPath($showlist[$flv]['filepath']))."%' AND `trash` = 0";
             $filecontent_num = getNumSQL($filecontent_sql);
-            $filegc_sql = "SELECT `id` FROM `globalcontent` WHERE `valuefields` LIKE '%".escapeSQL(cleanPath($showlist[$flv]['filepath']))."%' AND `trash` = 0";
+            $filegc_sql = "SELECT `id` FROM `content_global` WHERE `valuefields` LIKE '%".escapeSQL(cleanPath($showlist[$flv]['filepath']))."%' AND `trash` = 0";
             $filegc_num = getNumSQL($filegc_sql);
             $showlist[$flv]['fileusage'] = (((intval($filecontent_num)+intval($filegc_num))>0)?true:false);
             // run modular table fields to get information about usage

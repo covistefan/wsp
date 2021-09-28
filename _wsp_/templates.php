@@ -704,7 +704,7 @@ require("./data/include/sidebar.inc.php");
                                         </div>
                                         <?php endif;
 
-                                        $globalcontents_sql = "SELECT `gc`.`id`, `gc`.`valuefields`, `ip`.`name` FROM `globalcontent` as `gc`, `interpreter` AS `ip` WHERE `gc`.`interpreter_guid` = `ip`.`guid` AND `gc`.`trash` = 0 ORDER BY `interpreter_guid`";
+                                        $globalcontents_sql = "SELECT `gc`.`id`, `gc`.`valuefields`, `ip`.`name` FROM `content_global` as `gc`, `interpreter` AS `ip` WHERE `gc`.`interpreter_guid` = `ip`.`guid` AND `gc`.`trash` = 0 ORDER BY `interpreter_guid`";
                                         $globalcontents_res = doSQL($globalcontents_sql);
                                         if ($globalcontents_res['num']>0): ?>
                                         <p><?php echo returnIntLang('templates globalcontents'); ?></p>

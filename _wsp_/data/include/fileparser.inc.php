@@ -471,7 +471,7 @@ function getContentvars($buf, $templateID = 0) {
 if (!(function_exists('getGlobalContentvars'))) {
     function getGlobalContentvars($buf) {
         $cnt = array();
-        $gcid_sql = "SELECT MIN(id) AS min, MAX(id) AS max FROM `globalcontent`";
+        $gcid_sql = "SELECT MIN(id) AS min, MAX(id) AS max FROM `content_global`";
         $gcid_res = doSQL($gcid_sql);
         if ($gcid_res['num']>0) {
             for ($cvar=intval($gcid_res['set'][0]['min']); $cvar<=intval($gcid_res['set'][0]['max']); $cvar++) {
@@ -762,7 +762,7 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
                     $interpreter = '';
                     $contentvalue = '';
                     if (intval($coresv['globalcontent_id'])>0) {
-                        $gc_sql = "SELECT * FROM `globalcontent` WHERE `id` = ".intval($coresv['globalcontent_id'])." LIMIT 0,1";
+                        $gc_sql = "SELECT * FROM `content_global` WHERE `id` = ".intval($coresv['globalcontent_id'])." LIMIT 0,1";
                         $gc_res = doSQL($gc_sql);
                         if ($gc_res['num']>0) {
                             $contentvalue = trim($gc_res['set'][0]['valuefields']);
@@ -998,7 +998,7 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
             foreach ($globalcontentvars AS $key => $value) {
                 $interpreter = '';
                 $contentvalue = '';
-                $gccontent_sql = "SELECT * FROM `globalcontent` WHERE `id` = ".intval($key)." AND (`content_lang` = '".escapeSQL($lang)."' OR `content_lang` = '') AND `trash` = 0";
+                $gccontent_sql = "SELECT * FROM `content_global` WHERE `id` = ".intval($key)." AND (`content_lang` = '".escapeSQL($lang)."' OR `content_lang` = '') AND `trash` = 0";
                 $gccontent_res = doSQL($gccontent_sql);
                 $gccontent_num = $gccontent_res['num'];
                 // set global content num to 0 if visibility of contents is locked to (hidden) menupoint 

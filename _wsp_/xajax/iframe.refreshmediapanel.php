@@ -90,7 +90,7 @@ foreach ($db_res['set'] AS $dbk => $dbv) {
         }
     }
 }
-$db_sql = 'SELECT `valuefields` FROM `globalcontent` WHERE `trash` = 0';
+$db_sql = 'SELECT `valuefields` FROM `content_global` WHERE `trash` = 0';
 $db_res = doSQL($db_sql);
 foreach ($db_res['set'] AS $dbk => $dbv) {
     if (trim($dbv['valuefields'])!='') {

@@ -221,10 +221,10 @@ if ($cc_res['num']>0) {
 // check global content usage
 /*
 // this checkes only USED global contents in contents -> but maybe they are in templates OR they are yet not used
-$gc_res = doSQL("SELECT c.`mid` AS `mid`, c.`trash` AS `trashed`, g.`id` AS `id` FROM `globalcontent` AS g, `content` AS c WHERE g.`trash` = 0 AND g.`id` = c.`globalcontent_id` AND (g.`valuefields` LIKE '%".escapeSQL(trim($details['fullpath']))."%')");
+$gc_res = doSQL("SELECT c.`mid` AS `mid`, c.`trash` AS `trashed`, g.`id` AS `id` FROM `content_global` AS g, `content` AS c WHERE g.`trash` = 0 AND g.`id` = c.`globalcontent_id` AND (g.`valuefields` LIKE '%".escapeSQL(trim($details['fullpath']))."%')");
 */
 // this just checks existings global contents
-$gc_res = doSQL("SELECT g.`id` AS `id` FROM `globalcontent` AS g WHERE g.`trash` = 0 AND (g.`valuefields` LIKE '%".escapeSQL(trim($details['fullpath']))."%')");
+$gc_res = doSQL("SELECT g.`id` AS `id` FROM `content_global` AS g WHERE g.`trash` = 0 AND (g.`valuefields` LIKE '%".escapeSQL(trim($details['fullpath']))."%')");
 if ($gc_res['num']>0) {
     foreach ($gc_res['set'] AS $gck => $gcv) {
 		$details['usage'] = true;

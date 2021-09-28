@@ -101,7 +101,7 @@ if (isset($_SESSION['wspvars']['editcontentid']) && intval($_SESSION['wspvars'][
 // setup content filter by search
 if (isset($_SESSION['wspvars']['contentfilter']) && trim($_SESSION['wspvars']['contentfilter'])!='') {
     // get all global contents that fit search statement
-    $globalcontents = getResultSQL("SELECT `id` FROM `globalcontent` WHERE (`valuefields` LIKE '%".escapeSQL(trim($_SESSION['wspvars']['contentfilter']))."%')  AND `trash` = 0");
+    $globalcontents = getResultSQL("SELECT `id` FROM `content_global` WHERE (`valuefields` LIKE '%".escapeSQL(trim($_SESSION['wspvars']['contentfilter']))."%')  AND `trash` = 0");
     // add empty statement to fill with globalcontent ids if avaiable
     $addsql = '';
     if (is_array($globalcontents) && count($globalcontents)>0): $addsql = " OR `globalcontent_id` IN ('".implode("','", $globalcontents)."') "; endif;

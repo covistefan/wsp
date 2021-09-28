@@ -130,7 +130,7 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
                             <input type="hidden" name="gcid" id="" value="0" /></p>
                             <?php 
                             // check if global contents are avaiable 
-                            $gc_sql = "SELECT * FROM `globalcontent` WHERE (`content_lang` = '".$_SESSION['wspvars']['workspacelang']."' || `content_lang` = '') AND `trash` = 0 ORDER BY `interpreter_guid`";
+                            $gc_sql = "SELECT * FROM `content_global` WHERE (`content_lang` = '".$_SESSION['wspvars']['workspacelang']."' || `content_lang` = '') AND `trash` = 0 ORDER BY `interpreter_guid`";
                             $gc_res = doSQL($gc_sql);
                             if ($gc_res['num']>0) { 
                 ?>

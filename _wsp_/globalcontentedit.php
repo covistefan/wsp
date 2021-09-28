@@ -51,7 +51,7 @@ $worklang = unserializeBroken($_SESSION['wspvars']['sitelanguages']);
 
 // text2generic
 if (isset($_REQUEST['op']) && trim($_REQUEST['op'])=='togeneric' && isset($_REQUEST['gcid']) && intval($_REQUEST['gcid'])>0):
-	$sql = "UPDATE `globalcontent` SET `interpreter_guid` = 'genericwysiwyg' WHERE `id` = ".intval($_REQUEST['gcid']);
+	$sql = "UPDATE `content_global` SET `interpreter_guid` = 'genericwysiwyg' WHERE `id` = ".intval($_REQUEST['gcid']);
 	$res = doSQL($sql);
 	if ($res['aff']>0):
         addWSPMsg('resultmsg', returnIntLang('globalcontent updated to genericwysiwyg'));
@@ -65,7 +65,7 @@ if (isset($_POST['op']) && ($_POST['op']=='save' || $_POST['op']=='saveglobal') 
     // if no interpreter function => just serialize field values
     $value = serialize($_POST['field']);
     // update globalcontent table with new values
-	$sql = "UPDATE `globalcontent` SET `valuefields`= '".escapeSQL($value)."', `content_lang` = '".escapeSQL($_POST['content_lang'])."' WHERE `id` = " . intval($gcid);
+	$sql = "UPDATE `content_global` SET `valuefields`= '".escapeSQL($value)."', `content_lang` = '".escapeSQL($_POST['content_lang'])."' WHERE `id` = " . intval($gcid);
 	doSQL($sql);
     // update menu db set contentchanged where global content is used
     $menu_sql = "UPDATE `menu` `m`, `content` `c` SET `m`.`contentchanged` = 2 WHERE `c`.`mid` = `m`.`mid` AND `c`.`globalcontent_id` = ".intval($gcid);
@@ -301,7 +301,7 @@ require ("data/include/sidebar.inc.php");
                 endif;
             endif;
             
-            $gc_sql = "SELECT * FROM `globalcontent` WHERE `id` = ".intval($gcid);
+            $gc_sql = "SELECT * FROM `content_global` WHERE `id` = ".intval($gcid);
             $gc_res = doSQL($gc_sql);
 
             if ($gc_res['num']>0):
