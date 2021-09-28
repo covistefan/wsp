@@ -762,7 +762,7 @@ require("./data/include/sidebar.inc.php");
 			<?php endif; ?>
 			<?php
 		
-			$globalcontents_sql = "SELECT `gc`.`id`, `gc`.`valuefield`, `ip`.`name` FROM `content_global` as `gc`, `interpreter` AS `ip` WHERE `gc`.`interpreter_guid` = `ip`.`guid` AND `gc`.`trash` = 0 ORDER BY `interpreter_guid`";
+			$globalcontents_sql = "SELECT `gc`.`id`, `gc`.`valuefields`, `ip`.`name` FROM `content_global` as `gc`, `interpreter` AS `ip` WHERE `gc`.`interpreter_guid` = `ip`.`guid` AND `gc`.`trash` = 0 ORDER BY `interpreter_guid`";
 			$globalcontents_res = mysql_query($globalcontents_sql);
 			$globalcontents_num = 0;
 			if ($globalcontents_res):

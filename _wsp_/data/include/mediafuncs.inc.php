@@ -170,11 +170,11 @@ if (isset($opm) && $opm=='changedir'):
 		}
 		
 		//golbalcontent
-		$sqlglobalcontent = doSQL("SELECT `id`, `valuefield` FROM `content_global`");
+		$sqlglobalcontent = doSQL("SELECT `id`, `valuefields` FROM `content_global`");
 		foreach ($sqlglobalcontent['set'] AS $smk => $smv) {
-			if (strstr(trim($smv["valuefield"]),$_POST['renpath'])) {
-				$string = str_replace(basename($_POST['renpath']), removeSpecialChar($_POST['newdirname']), trim($smv["valuefield"]));
-				doSQL("UPDATE `content_global` SET `valuefield` = '".escapeSQL($string)."' WHERE `id` = ".intval($smv["id"]));
+			if (strstr(trim($smv['valuefields']),$_POST['renpath'])) {
+				$string = str_replace(basename($_POST['renpath']), removeSpecialChar($_POST['newdirname']), trim($smv['valuefields']));
+				doSQL("UPDATE `content_global` SET `valuefields` = '".escapeSQL($string)."' WHERE `id` = ".intval($smv["id"]));
 			}
 		}
 		
@@ -576,7 +576,7 @@ function listFiles($path = '', $extern = 0) {
 							$num = mysql_num_rows($res);
 							if ($num == 0):
 								// check usage in globalcontent
-								$sql = "SELECT `id` FROM `content_global` WHERE `valuefield` LIKE '%" . $image . "%' LIMIT 1";
+								$sql = "SELECT `id` FROM `content_global` WHERE `valuefields` LIKE '%" . $image . "%' LIMIT 1";
 								$res = mysql_query($sql);
 								$num+= mysql_num_rows($res);
 								if ($num == 0):
@@ -757,7 +757,7 @@ function listFiles($path = '', $extern = 0) {
 							$res = mysql_query($sql);
 							$num = mysql_num_rows($res);
 							if ($num == 0):
-								$sql = "SELECT `id` FROM `content_global` WHERE `valuefield` LIKE '%".$path."/".$files[$f]."%' LIMIT 1";
+								$sql = "SELECT `id` FROM `content_global` WHERE `valuefields` LIKE '%".$path."/".$files[$f]."%' LIMIT 1";
 								$res = mysql_query($sql);
 								$num+= mysql_num_rows($res);
 							endif;
@@ -1032,7 +1032,7 @@ function fileinuse($path, $file) {
 		$content[$data[0]][] = $data[1];
 	endwhile;
 
-	$sql = "SELECT c.`mid`, g.`id` FROM `content_global` AS g, `content` AS c WHERE g.`id` = c.`globalcontent_id` AND (g.`valuefield` LIKE '%" . $file . "%')";
+	$sql = "SELECT c.`mid`, g.`id` FROM `content_global` AS g, `content` AS c WHERE g.`id` = c.`globalcontent_id` AND (g.`valuefields` LIKE '%" . $file . "%')";
 	$res = mysql_query($sql);
 	$cnum+= mysql_num_rows($res);
 	while ($data = mysql_fetch_row($res)):
@@ -1088,7 +1088,7 @@ function fileUsage($path, $file) {
             endforeach;
         endif;
 
-        $sql = "SELECT c.`mid` FROM `content_global` AS g, `content` AS c, `menu` AS m WHERE g.`id` = c.`globalcontent_id` AND (g.`valuefield` LIKE '%" .mysql_real_escape_string(trim($file)). "%') AND g.`trash` = 0 AND c.`trash` = 0 AND m.`trash` = 0 AND c.`mid` > 0 AND c.`mid` = m.`mid`";
+        $sql = "SELECT c.`mid` FROM `content_global` AS g, `content` AS c, `menu` AS m WHERE g.`id` = c.`globalcontent_id` AND (g.`valuefields` LIKE '%" .mysql_real_escape_string(trim($file)). "%') AND g.`trash` = 0 AND c.`trash` = 0 AND m.`trash` = 0 AND c.`mid` > 0 AND c.`mid` = m.`mid`";
         $res = doSQL($sql);
         if ($res['num']>0):
             foreach ($res['set'] AS $rsk => $data):

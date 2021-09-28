@@ -1482,7 +1482,7 @@ if (!(function_exists('returnContentItem'))) {
         // get content description from interpreter values
         $contentvalue = array();
         if (intval($contentdata['globalcontent_id'])>0):
-            $globalcontent = doResultSQL("SELECT `valuefield` FROM `content_global` WHERE `id` = ".intval($contentdata['globalcontent_id']));
+            $globalcontent = doResultSQL("SELECT `valuefields` FROM `content_global` WHERE `id` = ".intval($contentdata['globalcontent_id']));
             if (trim($globalcontent)!=''):
                 $contentinfo[] = '<i class="fa fa-globe"></i>';
                 $jsinfo[] = returnIntLang('global content', false);

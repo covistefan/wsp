@@ -164,7 +164,7 @@ include ("data/include/wspmenu.inc.php");
 						$name = returnIntLang('hint generic wysiwyg', false);
 					}
 					$guid = trim($gcresv['interpreter_guid']);
-					$fieldvalue = unserializeBroken($gcresv['valuefield']);
+					$fieldvalue = unserializeBroken($gcresv['valuefields']);
                     $interpreterdesc = returnIntLang('globalcontent interpreter desc not found');
 					// Interpreter einlesen
 					if (is_file($_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/".$_SESSION['wspvars']['wspbasedir']."/data/interpreter/".$file)) {

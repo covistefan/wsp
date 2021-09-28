@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 3.1
  * @version 7.0
- * @lastchange 2019-02-04
+ * @lastchange 2021-09-28
  */
 
 if (!(function_exists('getHeadVar'))) {
@@ -1004,7 +1004,7 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
                 // set global content num to 0 if visibility of contents is locked to (hidden) menupoint 
                 if ($midvisibility==0 && intval($mid_res['set'][0]['lockpage'])==1): $gccontent_num = 0; endif;
                 if ($gccontent_num>0):
-                    $contentvalue = trim($gccontent_res['set'][0]['valuefield']);
+                    $contentvalue = trim($gccontent_res['set'][0]['valuefields']);
                     $interpreter = trim($gccontent_res['set'][0]['interpreter_guid']);
                 endif;
                 // lookup for interpreter and parsefile

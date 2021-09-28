@@ -140,7 +140,7 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
                                     <?php
                                     foreach ($gc_res['set'] AS $grsk => $grsv) {
 
-                                        $fieldvalue = unserializeBroken($grsv['valuefield']);
+                                        $fieldvalue = unserializeBroken($grsv['valuefields']);
                                         $i_sql = "SELECT `parsefile`, `name` FROM `interpreter` WHERE `guid` = '".escapeSQL(trim($grsv['interpreter_guid']))."'";
                                         $i_res = doSQL($i_sql);
                                         if ($i_res['num']>0) {
