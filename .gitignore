@@ -5,6 +5,7 @@ _wsp_/versions.php
 _wsp_/tmp/*
 _wsp_/.*
 
+media
 media/*
 [a-z]*/*
 
@@ -12,6 +13,8 @@ media/*
 !data/*
 !data/script/covifuncs.js
 !data/script/jquery/*
+!_wsp_/tmp/database.xml
+!_wsp_/tmp/database.sql
 
 data/menu/*
 data/script/*
