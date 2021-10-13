@@ -93,12 +93,20 @@ if ((isset($sitedata['wsprobots']) && $sitedata['wsprobots']==1) || (isset($site
 
 $sitedata = getWSPProperties();
 
-// setup some siteinfo facts
-$sitedata['devurl'] = trim(str_replace("http://", "", $sitedata['devurl']));
-if (trim(str_replace("http://", "", $sitedata['devurl']))==""): $sitedata['devurl'] = trim(str_replace("http://", "", $sitedata['siteurl']));	endif;
-if (intval($sitedata['backupsteps'])<3): $sitedata['backupsteps'] = 3; endif;
-if (intval($sitedata['autologout'])<15): $sitedata['autologout'] = 15; endif;
-if (!(isset($sitedata['cookiedays'])) || (isset($sitedata['cookiedays']) && intval($sitedata['cookiedays']))<1): $sitedata['cookiedays'] = 1; endif;
+// setup siteinfo facts
+$sitedata['siteurl'] = isset($sitedata['siteurl'])?trim(str_replace("http://", "", $sitedata['siteurl'])):$_SERVER['HTTP_HOST'];
+$sitedata['devurl'] = isset($sitedata['devurl'])?trim(str_replace("http://", "", $sitedata['devurl'])):$_SERVER['HTTP_HOST'];
+$sitedata['devurl'] = trim($sitedata['devurl'])!=''?$sitedata['devurl']:$sitedata['siteurl'];
+$sitedata['backupsteps'] = isset($sitedata['backupsteps']?intval($sitedata['backupsteps']):3;
+$sitedata['backupsteps'] = intval($sitedata['backupsteps'])>=3)?$sitedata['backupsteps']:3;
+$sitedata['shownotice'] = isset($sitedata['shownotice'])?intval($sitedata['shownotice']):2;
+$sitedata['mailclass'] = isset($sitedata['mailclass'])?intval($sitedata['mailclass']):1;
+$sitedata['deletedmenu'] = isset($sitedata['deletedmenu'])?intval($sitedata['deletedmenu']):0;
+
+
+
+if (!(isset($sitedata['autologout'])) || intval($sitedata['autologout'])<15) { $sitedata['autologout'] = 15; }
+if (!(isset($sitedata['cookiedays'])) || intval($sitedata['cookiedays'])<1) { $sitedata['cookiedays'] = 1; }
 
 // include head ------------------------------
 include("./data/include/header.inc.php");
@@ -485,8 +493,8 @@ include("./data/include/sidebar.inc.php");
                                                 <select id="deletedmenu" name="deletedmenu" class="form-control singleselect">
                                                     <option value="0"><?php echo returnIntLang('editorprefs deleted structure stay', false); ?></option>
                                                     <option value="1" <?php if(isset($sitedata['deletedmenu']) && $sitedata['deletedmenu']=='1') echo "selected=\"selected\""; ?>><?php echo returnIntLang('editorprefs deleted structure delete', false); ?></option>
-                                                    <option value="2" <?php if($sitedata['deletedmenu']=='2') echo "selected=\"selected\""; ?>><?php echo returnIntLang('editorprefs deleted structure index', false); ?></option>
-                                                    <option value="3" <?php if($sitedata['deletedmenu']=='3') echo "selected=\"selected\""; ?>><?php echo returnIntLang('editorprefs deleted structure hint', false); ?></option>
+                                                    <option value="2" <?php if($sitedata['deletedmenu']==2) echo "selected=\"selected\""; ?>><?php echo returnIntLang('editorprefs deleted structure index', false); ?></option>
+                                                    <option value="3" <?php if($sitedata['deletedmenu']==3) echo "selected=\"selected\""; ?>><?php echo returnIntLang('editorprefs deleted structure hint', false); ?></option>
                                                 </select>
                                             </div>
                                         </div>
