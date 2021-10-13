@@ -33,9 +33,9 @@ class clsSetup {
 	/**
 	* Gibt ein Array mit den Modulen zurück, die installiert sein müssen (GUID, mind. Version)
 	*/
-	function dependences() {
+	function dependencies() {
 		return array();
-	}	// dependences()
+	}	// dependencies()
 
 	/**
 	* Gibt ein Array mit den Menüeinträgen zurück

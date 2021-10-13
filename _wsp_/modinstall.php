@@ -37,12 +37,14 @@ function setRestrictions($aRights) {
 		$sRights = serialize($value['rights']);
 		$sLabels = serialize($value['namerights']);
 
+        addWSPMsg('errormsg', 'function setRestrictions in modinstall has errors');
+
 		$sql = "SELECT `id` FROM `wsprights` WHERE `guid` = '".$guid."'";
 		$rsRight = doSQL($sql);
 		// Recht hinzufuegen
 		if ($rsRight['num'] == 0) {
 			$sql = "INSERT INTO `wsprights`
-						(`guid`, `right`, `standard`, `possibilities`, `labels`)
+						(`guid`, `description`, `standard`, `options`, `labels`)
 						VALUES('$guid', '".$value['title']."', '".$value['standard']."', '$sRights', '$sLabels')";
 		}
 		// Recht updaten
@@ -50,7 +52,7 @@ function setRestrictions($aRights) {
 			$sql = "UPDATE `wsprights`
 						SET `right`='".$value['title']."',
 							`standard`='".$value['standard']."',
-							`possibilities`='".$sRights."',
+							`options`='".$sRights."',
 							`labels`='".$sLabels."'
 						WHERE `guid`='".$guid."'";
 		}	// if
@@ -77,7 +79,7 @@ function delRestrictions($aRights) {
 		// globale Definition des Zugriffsrechts loeschen
 		doSQL("DELETE FROM `wsprights` WHERE `guid` = '".escapeSQL(trim($guid))."'");
 
-		// individuelle Zugriffsrechte der User loeschen
+        // individuelle Zugriffsrechte der User loeschen
 		$sql = "SELECT `rid`, `rights` FROM `restrictions`";
 		$rsRestrictions = doSQL($sql);
 		if ($rsRestrictions['num'] > 0) {
@@ -835,11 +837,11 @@ require ("./data/include/sidebar.inc.php");
                     // register module
                     $sql = "SELECT `id`, `settings` FROM `modules` WHERE `guid` = '".$modsetup->getGUID()."'";
                     $res = doSQL($sql);
-                    $dependences = '';
-                    foreach ($modsetup->dependences() as $key => $value) {
-                        $dependences .= $key." ";
+                    $dependencies = '';
+                    foreach ($modsetup->dependencies() as $key => $value) {
+                        $dependencies .= $key." ";
                     }
-                    $dependences = trim($dependences);
+                    $dependencies = trim($dependencies);
                     
                     if ($res['num'] == 0):
                         $sql = "INSERT INTO `modules` SET
@@ -847,7 +849,7 @@ require ("./data/include/sidebar.inc.php");
                             `version` = '".$modsetup->version()."',
                             `guid` = '".$modsetup->getGUID()."',
                             `archive` = '".$modfile."',
-                            `dependences` = '".$dependences."',
+                            `dependencies` = '".$dependencies."',
                             `isparser` = '".(isset($type['isparser'])?intval($type['isparser']):0)."',
                             `iscmsmodul` = '".(isset($type['iscmsmodul'])?intval($type['iscmsmodul']):0)."',
                             `ismenu` = '".(isset($type['ismenu'])?intval($type['ismenu']):0)."',
@@ -865,7 +867,7 @@ require ("./data/include/sidebar.inc.php");
                             `version` = '".$modsetup->version()."',
                             `guid` = '".$modsetup->getGUID()."',
                             `archive` = '".$modfile."',
-                            `dependences` = '".$dependences."',
+                            `dependencies` = '".$dependencies."',
                             `isparser` = '".(isset($type['isparser'])?intval($type['isparser']):0)."',
                             `iscmsmodul` = '".(isset($type['iscmsmodul'])?intval($type['iscmsmodul']):0)."',
                             `ismenu` = '".(isset($type['ismenu'])?intval($type['ismenu']):0)."',
@@ -999,19 +1001,19 @@ require ("./data/include/sidebar.inc.php");
                                             ?></div>
                                 </div>
                                 <div class="row">
-                                    <div class="col-md-3"><?php echo returnIntLang('str dependences'); ?></div>
+                                    <div class="col-md-3"><?php echo returnIntLang('str dependencies'); ?></div>
                                     <div class="col-md-9"><?php
 
-                                    if (count($modsetup->dependences()) == 0) {
+                                    if (count($modsetup->dependencies()) == 0) {
                                         // keine abhaengigkeiten vorhanden
-                                        echo returnIntLang('modinstall no dependences');
+                                        echo returnIntLang('modinstall no dependencies');
                                         $canInstall = true;
                                     }
                                     else {
                                         // abhaengigkeiten vorhanden
                                         $canInstall = true;
                                         $cntDeps = 0;
-                                        foreach ($modsetup->dependences() as $guid => $modinfo):
+                                        foreach ($modsetup->dependencies() as $guid => $modinfo):
                                             $dep_sql = "SELECT `version` FROM `modules` WHERE `guid` = '".$guid."'";
                                             $dep_res = doResultSQL($dep_sql);
                                                         if ($dep_res!==false):
@@ -1033,10 +1035,10 @@ require ("./data/include/sidebar.inc.php");
                                                         endif;
                                                     endforeach;
                                                     // $cntDeps == 0 => required modules nicht vorhanden
-                                                    // $cntDeps > 0 && $cntDeps == count($modsetup->dependences()) => alle installiert => versionierung pruefen
+                                                    // $cntDeps > 0 && $cntDeps == count($modsetup->dependencies()) => alle installiert => versionierung pruefen
                                         if ($cntDeps==0) {
                                             // KEINE erfuellten Abhaengigkeiten
-                                            foreach ($modsetup->dependences() as $guid => $modinfo) {
+                                            foreach ($modsetup->dependencies() as $guid => $modinfo) {
                                                 echo returnIntLang('modinstall installbeforeinstall1')." <strong>".$modinfo[0]."</strong> ".returnIntLang('modinstall installbeforeinstall2')." <strong>".$modinfo[1]."</strong> ".returnIntLang('modinstall installbeforeinstall3')."<br />";
                                             }
                                             $canInstall = false;

@@ -72,7 +72,7 @@ if (isset($_REQUEST['so']) && trim($_REQUEST['so'])!='') {
 if ($op=='removemod' && trim($mk)!='') {
     $success = true;
     $guid = base64_decode($mk);
-    $dep_res = doSQL("SELECT `id` FROM `modules` WHERE `dependences` LIKE '%".escapeSQL($guid)."%'");
+    $dep_res = doSQL("SELECT `id` FROM `modules` WHERE `dependencies` LIKE '%".escapeSQL($guid)."%'");
     if ($dep_res['num']>0) {
         addWSPMsg('noticemsg', returnIntLang('modules cannot remove module because of dependencies1').$dep_res['num'].returnIntLang('modules cannot remove module because of dependencies2'));
         $success = false;
@@ -116,7 +116,10 @@ if ($op=='removemod' && trim($mk)!='') {
 * Kopiert eine Verzeichnisstruktur mit allen Files und Subdirs an den angegebenen Platz
 */
 function copyTree($src, $dest) {
-	$dh = dir($src);
+	
+    addWSPMsg('errormsg', 'function copyTree in modules has errrors');
+    
+    $dh = dir($src);
 	while (false !== ($entry = $dh->read())) {
 		if (($entry != '.') && ($entry != '..')) {
 			$ftphdl = ftp_connect($_SESSION['wspvars']['ftphost'], $_SESSION['wspvars']['ftpport']);
@@ -190,7 +193,7 @@ function modUninstall() {
 	$wsparchive = $_SERVER['DOCUMENT_ROOT']."/wsp/modules/".mysql_db_name($rs, 0, 'archive');
 	$tmppath = $_SERVER['DOCUMENT_ROOT']."/wsp/tmp/".$_SESSION['wspvars']['usevar']."/modules/p".mysql_db_name($rs, 0, 'archive');
 
-    doSQL("DELETE FROM `wsprights` WHERE `guid` = '".escapeSQL($key)."'");
+    doSQL("DELETE FROM `wsprights` WHERE `guid` = '".escapeSQL(trim($key))."'");
 
 	@mkdir($tmppath);
 	exec("cd ".$tmppath."; tar xzf ".$wsparchive);
@@ -315,9 +318,9 @@ function modRights() {
 			<table class="tablelist">
 				<?php for ($mres=0; $mres<$mod_num; $mres++):
 					
-					$rights_sql = "SELECT * FROM `wsprights` WHERE `guid` = '".mysql_real_escape_string(trim(mysql_result($mod_res, $mres, 'guid')))."'";
-					$rights_res = mysql_query($rights_sql);
-					$rights_num = 0; if ($rights_res): $rights_num = mysql_num_rows($rights_res); endif;
+                    $rights_sql = "SELECT * FROM `wsprights` WHERE `guid` = '".mysql_real_escape_string(trim(mysql_result($mod_res, $mres, 'guid')))."'";
+					$rights_res = doSQL($rights_sql);
+					$rights_num = $rights_res['num'];
 									
 					?>
 					<tr>
@@ -373,8 +376,8 @@ function pluginRights() {
 				for ($mres=0; $mres<$mod_num; $mres++):
 					
 					$rights_sql = "SELECT * FROM `wsprights` WHERE `guid` = '".mysql_result($mod_res, $mres, 'guid')."'";
-					$rights_res = mysql_query($rights_sql);
-					$rights_num = mysql_num_rows($rights_res);
+					$rights_res = doSQL($rights_sql);
+					$rights_num = $rights_res['num'];
 					
 					?>
 					<tr>
@@ -460,7 +463,7 @@ function modUpdate($data) {
 $lint_res = doSQL("SELECT * FROM `interpreter` AS i WHERE `module_guid` NOT IN (SELECT `guid` FROM `modules`)");
 if ($lint_res>0) {
     foreach ($lint_res['set'] AS $lik => $liv) {
-        $res = doSQL("INSERT INTO `modules` SET `name` = '".escapeSQL(trim($liv['name']))."', `version` = '".escapeSQL(trim($liv['version']))."', `guid` = '".escapeSQL(trim($liv['module_guid']))."', `archive` = '', `dependences` = '', `isparser` = 1, `iscmsmodul` = 0, `ismenu` = 0, `modsetup` = '', `settings` = '', `affectedcontent` = '', `filelist` = ''");
+        $res = doSQL("INSERT INTO `modules` SET `name` = '".escapeSQL(trim($liv['name']))."', `version` = '".escapeSQL(trim($liv['version']))."', `guid` = '".escapeSQL(trim($liv['module_guid']))."', `archive` = NULL, `dependencies` = NULL, `isparser` = 1, `iscmsmodul` = 0, `ismenu` = 0, `modsetup` = NULL, `settings` = NULL, `affectedcontent` = NULL, `filelist` = NULL");
         if ($res['aff']==1) {
             addWSPMsg('errormsg', returnIntLang('modules lost and found interpreter1')." ".trim($liv['name'])." ".trim($liv['version']).returnIntLang('modules lost and found interpreter2'));
         } else {
@@ -497,7 +500,7 @@ foreach ($plugin_res['set'] AS $pkey => $pvalue) {
         'version' => NULL,
         'guid' => trim($pvalue['guid']),
         'archive' => NULL,
-        'dependences' => NULL,
+        'dependencies' => NULL,
         'isparser' => false,
         'iscmsmodul' => false,
         'ismenu' => false,

@@ -24,8 +24,8 @@
 					$systemrights = array();
                 	if (count($userrights)>0) {
                         $rightdesc = array('siteprops' => returnIntLang('usermanagement siteprops', false), 'sitestructure' => 'sitestructure', 'design' => returnIntLang('usermanagement design', false), 'contents' => 'contents', 'publisher' => 'publisher', 'imagesfolder' => 'images', 'downloadfolder' => 'documents', 'mediafolder' => 'media');
-                        $moddesc = doSQL("SELECT `guid`, `right` FROM `wsprights`");
-                        if ($moddesc['num']>0): foreach($moddesc['set'] AS $mdk => $mdv): $rightdesc[$mdv['guid']] = 'MOD: '.$mdv['right']; endforeach; endif;
+                        $moddesc = doSQL("SELECT `guid`, `description` FROM `wsprights`");
+                        if ($moddesc['num']>0): foreach($moddesc['set'] AS $mdk => $mdv): $rightdesc[$mdv['guid']] = 'MOD: '.$mdv['description']; endforeach; endif;
                         $plgdesc = doSQL("SELECT `guid`, `pluginname` FROM `wspplugins`");
                         if ($plgdesc['num']>0): foreach($plgdesc['set'] AS $pdk => $pdv): $rightdesc[$pdv['guid']] = 'PLUGIN: '.$pdv['pluginname']; endforeach; endif;
                         foreach ($userrights as $key => $value) {

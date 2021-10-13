@@ -369,6 +369,7 @@ if (!(function_exists('mysqli_wsp_client_version'))) {
 // input none or array with varnames that values should be returned
 if (!(function_exists('getWSPProperties'))) {
     function getWSPProperties($propselected = '') {
+        $wspproperties = array();
         if (!(is_array($propselected)) && trim($propselected)=='') {
             // get all properties
             $wspprop = doSQL("SELECT * FROM `wspproperties`");

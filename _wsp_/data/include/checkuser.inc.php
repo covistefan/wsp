@@ -115,10 +115,10 @@ if ($rights_res['num']==1) {
 	//
 	// festlegung modularer rechte
 	//
-	$modrights_sql = "SELECT `guid`, `possibilities` FROM `wsprights`";
+	$modrights_sql = "SELECT `guid`, `options` FROM `wsprights`";
 	$modrights_res = doSQL($modrights_sql);
 	foreach ($modrights_res['set'] AS $mrk => $mrv) {
-		$tmprights = unserializeBroken($mrv['possibilities']);
+		$tmprights = unserializeBroken($mrv['options']);
 		if (key_exists($mrv['guid'], $_SESSION['wspvars']['modrights'])) {
 			$_SESSION['wspvars']['rights'][$mrv['guid']] = $tmprights[$_SESSION['wspvars']['modrights'][$mrv['guid']]];
 		} else {

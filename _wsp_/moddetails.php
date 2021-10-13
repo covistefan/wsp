@@ -41,9 +41,9 @@ if (isset($_POST['op']) && $_POST['op']=="setrights") {
                 $labels = array(returnIntLang('str yes'),returnIntLang('str no'));
                 $sql = "INSERT INTO `wsprights` SET 
                     `guid` = '".escapeSQL($pgk)."',
-                    `right` = '".escapeSQL(trim($_POST['modname'][$pgk]))."',
+                    `description` = '".escapeSQL(trim($_POST['modname'][$pgk]))."',
                     `standard` = '1',
-                    `possibilities` = '".escapeSQL(serialize($possibilities))."',
+                    `options` = '".escapeSQL(serialize($possibilities))."',
                     `labels` = '".escapeSQL(serialize($labels))."'";
                 if (getAffSQL($sql)>0) {
                     $aff++;
@@ -83,7 +83,7 @@ if (isset($_POST['op']) && $_POST['op']=="setdynamic") {
 if (isset($_POST['op']) && $_POST['op']=="removemod" && trim($_POST['mk'])!='') {
     $success = true;
     $guid = base64_decode($_POST['mk']);
-    $dep_res = doSQL("SELECT `id` FROM `modules` WHERE `dependences` LIKE '%".escapeSQL($guid)."%'");
+    $dep_res = doSQL("SELECT `id` FROM `modules` WHERE `dependencies` LIKE '%".escapeSQL($guid)."%'");
     if ($dep_res['num']>0) {
         addWSPMsg('noticemsg', returnIntLang('modules cannot remove module because of dependencies1').$dep_res['num'].returnIntLang('modules cannot remove module because of dependencies2'));
         $success = false;
@@ -375,7 +375,7 @@ require ("./data/include/sidebar.inc.php");
                                             <div class="col-md-3"><p><?php echo ((intval($mnu_res['set'][$mres]['parent_id'])>0)?"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$mnu_res['set'][$mres]['title']:$mnu_res['set'][$mres]['title']); ?></p></div>
                                             <div class="col-md-2"><p><input type="hidden" name="setrights[<?php echo trim($mnu_res['set'][$mres]['guid']); ?>]" value="0" /><input type="checkbox" name="setrights[<?php echo trim($mnu_res['set'][$mres]['guid']); ?>]" id="setrights_<?php echo intval($mnu_res['set'][$mres]['id']); ?>" value="1" <?php if ($rights_res['num']>0): echo "checked=\"checked\""; endif; if (intval($mnu_res['set'][$mres]['parent_id'])>0): echo " onchange=\"checkParent(".intval($mnu_res['set'][$mres]['parent_id']).",0);\""; else: echo " onchange=\"checkParent(".intval($mnu_res['set'][$mres]['id']).",1);\" readonly=\"readonly\" "; endif; ?> /><input type="hidden" name="guid[<?php echo trim($mnu_res['set'][$mres]['guid']); ?>]" value="<?php echo trim($mnu_res['set'][$mres]['guid']); ?>"></p></div>
                                             <div class="col-md-3"><p><?php echo returnIntLang('modrights rights open name'); ?></p></div>
-                                            <div class="col-md-4 form-group"><input type="text" name="modname[<?php echo trim($mnu_res['set'][$mres]['guid']); ?>]" value="<?php if ($rights_res['num']>0 && trim($rights_res['set'][0]['right'])!=''): echo trim($rights_res['set'][0]['right']); else: echo $mnu_res['set'][$mres]['describ']; endif; ?>" class="form-control" /></div>
+                                            <div class="col-md-4 form-group"><input type="text" name="modname[<?php echo trim($mnu_res['set'][$mres]['guid']); ?>]" value="<?php if ($rights_res['num']>0 && trim($rights_res['set'][0]['description'])!=''): echo trim($rights_res['set'][0]['description']); else: echo $mnu_res['set'][$mres]['describ']; endif; ?>" class="form-control" /></div>
                                         </div>
                                     <?php endfor; ?>
                                     <input type="hidden" name="op" value="setrights">
@@ -559,9 +559,9 @@ require ("./data/include/sidebar.inc.php");
                     </div>
                 <?php } 
                 
-                $dep_res = doSQL("SELECT `guid`, `name` FROM `modules` WHERE dependences LIKE '%".escapeSQL($modules_res['set'][0]['guid'])."%'");
+                $dep_res = doSQL("SELECT `guid`, `name` FROM `modules` WHERE `dependencies` LIKE '%".escapeSQL($modules_res['set'][0]['guid'])."%'");
             
-                if ($modules_res['set'][0]['dependences']!='' || $dep_res['num']>0) {
+                if ($modules_res['set'][0]['dependencies']!='' || $dep_res['num']>0) {
                     ?>
                     <div class="col-md-6">
                         <div class="panel">
@@ -580,9 +580,9 @@ require ("./data/include/sidebar.inc.php");
                                 </div>
                                 <?php }
                     
-                                if ($modules_res['set'][0]['dependences']!='') {
+                                if ($modules_res['set'][0]['dependencies']!='') {
                                     
-                                    $par_res = doSQL("SELECT `guid`, `name` FROM `modules` WHERE `guid` = '".escapeSQL($modules_res['set'][0]['dependences'])."'");
+                                    $par_res = doSQL("SELECT `guid`, `name` FROM `modules` WHERE `guid` = '".escapeSQL($modules_res['set'][0]['dependencies'])."'");
                                     
                                 ?>
                                 <div class="row">

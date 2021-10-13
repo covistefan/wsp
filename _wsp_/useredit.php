@@ -119,7 +119,7 @@ if (isset($_POST['change_username']) && isset($_POST['change_realname']) && isse
 		$modrights_res = doSQL($modrights_sql);
 		if ($modrights_res['num']>0):
             foreach ($modrights_res['set'] AS $mrsk => $mrsv):
-                $modrights = unserializeBroken($mrsv['possibilities']);
+                $modrights = unserializeBroken($mrsv['options']);
                 if (isset($_POST[$mrsv['guid']])):
                     $changerights[$mrsv['guid']] = intval($_POST[$mrsv['guid']]);
                 endif;
