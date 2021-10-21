@@ -45,12 +45,13 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
             if (is_array($subdirlist)): $dirlist = array_merge($dirlist, $subdirlist); endif;
 
             // create tmp user directory (again) if it doesnt exist 
-            if (createUsevarDir($_SESSION['wspvars']['usevar'])) {
-                $handle = fopen($medialist, "w");
-                fwrite($handle, json_encode($dirlist));
-                fclose($handle);
+            if (!(is_dir(cleanPath(DOCUMENT_ROOT."/".WSP_DIR."/tmp/".$_SESSION['wspvars']['usevar'])))) {
+                createFolder("/".WSP_DIR."/tmp/".$_SESSION['wspvars']['usevar']);
             }
-            
+            $handle = fopen($medialist, "w");
+            fwrite($handle, json_encode($dirlist));
+            fclose($handle);
+        
             header('Content-Type: application/json');
             echo json_encode($dirlist, true);
         }
