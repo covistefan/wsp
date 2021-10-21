@@ -97,8 +97,8 @@ $sitedata = getWSPProperties();
 $sitedata['siteurl'] = isset($sitedata['siteurl'])?trim(str_replace("http://", "", $sitedata['siteurl'])):$_SERVER['HTTP_HOST'];
 $sitedata['devurl'] = isset($sitedata['devurl'])?trim(str_replace("http://", "", $sitedata['devurl'])):$_SERVER['HTTP_HOST'];
 $sitedata['devurl'] = trim($sitedata['devurl'])!=''?$sitedata['devurl']:$sitedata['siteurl'];
-$sitedata['backupsteps'] = isset($sitedata['backupsteps']?intval($sitedata['backupsteps']):3;
-$sitedata['backupsteps'] = intval($sitedata['backupsteps'])>=3)?$sitedata['backupsteps']:3;
+$sitedata['backupsteps'] = isset($sitedata['backupsteps'])?intval($sitedata['backupsteps']):3;
+$sitedata['backupsteps'] = intval($sitedata['backupsteps'])>=3?$sitedata['backupsteps']:3;
 $sitedata['shownotice'] = isset($sitedata['shownotice'])?intval($sitedata['shownotice']):2;
 $sitedata['mailclass'] = isset($sitedata['mailclass'])?intval($sitedata['mailclass']):1;
 $sitedata['deletedmenu'] = isset($sitedata['deletedmenu'])?intval($sitedata['deletedmenu']):0;
@@ -179,21 +179,27 @@ include("./data/include/sidebar.inc.php");
                                         </div>
                                         <div class="col-md-3">
                                             <div class="form-group">
-                                                <select name="templates_id" class="form-control singleselect fullwidth">
-                                                    <?php
+                                                <?php
 
-                                                    $stdtempl = doSQL("SELECT `id`, `name` FROM `templates` ORDER BY `name`");
-                                                    foreach ($stdtempl['set'] AS $stk => $stv):
-                                                        $buf = "<option value=\"".$stv['id']."\"";
-                                                            if ($stv['id'] == $sitedata['templates_id']):
-                                                                $buf .= " selected";
-                                                            endif;
-                                                            $buf .= ">".$stv['name']."</option>";
-                                                            echo $buf;
-                                                    endforeach;
+                                                $stdtempl = doSQL("SELECT `id`, `name` FROM `templates` ORDER BY `name`");
+                                                $tmplbuf = '';
+                                                foreach ($stdtempl['set'] AS $stk => $stv) {
+                                                    $tmplbuf.= "<option value=\"".$stv['id']."\"";
+                                                    if ($stv['id']==intval($sitedata['templates_id'])) {
+                                                        $tmplbuf.= " selected";
+                                                    }
+                                                    $tmplbuf.= ">".$stv['name']."</option>";
+                                                }
 
-                                                    ?>
-                                                </select>
+                                                if ($tmplbuf!='') {
+                                                    echo '<select name="templates_id" class="form-control singleselect fullwidth">';
+                                                    echo $tmplbuf;
+                                                    echo '</select>';
+                                                } else {
+                                                    echo '<p>'.returnIntLang('str none avaiable').'</p>';
+                                                }
+
+                                                ?>
                                             </div>
                                         </div>
                                         <div class="col-md-3">
@@ -208,7 +214,7 @@ include("./data/include/sidebar.inc.php");
                                             $designfiles = array();
                                             $functiondir = opendir (DOCUMENT_ROOT."/".WSP_DIR."/media/layout/");
                                             while ($entry = readdir($functiondir)):
-                                                if (stristr($entry, ".css") && stristr($entry, "wsp7-")):
+                                                if (stristr($entry, ".css") && stristr($entry, "wsp7-") && !stristr($entry, "night")):
                                                     $cssfile[] = $entry;
                                                 endif;
                                             endwhile;
@@ -235,7 +241,7 @@ include("./data/include/sidebar.inc.php");
                                                     unset($designfiles[$key]);
                                                 endif;
                                             endforeach;
-                                            if (count($designfiles)>0):
+                                            if (count($designfiles)>1) {
                                                 echo "<select name=\"wspstyle\" class=\"form-control singleselect\">";
                                                 foreach ($designfiles AS $dkey => $dvalue):
                                                 echo "<option value=\"".$dvalue['file']."\" ";
@@ -245,9 +251,12 @@ include("./data/include/sidebar.inc.php");
                                                 echo "</option>";
                                                 endforeach;
                                                 echo "</select>";
-                                            else:
+                                            } else {
+                                                if (count($designfiles)>0) {
+                                                    echo '<input type="hidden" name="wspstyle" value="'.$designfiles[0]['file'].'" />';
+                                                }
                                                 echo returnIntLang('editorprefs wspstyle not found', true);
-                                            endif;
+                                            }
 
                                             ?>
                                             </div>
@@ -398,6 +407,7 @@ include("./data/include/sidebar.inc.php");
                                             </div>
                                         </div>
                                     </div>
+                                    <!--
                                     <div class="row">
                                         <div class="col-md-3">
                                             <?php echo returnIntLang('editorprefs output ftpcon'); ?>
@@ -409,63 +419,8 @@ include("./data/include/sidebar.inc.php");
                                                 </select>
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
-                                            <?php echo returnIntLang('editorprefs wspstyle'); ?>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-group">
-                                            <?php
-
-                                            /* read all files from /media/layout/ and find files with @type design */
-                                            $funcfolder = array();
-                                            $designfiles = array();
-                                            $functiondir = opendir (DOCUMENT_ROOT."/".WSP_DIR."/media/layout/");
-                                            while ($entry = readdir($functiondir)):
-                                                if (stristr($entry, ".css") && stristr($entry, "wsp7-")):
-                                                    $cssfile[] = $entry;
-                                                endif;
-                                            endwhile;
-                                            closedir ($functiondir);
-                                            sort ($cssfile);
-                                            foreach($cssfile AS $key => $fileinfo):
-                                                $filearray = file(DOCUMENT_ROOT."/".WSP_DIR."/media/layout/".$fileinfo);
-                                                $designfiles[$key]['file'] = str_replace(".css", "", $fileinfo);
-                                                for ($fa=1; $fa<count($filearray); $fa++):
-                                                    if (substr(trim($filearray[$fa]),0,3)=="* @"):
-                                                        if (substr(trim($filearray[$fa]),3,11)=="description"):
-                                                            $designfiles[$key]['desc'] = trim(substr(trim($filearray[$fa]),14));
-                                                        elseif (substr(trim($filearray[$fa]),3,4)=="type"):
-                                                            $designfiles[$key]['type'] = trim(substr(trim($filearray[$fa]),7));
-                                                        elseif (substr(trim($filearray[$fa]),3,7)=="version"):
-                                                            $designfiles[$key]['vers'] = trim(substr(trim($filearray[$fa]),10));
-                                                        endif;
-                                                    endif;
-                                                    if ($fa>20 || substr(trim($filearray[$fa]),0,2)=="*/"):
-                                                        $fa = count($filearray);
-                                                    endif;
-                                                endfor;
-                                                if (!(key_exists('type', $designfiles[$key])) || (key_exists('type', $designfiles[$key]) && trim($designfiles[$key]['type'])=="")):
-                                                    unset($designfiles[$key]);
-                                                endif;
-                                            endforeach;
-                                            if (count($designfiles)>0):
-                                                echo "<select name=\"wspstyle\" class=\"form-control singleselect\">";
-                                                foreach ($designfiles AS $dkey => $dvalue):
-                                                echo "<option value=\"".$dvalue['file']."\" ";
-                                                if ($sitedata['wspstyle']==$dvalue['file']): echo " selected=\"selected\""; endif;
-                                                echo ">";
-                                                echo trim(trim($dvalue['desc'])." ".trim($dvalue['vers']));
-                                                echo "</option>";
-                                                endforeach;
-                                                echo "</select>";
-                                            else:
-                                                echo returnIntLang('editorprefs wspstyle not found', true);
-                                            endif;
-
-                                            ?>
-                                            </div>
-                                        </div>
                                     </div>
+                                    -->
                                 </div>
                                 <div class="tab-pane fade" id="editorprefs_smtp">
                                     <?php if(defined('SMTP_HOST') && defined('SMTP_USER') && defined('SMTP_PASS') && defined('SMTP_PORT')): ?>
