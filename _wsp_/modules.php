@@ -520,7 +520,7 @@ $serverfile =
 $values = false;
 $xmldata = '';
 $defaults = array( 
-    CURLOPT_URL => 'https://'.WSP_UPDSRV.'/versions/modules/', 
+    CURLOPT_URL => 'https://update.wsp-server.info/versions/modules/', 
     CURLOPT_HEADER => 0, 
     CURLOPT_RETURNTRANSFER => TRUE, 
     CURLOPT_TIMEOUT => 4 
@@ -604,6 +604,9 @@ require ("./data/include/header.inc.php");
 require ("./data/include/navbar.inc.php");
 require ("./data/include/sidebar.inc.php");
 
+// resolving if modules or plugins are avaiable
+$countmodules = $modules_res['num'] + $plugin_res['num'];
+
 ?>
 <div class="main">
     <!-- MAIN CONTENT -->
@@ -619,15 +622,8 @@ require ("./data/include/sidebar.inc.php");
             </ul>
         </div>
         <div class="container-fluid">
-            <?php showWSPMsg(1); 
-            
-//            echo "<pre>";
-//            var_export($modset);
-//            var_export($modules_res);
-//            var_export($plugin_res);
-//            echo "</pre>";
-            
-            if (trim($op)=='op') { ?>
+            <?php showWSPMsg(1); ?> 
+            <?php if (trim($op)=='op') { ?>
                 <div class="row">
                     <?php
 
@@ -649,7 +645,7 @@ require ("./data/include/sidebar.inc.php");
 
                     ?>
                 </div>
-            <?php } else { ?>
+            <?php } else if ($countmodules>0) { ?>
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="panel">
@@ -798,6 +794,15 @@ require ("./data/include/sidebar.inc.php");
                 <div class="row">
                     <div class="col-lg-12">
                         <p><a href="./modinstall.php" class="btn btn-primary"><?php echo returnIntLang('modules modinstall', false); ?></a></p>
+                    </div>
+                </div>
+            <?php } else { ?>
+                <div class="row">
+                    <div class="col-md-12">
+                        <h3 style="text-align: center; font-weight: 300"><?php echo returnIntLang('modules just install your first module', false); ?></h3>
+                        <h1 style="text-align: center; font-size: 8vw; padding-top: 1vw">
+                            <a href="./modinstall.php"><i class="fas fa-cloud-download-alt"></i></a>
+                        </h1>
                     </div>
                 </div>
             <?php } ?>
