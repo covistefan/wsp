@@ -878,13 +878,13 @@ endif;
 // 
 // returns an array with all 'mid', that have a relation to given mid DOWNWARDS - WITHOUT any structure information 
 if (!(function_exists('returnIDRoot'))) {
-	function returnIDRoot($mid, $midlist = array(), $all = false) {
-		$connected_sql = "SELECT `mid` FROM `menu` WHERE `trash` = ".intval($all)." AND `connected` = ".intval($mid);
+	function returnIDRoot($mid, $midlist = array(), $all = false, $order = true) {
+		$connected_sql = "SELECT `mid` FROM `menu` WHERE `trash` = ".intval($all)." AND `connected` = ".intval($mid).(($order===true)?" ORDER BY `isindex` DESC, `position` ASC":"");
 		$connected_res = doSQL($connected_sql);
 		if ($connected_res['num']>0) {
             foreach ($connected_res['set'] AS $crsk => $crsv) {
                 $midlist[] = intval($crsv['mid']);
-                $midlist = array_merge($midlist, returnIDRoot(intval($crsv['mid']), $midlist));
+                $midlist = array_merge($midlist, returnIDRoot(intval($crsv['mid']), $midlist, $all, $order));
             }
 		}
 		return array_values(array_unique($midlist));
@@ -893,12 +893,12 @@ if (!(function_exists('returnIDRoot'))) {
 
 // returns an array with all 'mid', that have a structured relation to given mid UPWARDS, eg. a list if mid up to root level - WITHOUT any structure information 
 if (!(function_exists('returnIDTree'))) {
-	function returnIDTree($mid, $midpath = array(), $all = false) {
-		$reverse_sql = "SELECT `connected` FROM `menu` WHERE `trash` = ".intval($all)." AND `mid` = ".intval($mid);
+	function returnIDTree($mid, $midpath = array(), $all = false, $order = true) {
+		$reverse_sql = "SELECT `connected` FROM `menu` WHERE `trash` = ".intval($all)." AND `mid` = ".intval($mid).(($order===true)?" ORDER BY `isindex` DESC, `position` ASC":"");
 		$reverse_res = doSQL($reverse_sql);
 		if ($reverse_res['num']>0) {
 			$midpath[] = intval(intval($reverse_res['set'][0]['connected']));
-			$midpath = returnIDTree(intval($reverse_res['set'][0]['connected']), $midpath);
+			$midpath = returnIDTree(intval($reverse_res['set'][0]['connected']), $midpath, $all, $order);
         }
         $midpath = array_values(array_unique($midpath));
 		return $midpath;
@@ -1151,7 +1151,7 @@ function returnContentStructureItem($datatable = 'menu', $mid = 0, $showsub = fa
         $middata_res['num'] = 0;
     }
     if ($middata_res['num']>0) {
-        $subdata_res = doSQL("SELECT `mid` FROM `".$datatable."` WHERE `level` <= ".$maxlevel." AND `trash` != 1 AND `connected` = ".intval($middata_res['set'][0]['mid']));
+        $subdata_res = doSQL("SELECT `mid` FROM `".$datatable."` WHERE `level` <= ".$maxlevel." AND `trash` != 1 AND `connected` = ".intval($middata_res['set'][0]['mid'])." ORDER BY `position` ASC ");
         $item.= '<div class="panel panel-group ';
         if ($lvl==0): $item.= 'panel-toplevel'; else: $item.= 'panel-level-'.$lvl; endif;
         if(isset($_SESSION['wspvars']['contentfilter']) && trim($_SESSION['wspvars']['contentfilter'])!='') {
@@ -5666,7 +5666,7 @@ if (!(function_exists('deleteFile'))) {
 if (!(function_exists('copyFile'))) {
     function copyFile($from = false, $to = false) {
         // check for final directory and create if not exists
-        if (!is_dir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.dirname(cleanPath($to)).DIRECTORY_SEPARATOR))) {
+        if ($return && !is_dir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.dirname(cleanPath($to)).DIRECTORY_SEPARATOR))) {
             $return = createFolder(cleanPath(DIRECTORY_SEPARATOR.dirname(cleanPath($to)).DIRECTORY_SEPARATOR));
         } else {
             $return = true;
@@ -5690,10 +5690,10 @@ if (!(function_exists('copyFile'))) {
                 return false;
             }
         } else if ($return && isset($_SESSION['wspvars']['srv']) && $_SESSION['wspvars']['srv']!==false) {
-            if (move_uploaded_file(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$from), cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.cleanPath($to)))) {
+            if (move_uploaded_file($from, cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.cleanPath($to)))) {
                 return true;
             } else {
-                if (rename(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$from), cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.cleanPath($to)))) {
+                if (rename($from, cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.cleanPath($to)))) {
                     return true;
                 } else {
                     if (defined('WSP_DEV') && WSP_DEV) {
@@ -5702,7 +5702,7 @@ if (!(function_exists('copyFile'))) {
                     return false;
                 }
             }
-        } else {
+        } else if ($return) {
             if (defined('WSP_DEV') && WSP_DEV) {
                 addWSPMsg( 'errormsg', '<em>copyFile</em> could not copy in any way' );
             }
@@ -5936,7 +5936,7 @@ if (!(function_exists('mediaSelect'))):
     function mediaSelect($path = '/media/', $toppath = '/media/', $hidepath = false, $selected = array(), $trimname = 100, $countlast = 10) {
         if (!(is_array($selected))) { $selected = array(trim($selected)); }
         $mediaarray = mediaArray($path,$toppath,$hidepath,$selected,$trimname,$countlast);
-        $mediaselect = '<option value="">'.returnIntLang('str please choose media', false).'</option>';
+        $mediaselect = '<option value=" ">'.returnIntLang('str please choose media', false).'</option>';
         if (count($mediaarray)>0):
             foreach ($mediaarray AS $mak => $mav):
                 $mediaselect.= '<optgroup label="'.$mak.'">';
@@ -5948,7 +5948,7 @@ if (!(function_exists('mediaSelect'))):
                 $mediaselect.= '</optgroup>';
             endforeach;
         else:
-            $mediaselect = '<option>'.returnIntLang('str no media avaiable', false).'</option>';
+            $mediaselect = '<option value=" ">'.returnIntLang('str no media avaiable', false).'</option>';
         endif;
         return $mediaselect;
     }
