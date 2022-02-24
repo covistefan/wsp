@@ -4,7 +4,7 @@
  * @author stefan@covi.de
  * @since 3.1
  * @version 7.0
- * @lastchange 2021-06-03
+ * @lastchange 2022-02-25
  */
 
 $lang['de'] = array();
