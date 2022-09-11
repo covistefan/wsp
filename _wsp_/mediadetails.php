@@ -19,8 +19,12 @@ $_SESSION['wspvars']['pagedesc'] = array('fa fa-paint-brush',returnIntLang('menu
 $_SESSION['wspvars']['fposition'] = $_SERVER['PHP_SELF'];
 $_SESSION['wspvars']['fpos'] = $_SERVER['PHP_SELF'];
 $_SESSION['wspvars']['fposcheck'] = true;
-$_SESSION['wspvars']['addpagecss'] = array();
-$_SESSION['wspvars']['addpagejs'] = array();
+$_SESSION['wspvars']['addpagecss'] = array(
+    'dropify.css',
+);
+$_SESSION['wspvars']['addpagejs'] = array(
+    'dropify.js',
+);
 /* second includes --------------------------- */
 require ("./data/include/checkuser.inc.php");
 require ("./data/include/siteinfo.inc.php");
@@ -60,6 +64,28 @@ if (!(isset($_REQUEST['fl']))) {
         header('location: /'.WSP_DIR.'/index.php');
         die();
     }
+}
+
+// upload preview
+if (isset($_POST['action']) && trim($_POST['action'])=='uploadthumb' && isset($_FILES) && isset($_FILES['uploadthumb']) && is_array($_FILES['uploadthumb']) && $_FILES['uploadthumb']['error']==0) {
+    echo '<br /><br /><br /><br /><br /><br />';
+    var_export($_POST);
+    var_export($_FILES);
+
+    $file = unserializeBroken(base64_decode($_POST['fl']));
+    $upload['fullpath'] = cleanPath($file[1]);
+    $upload['fullfile'] = basename($upload['fullpath']);
+
+
+    $upload['mediatyp'] = base64_decode($_POST['ml']);
+    $upload['mediafol'] = $mediafolder[base64_decode($_POST['ml'])];
+    $upload['fullfold'] = trim(substr($upload['fullpath'],0,-(strlen($upload['fullfile']))));
+    $upload['thmbfold'] = trim(substr($upload['fullpath'],0,-(strlen($upload['fullfile']))));
+    // rename Upload to
+    $upload['filename'] = substr($upload['fullfile'],0,strrpos($upload['fullfile'], '.'));
+
+    var_export($upload);
+
 }
 
 // save/update information
@@ -322,7 +348,7 @@ require ("./data/include/sidebar.inc.php");
             
             $filedir = cleanPath("/".$details['fullfold']);
             $filelist = scanfiles($filedir);
-            $filepos = (is_array(array_keys($filelist, $details['fullfile']) && count(array_keys($filelist, $details['fullfile']))>0)?intval(array_keys($filelist, $details['fullfile'])[0]):false);
+            $filepos = array_search($details['fullfile'], $filelist);
             if (count($filelist)>1) {
                 echo "<div class='row'>";
                 echo "<div class='col-xs-6 col-sm-6 col-md-6 text-left'><p>";
@@ -348,19 +374,19 @@ require ("./data/include/sidebar.inc.php");
                         <div class="panel-heading">
                             <h3 class="panel-title"><?php echo returnIntLang('mediadetails preview', true); ?> <?php if ($details['thumbnail']!==false): ?> &nbsp; <i class="fa fa-refresh" onclick="$('#reloadthumb').submit();"></i><?php endif; ?></h3>
                         </div>
-                        <div class="panel-body no-padding text-center">
-                            <div class="padding-top-30 padding-bottom-30">
-                                <?php if ($details['thumbnail']!==false): ?>
-                                <a onclick="showImage('<?php echo $details['fullpath']; ?>')"><img src="<?php echo $details['thumbnail']; ?>" class="previewimg" /></a>
-                                <script>
-                                    
-                                function showImage(imgPath) {
-                                    $('.imagepreview').attr('src', imgPath);
-                                    $('.imagepreview').css('background-image', imgPath);
-                                    $('#imagemodal').modal('show');   
-                                };
-                                    
-                                </script>
+                        <div class="panel-body">
+                        <?php if ($details['thumbnail']!==false) { ?>
+                                <div class="text-center">
+                                    <a onclick="showImage('<?php echo $details['fullpath']; ?>')"><img src="<?php echo $details['thumbnail']; ?>" class="previewimg" /></a>
+                                    <script>
+                                        
+                                    function showImage(imgPath) {
+                                        $('.imagepreview').attr('src', imgPath);
+                                        $('.imagepreview').css('background-image', imgPath);
+                                        $('#imagemodal').modal('show');   
+                                    };
+                                        
+                                    </script>
                                 <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                                     <div class="modal-dialog">
                                         <div class="modal-content">              
@@ -371,10 +397,17 @@ require ("./data/include/sidebar.inc.php");
                                         </div>
                                     </div>
                                 </div>
-                                <?php else: ?>
-                                    <p><code>upload area coming soon</code></p>
-                                <?php endif; ?>
                             </div>
+                            <hr />
+                            <?php } ?>
+                            <form id="uploadthumb" method="post" enctype="multipart/form-data" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+                                <input type="hidden" name="fl" value="<?php echo $fl; ?>" />
+                                <input type="hidden" name="ml" value="<?php echo prepareTextField($_REQUEST['ml']); ?>" />
+                                <input type="hidden" name="action" value="uploadthumb" />
+                                <input name="uploadthumb" type="file" id="dropify-preview" data-allowed-file-extensions="jpg png" data-default-file="<?php /* if (is_file(DOCUMENT_ROOT."/media/screen/favicon.ico")): echo "/media/screen/favicon.ico"; endif; */ ?>">
+                                <p>&nbsp;</p>
+                                <p><input type="submit" class="btn btn-primary" value="<?php echo returnIntLang('mediadetails upload preview', false); ?>" /></p>
+                            </form>
                         </div>
                         <form id="reloadthumb" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
                             <input type="hidden" name="fl" value="<?php echo $fl; ?>" />
@@ -670,12 +703,21 @@ require ("./data/include/sidebar.inc.php");
 </div>
 <script>
 
-$(function() {
-        
+$(document).ready(function() {
     
-        
+    $('.dropify').dropify();
+    
+    var drPreview = $('#dropify-preview').dropify({messages: { default: '<?php echo returnIntLang('mediadetails upload jpg or png file', false); ?>' }});
+    // drPreview.on('dropify.beforeClear', function(event, element) {
+    //     return confirm("<?php echo returnIntLang('mediadetails really delete file', false); ?> \"" + element.file.name + "\" ?");
+    //     });
+    // drPreview.on('dropify.afterClear', function(event, element) {
+    //     alert('<?php echo returnIntLang('seo file will be deleted when saving', false); ?>');
+    //     $('#removeset-favicon').val(1);
+    //     });
+
     });
-    
+
 </script>
         
 <?php include ("./data/include/footer.inc.php"); ?>

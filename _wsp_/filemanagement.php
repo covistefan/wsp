@@ -136,9 +136,11 @@ if (isset($_POST['deletefiles']) && is_array($_POST['deletefiles']) && count($_P
     foreach ($_POST['deletefiles'] AS $df => $dv) {
         $fdata = unserializeBroken(base64_decode($dv));
         if (isset($fdata[1]) && trim($fdata[1])!='' && strpos(trim($fdata[1]), trim($_SESSION['wspvars']['activemedia'][$mediafolder]))===0) {
-            ftpDeleteFile($fdata[1], true);
-            // remove information about file from database
-            doSQL("DELETE FROM `wspmedia` WHERE `filepath` = '".escapeSQL(trim($fdata[1]))."'");
+            $res = deleteFile($fdata[1]);
+            if ($res) {
+                // remove information about file from database
+                doSQL("DELETE FROM `wspmedia` WHERE `filepath` = '".escapeSQL(trim($fdata[1]))."'");
+            }
         }
     }
     $_POST['action'] = 'reloadlist';
