@@ -322,7 +322,7 @@ require ("./data/include/sidebar.inc.php");
             
             $filedir = cleanPath("/".$details['fullfold']);
             $filelist = scanfiles($filedir);
-            $filepos = (is_array(array_keys($filelist, $details['fullfile']) && count(array_keys($filelist, $details['fullfile']))>0)?intval(array_keys($filelist, $details['fullfile'])[0]):false);
+            $filepos = array_search($details['fullfile'], $filelist);
             if (count($filelist)>1) {
                 echo "<div class='row'>";
                 echo "<div class='col-xs-6 col-sm-6 col-md-6 text-left'><p>";
