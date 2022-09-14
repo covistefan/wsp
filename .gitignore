@@ -1,3 +1,7 @@
+*
+!*/_wsp_/
+!*/data/
+
 _wsp_/data/include/wspconf.inc.php
 _wsp_/updater.php
 _wsp_/testfile-wsp.txt
