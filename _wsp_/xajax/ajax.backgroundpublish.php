@@ -34,7 +34,7 @@ if (isset($_SESSION['wspvars'])) {
 	$longtermpub_res = doSQL($lontermpub_sql);
     
     // find open entries to do
-	$publish_sql = "SELECT * FROM `wspqueue` WHERE `done` = 0 AND `timeout` <= ".time()." ORDER BY `timeout` ASC, `priority` DESC, `action` ASC, `set` ASC, `id` ASC LIMIT 0,10";
+	$publish_sql = "SELECT * FROM `wspqueue` WHERE `done` = 0 AND `timeout` <= ".time()." ORDER BY `timeout` ASC, `priority` DESC, `action` ASC, `set` ASC, `id` ASC LIMIT 0,1";
 	$publish_res = doSQL($publish_sql);
     
 	if ($publish_res['num']>0) {
@@ -135,8 +135,8 @@ if (isset($_SESSION['wspvars'])) {
         }
     }
 
-	$queuedone_sql = "UPDATE `wspqueue` SET `outputuid` = 0, `priority` = -1 WHERE `done` > 0 AND `priority` != -1 AND `outputuid` = ".intval($_SESSION['wspvars']['userid'])." AND `timeout` < ".(time()-180);
-	doSQL($queuedone_sql);
+	// $queuedone_sql = "UPDATE `wspqueue` SET `outputuid` = 0, `priority` = -1 WHERE `done` > 0 AND `priority` != -1 AND `outputuid` = ".intval($_SESSION['wspvars']['userid'])." AND `timeout` < ".(time()-180);
+	// doSQL($queuedone_sql);
     
 }
 

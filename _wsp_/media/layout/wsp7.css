@@ -1988,13 +1988,12 @@ select.fullwidth, select.fullwidth ~ .btn-group .multiselect-container.dropdown-
 }
 
 span.multiselect-selected-text {
-    max-width: 98%;
-    overflow: hidden;
-    display: inline-block;
-    }
+  max-width: 98%;
+  overflow: hidden;
+}
 
 ul.multiselect-container.dropdown-menu {
-    max-width: 100%;
+  max-width: 100%;
 }
 
 ul.multiselect-container.dropdown-menu > li > a {
@@ -2525,6 +2524,10 @@ fieldset[disabled] .btn {
 
 #contentstructure .panel-group {
     margin-bottom: 2px;
+}
+
+#contentstructure .sub {
+  margin-left: 30px;
 }
 
 #contentstructure .panel.panel-group.panel-toplevel {
@@ -9103,6 +9106,16 @@ ul.activity-timeline > li:last-child:after {
 
 /* SOME SPECIALS */
 
+.row.form-row {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.form-col {
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+}
+
 .row.clear-4 .col-md-3:nth-child(4n+1) {
     clear: both;
 }
@@ -9111,6 +9124,10 @@ ul.activity-timeline > li:last-child:after {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.row .col-md-6.col-right {
+  float: right;
 }
 
 /* SUMMERNOTE EDITOR */

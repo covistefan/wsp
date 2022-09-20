@@ -530,7 +530,9 @@ if (!(function_exists('buildMenu'))) {
             }
         }
         if (isset($code[0]) && is_array($code[0]) && array_key_exists('MENU.SHOW',$code[0]) && trim($code[0]['MENU.SHOW'])!='') {
-            $str_res = doSQL("SELECT `mid` FROM `menu` WHERE `mid` IN ('".implode("','", explode(";", $code[0]['MENU.SHOW']))."') ".$not_sql." AND `trash` = 0 AND (`denylang` NOT LIKE '%2:\"".$lang."\"%' OR `denylang` = NULL)");
+            $str_sql = "SELECT `mid` FROM `menu` WHERE `mid` IN ('".implode("','", explode(";", $code[0]['MENU.SHOW']))."') ".$not_sql." AND `trash` = 0 AND (`denylang` NOT LIKE '%2:\"".$lang."\"%' OR ISNULL `denylang`)";
+            $str_sql = "SELECT `mid` FROM `menu` WHERE `mid` IN ('".implode("','", explode(";", $code[0]['MENU.SHOW']))."') ".$not_sql." AND `trash` = 0";
+            $str_res = doSQL($str_sql);
             $str_num = intval($str_res['num']);
             $actl = 1;
             $maxl = 1;
@@ -543,6 +545,7 @@ if (!(function_exists('buildMenu'))) {
             'code' => $code,
             'sql' => $str_sql,
             'sql_num' => $str_num,
+            'sql_err' => $str_res['err'],
             'startlevel' => $startlevel,
             'basemid' => $basemid,
             'actmid' => $actmid,
@@ -553,7 +556,7 @@ if (!(function_exists('buildMenu'))) {
             );
         if ($preview):
             // some preview output to source
-            $buf['buildcss'] = '<style>li.active { background: red; } </style>';
+            $buf['buildcss'] = '<style>li.active { background: rgba(255,0,0,0.15); } </style>';
     //		$buf['buildcss'] = "<!-- ".$str_sql." -->\n";	// rausgenommen 7.5.15
         else:
             $buf['buildcss'] = '';
@@ -566,7 +569,7 @@ if (!(function_exists('buildMenu'))) {
             $tmpmidlist = array();
             if (array_key_exists('MENU.SHOW',$code[0]) && trim($code[0]['MENU.SHOW'])!='') {
                 $tmpmidlist = explode(";", $code[0]['MENU.SHOW']);
-                foreach ($str_res AS $smresk => $smresv)  {
+                foreach ($str_res['set'] AS $smresk => $smresv)  {
                     if (isset($smresv['mid']) && in_array(intval($smresv['mid']),$tmpmidlist)) {
                         $midlist[array_search(intval($smresv['mid']),$tmpmidlist)] = intval($smresv['mid']);
                     }
@@ -590,6 +593,7 @@ if (!(function_exists('buildMenu'))) {
                     if (isset($code[0]['CONTAINER.CLASS'])) {
                         $buf['menucode'].= $code[0]['CONTAINER.CLASS'];
                     }
+
                     $buf['menucode'].= ' contains-'.count($midlist).' ">';
                 }
             }	
@@ -618,6 +622,9 @@ if (!(function_exists('buildMenu'))) {
                     $buf['menucode'].= ' contains-'.count($midlist).' ">';
                 }
             }
+            $buf['midlist'] = $midlist;
+
+
             // run all menupoints
             foreach ($midlist AS $midkey => $midvalue):
                 $midfacts_sql = "SELECT * FROM `menu` WHERE `mid` = ".intval($midvalue);
@@ -783,8 +790,7 @@ if (!(function_exists('buildMenu'))) {
                                 $buf['menucode'].= $subcode['menucode'];
                             }
                         }
-                    }
-                    else if ($code[0]['TYPE']=='SELECT') {
+                    } else if ($code[0]['TYPE']=='SELECT') {
                         $buf['menucode'].= '</option>';
                         if ($actl<$maxl) {
                             $sub_sql = "SELECT `mid` FROM `menu` WHERE `connected` = ".intval($midvalue)." AND `trash` = 0 AND `visibility` = 1 ORDER BY `position` ASC";
@@ -794,17 +800,15 @@ if (!(function_exists('buildMenu'))) {
                                 $buf['menucode'].= $subcode['menucode'];
                             }
                         }
-                    }
-                    else if ($code[0]['TYPE']=='SHORTCUT') {
+                    } else if ($code[0]['TYPE']=='SHORTCUT') {
                         $buf['menucode'].= '';
-                    }
-                    else {	
+                    } else {	
                         if ($actl<$maxl) {
                             $sub_sql = "SELECT `mid` FROM `menu` WHERE `connected` = ".intval($midvalue)." AND `trash` = 0 AND `visibility` = 1 ORDER BY `position` ASC";
                             $sub_res = doSQL($sub_sql);
                             if ($sub_res['num']>0) {
                                 $subcode = buildMenu($code, $startlevel, $midvalue, $actmid, $lang, $actl+1, $maxl, $preview);
-                                $buf['menucode'].= $subcode['menucode'];
+                                $buf['menucode'].= '<span class="sub"></span>'.$subcode['menucode'];
                             }
                         }
                         $buf['menucode'].= '</li>';
@@ -822,15 +826,16 @@ if (!(function_exists('buildMenu'))) {
                 endif;
             endforeach;
             // close container
-            if ($code[0]['TYPE']=='LINK'):
+            if ($code[0]['TYPE']=='LINK') {
                 $buf['menucode'].= '</div>';
-            elseif (($code[0]['TYPE']=='SELECT' && $actl==0) || ($code[0]['TYPE']=='SELECT' && $actl==$maxl)):
+            } else if (($code[0]['TYPE']=='SELECT' && $actl==0) || ($code[0]['TYPE']=='SELECT' && $actl==$maxl)) {
                 $buf['menucode'].= '</select>';
-            elseif ($code[0]['TYPE']=='SHORTCUT'):
+            } else if ($code[0]['TYPE']=='SHORTCUT') {
                 $buf['menucode'].= '';
-            else:	
+            } else {	
                 $buf['menucode'].= '</ul>';
-            endif;
+            }
+
         endif;
         return $buf;
         }

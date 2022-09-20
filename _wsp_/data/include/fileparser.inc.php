@@ -3,9 +3,32 @@
  * Allgemeine parser-functions
  * @author stefan@covi.de
  * @since 3.1
- * @version 7.0
- * @lastchange 2021-09-28
+ * @version 7.1
+ * @lastchange 2022-09-20
  */
+
+function checkPathDR($givenPath, $drPath) {
+    $givenPathParts = explode('/', $givenPath);
+    $drPathParts = explode('/', $drPath);
+    
+    foreach ($drPathParts AS $drk => $drv) { if (trim($drv)=='') { unset($drPathParts[$drk]); }}
+    foreach ($givenPathParts AS $gpk => $gpv) { if (trim($gpv)=='') { unset($givenPathParts[$gpk]); }}
+    $drPathParts = array_values($drPathParts);
+    $givenPathParts = array_values($givenPathParts);
+
+    var_export($givenPathParts);
+    echo '<hr />';
+    var_export($drPathParts);
+    echo '<hr />';
+
+    foreach ($drPathParts AS $drk => $drv) {
+        if (in_array($drv, $givenPathParts)) {
+            $ff = array_keys($givenPathParts, $drv);
+            echo $drv.var_export($ff, true).'<br />';
+        }
+    }
+    
+}
 
 if (!(function_exists('getHeadVar'))) {
     function getHeadVar($mid, $publishlang, $preview = false, $metascript = array()) {
@@ -148,7 +171,7 @@ if (!(function_exists('getHeadVar'))) {
                     $headvar.= "\n\t\t\t\"http://www.w3.org/TR/html4/loose.dtd\">\n";
                 }
                 // language
-                $headvar.= "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"".$publishlang."\" lang=\"".$publishlang."\">\n";	
+                $headvar.= "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"".$publishlang."\" lang=\"".$publishlang."\" class=\"mid-".intval($mid)."\">\n";	
                 $headvar.= "<head>\n";
                 // 2012-03-01 use only utf8-encoding codepage
                 $headvar.= "<meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />\n";
@@ -275,7 +298,7 @@ if (!(function_exists('getHeadVar'))) {
                                 if ($preview) {
 
                                     $headvar .= "<style>\n";
-
+                                    $headvar .= preg_replace('/\n\s*\n/', "\n\n", preg_replace('!/\*.*?\*/!s', '', file_get_contents(DOCUMENT_ROOT.'/media/layout/'.trim($style_res['set'][0]['file']).'.css')));
                                     $headvar .= "</style>\n";
 
                                 } else {
@@ -348,7 +371,7 @@ if (!(function_exists('getHeadVar'))) {
                     $headvar .= "<link rel=\"shortcut icon\" href=\"/media/screen/favicon.ico\" />\n";
                 }
                 // iOS properties
-                if (is_file(DOCUMENT_ROOT."/".WSP_DIR."/media/screen/iphone_favicon.png")) {
+                if (is_file(DOCUMENT_ROOT."/media/screen/iphone_favicon.png")) {
                     $headvar .= "<link rel=\"apple-touch-icon\" href=\"/media/screen/iphone_favicon.png\" />\n";
                 }
                 // viewport properties
@@ -425,7 +448,7 @@ if (!(function_exists('getHeadVar'))) {
                 // do js-based location reload if forwarding is active in any way ..
                 $headvar .= "<body";
                 if ($template_body!="") {
-                    $headvar .= " ".$bodytag;
+                    $headvar .= " ".$template_body;
                 }
                 $headvar .= ">\n";
             }
@@ -734,7 +757,6 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
             $filename = trim($mid_res['set'][0]['filename']);
             // get is index flag
             $isindex = intval($mid_res['set'][0]['isindex']);
-
 
             // get contents
             $content_sql = "SELECT * FROM `content` WHERE `content_lang` = '".escapeSQL($lang)."' AND `mid` = ".intval($mid_res['set'][0]['mid'])." AND `visibility` > 0 AND `trash` = 0 ORDER BY `content_area` ASC, `position` ASC";
@@ -1361,6 +1383,9 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
                         $shortcut = buildMenu(array(array('TYPE' => 'SHORTCUT', 'MENU.SHOW' => intval($scresv['mid']))), 0, intval($scresv['mid']), intval($scresv['mid']), $lang, 0, 1, false);
                     endif;
                     $tmpbuf = str_replace("[%".strtoupper(trim($scresv['linktoshortcut']))."%]", $shortcut['menucode'], $tmpbuf);
+                    $tmpbuf = str_replace("[%LINK:".strtoupper(trim($scresv['linktoshortcut']))."%]", $shortcut['menucode'], $tmpbuf);
+                    $tmpbuf = str_replace("[%PAGE:".strtoupper(trim($scresv['linktoshortcut']))."%]", returnInterpreterPath(intval($scresv['mid'])), $tmpbuf);
+                    $tmpbuf = str_replace("[%MID:".intval($scresv['mid'])."%]", $shortcut['menucode'], $tmpbuf);
                 }
             }
             
@@ -1375,7 +1400,13 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
                 // define temp directory
                 $tmppath = cleanPath(DOCUMENT_ROOT."/".WSP_DIR."/tmp/".$_SESSION['wspvars']['usevar']."/");
                 // define temp filename
-                $tmpfile = tempnam($tmppath, 'wsp');
+                $tmpfile = cleanPath(DOCUMENT_ROOT."/".WSP_DIR."/tmp/".$_SESSION['wspvars']['usevar']."/".basename(tempnam($tmppath, 'wsp')));
+                if (defined('WSP_DEV') && WSP_DEV) {
+                    echo '<pre>'.var_export($_SERVER['DOCUMENT_ROOT'], true).'</pre>';
+                    echo '<pre>'.var_export(DOCUMENT_ROOT, true).'</pre>';
+                    echo '<pre>'.var_export($tmppath, true).'</pre>';
+                    echo '<pre>'.var_export($tmpfile, true).'</pre>';
+                }
                 // create temporary buffer file with file contents
                 $fh = fopen($tmpfile, "r+");
                 // write contents
@@ -1403,6 +1434,16 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
                         $frwpath = cleanPath('/'.$pathdata['folder']);
                     }
 
+                    if (defined('WSP_DEV') && WSP_DEV) {
+                        addWSPMsg('resultmsg', 'dirpath: '.$dirpath);
+                        addWSPMsg('resultmsg', 'filepath: '.$filepath);
+                        addWSPMsg('resultmsg', 'frwdir: '.$frwdir);
+                        addWSPMsg('resultmsg', 'frwpath: '.$frwpath);
+                        addWSPMsg('resultmsg', 'DOCUMENT_ROOT: '.DOCUMENT_ROOT);
+                        addWSPMsg('resultmsg', 'tmpfile: '.$tmpfile);
+                        addWSPMsg('resultmsg', 'cleanpath: '.cleanPath(str_replace(DOCUMENT_ROOT, '/', $tmpfile)));
+                    }
+
                     // create the folder (except if the MAIN INDEX is published)
                     if ($filepath!='/index.php') {
                         $dirreturn = createFolder($dirpath);
@@ -1410,33 +1451,34 @@ function publishSites($pubid, $mode = 'publish', $lang = 'de', $newendmenu = fal
                             addWSPMsg('errormsg', returnIntLang('publisher directory could not be created1', false)." \"".$dirpath."\" ".returnIntLang('publisher directory could not be created2', false));
                         }
                     }
-                    $copyfile = copyFile(str_replace(DOCUMENT_ROOT, '', $tmpfile), $filepath);
-                    if ($copyfile===false) {
-                        addWSPMsg('errormsg', returnIntLang('publisher file could not be created1', false)." \"".$filepath."\" ".returnIntLang('publisher file could not be created2', false));
-                    }
-                    else {
+                    $copyfile = copyFile(cleanPath(str_replace(DOCUMENT_ROOT, '/', $tmpfile)), $filepath);
+                    if ($copyfile) {
                         doSQL("UPDATE `menu` SET `contentchanged` = 0, `lastpublish` = ".time()." WHERE `mid` = ".intval($mid_res['set'][0]['mid']));
                         $returnstat = true;
+                        // unlinking only when ftp works
+                        @unlink($tmpfile);
+                    } else {
+                        addWSPMsg('errormsg', returnIntLang('publisher file could not be created1', false)." \"".$filepath."\" ".returnIntLang('publisher file could not be created2', false));
                     }
-                    @unlink($tmpfile);
                     
                     // create a header location file that points to final file
-                    $tmpfile = tempnam($tmppath, 'frw');
+                    $tmpfile = cleanPath(DOCUMENT_ROOT."/".WSP_DIR."/tmp/".$_SESSION['wspvars']['usevar']."/".basename(tempnam($tmppath, 'frw')));
                     $fh = fopen($tmpfile, "r+");
-                    $frwbuf = '<?php header("location: . '.cleanPath('/'.trim($mid_res['set'][0]['filename']).'/').'"); ?>';
+                    $frwbuf = '<?php header("location: .'.cleanPath('/'.trim($mid_res['set'][0]['filename']).'/').'"); ?>';
                     fwrite($fh, $frwbuf);
                     // (over)write an (existing) file ONE directory step UPWARDS with header location
                     // e.g. folder is /info/privacy/ the file /info/privacy.php will be overwritten with a header location to folder
-                    $copyfile = copyFile(str_replace(DOCUMENT_ROOT, '', $tmpfile), $frwdir);
+                    $copyfile = copyFile(cleanPath(str_replace(DOCUMENT_ROOT, '/', $tmpfile)), $frwdir);
                     if (!$copyfile) { $returnstat = false; }
                     // AND, if this file is the index.php of home directory -
                     // 
                     if ($pathdata['filefolder']=='' && $pathdata['file']=='/index.php') { 
-                        $copyfile = copyFile(str_replace(DOCUMENT_ROOT, '', $tmpfile), cleanPath('/'.$frwpath.'/index.php'));
+                        $copyfile = copyFile(cleanPath(str_replace(DOCUMENT_ROOT, '/', $tmpfile)), cleanPath('/'.$frwpath.'/index.php'));
                     }
-                    // remove tmp file
-                    @unlink($tmpfile);
-                    
+                    if ($copyfile) {
+                        // unlinking only when ftp works
+                        @unlink($tmpfile);
+                    }
                 } else {
                     
                     // setup LANGUAGE base folder on top of path if published language is different to base language

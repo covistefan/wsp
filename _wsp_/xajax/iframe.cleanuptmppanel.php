@@ -3,8 +3,8 @@
  * ...
  * @author stefan@covi.de
  * @since 6.0
- * @version 7.0
- * @lastchange 2019-03-25
+ * @version 7.1
+ * @lastchange 2022-09-20
  */
 
 // if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!=''):

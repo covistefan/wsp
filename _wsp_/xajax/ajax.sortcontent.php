@@ -82,7 +82,13 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
                             $aff = true;
                         } 
                         else if ($res===false) {
-                            echo json_encode(array('action' => 'error', 'target' => 'copymid'));
+                            echo json_encode(
+                                array(
+                                    'action' => 'error',
+                                    'target' => 'copymid',
+                                    'postdata' => stripslashes(serialize($_POST))
+                                )
+                            );
                             die();
                         }
                     }
@@ -106,7 +112,14 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
         }
         $do['affmid'] = array_values(array_unique($do['affmid']));
         if ($aff) {
-            echo json_encode(array('action' => $action, 'mid' => $do['affmid']));
+            echo json_encode(
+                array(
+                    'action' => $action,
+                    'mid' => $do['affmid'],
+                    'cid' => $dcvv['cid'],
+                    'postdata' => stripslashes(serialize($_POST))
+                )
+            );
         }
     } else {
         // the mid of the content element changes and ALL elements have to be reordered
@@ -124,7 +137,15 @@ if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!='') {
         }
         $do['affmid'] = array_values(array_unique($do['affmid']));
         if ($aff) {
-            echo json_encode(array('action' => 'sort', 'mid' => $do['affmid']));
+            echo json_encode(
+                array(
+                    'action' => 'sort',
+                    'mid' => $do['affmid'],
+                    'cid' => null,
+                    'result' => $aff,
+                    'postdata' => serialize($_POST)
+                )
+            );
         }
     }
 }

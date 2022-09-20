@@ -3,8 +3,8 @@
  * Cleanup
  * @author stefan@covi.de
  * @since 3.3
- * @version 7.0
- * @lastchange 2019-03-25
+ * @version 7.1
+ * @lastchange 2022-09-20
  */
 
 // start session -----------------------------
@@ -27,10 +27,10 @@ require ("./data/include/siteinfo.inc.php");
 $filesizes = array('Byte','KB','MB','GB');
 
 // define page specific funcs ----------------
-if (isset($_REQUEST['cfd']) && trim($_REQUEST['cfd'])!=''): 
+if (isset($_REQUEST['cfd']) && trim($_REQUEST['cfd'])!='') {
     // define jumper to scroll down in footer.inc
     $_SESSION['document_jumper'] = '#filesystem-jumper';
-endif;
+}
 
 // do ftp connect to establish ONE ftp-connection
 $cFTP = $tFTP = 3;

@@ -3,8 +3,8 @@
  * global site-setup
  * @author stefan@covi.de
  * @since 4.0
- * @version 7.0
- * @lastchange 2020-06-30
+ * @version 7.1
+ * @lastchange 2022-09-19
  */
 
 // start session -----------------------------

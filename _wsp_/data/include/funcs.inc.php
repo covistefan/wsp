@@ -141,7 +141,9 @@ if (!(function_exists('mysqli_result'))) {
 if (!(function_exists('escapeSQL'))) {
     function escapeSQL($string) {
         if (isset($_SESSION['wspvars']['db']) && $_SESSION['wspvars']['db']) {
-            return mysqli_real_escape_string($_SESSION['wspvars']['db'], $string);
+            if (!$_SESSION['wspvars']['db']->connect_errno) {
+                return mysqli_real_escape_string($_SESSION['wspvars']['db'], $string);
+            }
         } else {
             return $string;
         }
@@ -1181,7 +1183,7 @@ function returnContentStructureItem($datatable = 'menu', $mid = 0, $showsub = fa
             // 
         endif;
         if ($middata_res['set'][0]['editable']==1 || $middata_res['set'][0]['editable']==9) {
-            $item.=' <a class="toggle-content" mid="'.$middata_res['set'][0]['mid'].'">';
+            // $item.=' <a mid="'.$middata_res['set'][0]['mid'].'">';
         }
         if (isset($_SESSION['wspvars']['sdm']) && $_SESSION['wspvars']['sdm']==3) {
             $item.= $middata_res['set'][0]['description'].' &nbsp; <i class="fa fa-code"></i> '.fileNamePath($middata_res['set'][0]['mid']).' &nbsp; <i class="fa fa-hashtag"></i> '.$middata_res['set'][0]['mid'];
@@ -1197,7 +1199,7 @@ function returnContentStructureItem($datatable = 'menu', $mid = 0, $showsub = fa
             $_SESSION['wspvars']['sdm'] = 0;
         }
         if ($middata_res['set'][0]['editable']==1 || $middata_res['set'][0]['editable']==9) {
-            $item.= "</a> ";
+            // $item.= "</a> ";
         }
         $realtemp = getTemplateID(intval($middata_res['set'][0]['mid']));
         $templatevars = getTemplateVars($realtemp);
@@ -5617,7 +5619,6 @@ if (!(function_exists('deleteFolder'))) {
 if (!(function_exists('deleteFile'))) {
     function deleteFile($path = false) {
         if (is_file(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$path))) {
-
             if (isset($_SESSION['wspvars']['ftp']) && $_SESSION['wspvars']['ftp']!==false) {
                 // create ftp-connection
                 $ftp = doFTP();
@@ -5665,6 +5666,19 @@ if (!(function_exists('deleteFile'))) {
 
 if (!(function_exists('copyFile'))) {
     function copyFile($from = false, $to = false) {
+        
+        if (is_file($from)) {
+            $return = true;
+        } else if (is_file(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$from)) {
+            $from = cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$from);
+            $return = true;
+        } else {
+            if (defined('WSP_DEV') && WSP_DEV) {
+                addWSPMsg('errormsg', '<strong>'.cleanPath($from).'</strong> || <strong>'.cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$from).'</strong> not found');
+            }
+            $return = false;
+        }
+
         // check for final directory and create if not exists
         if ($return && !is_dir(cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.dirname(cleanPath($to)).DIRECTORY_SEPARATOR))) {
             $return = createFolder(cleanPath(DIRECTORY_SEPARATOR.dirname(cleanPath($to)).DIRECTORY_SEPARATOR));
@@ -5690,6 +5704,7 @@ if (!(function_exists('copyFile'))) {
                 return false;
             }
         } else if ($return && isset($_SESSION['wspvars']['srv']) && $_SESSION['wspvars']['srv']!==false) {
+            
             if (move_uploaded_file($from, cleanPath(DOCUMENT_ROOT.DIRECTORY_SEPARATOR.cleanPath($to)))) {
                 return true;
             } else {
@@ -5747,18 +5762,34 @@ if (!(function_exists('imageSelect'))):
 			$hidemedia = " AND (".implode(" AND ", $hideoption).") ";	
 		endif;
 		// prepare selected as array
-		if (!(is_array($selected))): $selected = array($selected); endif;
+		if (!(is_array($selected))) { $selected = array($selected); }
 		// prepare toppath as path
 		$toppath = str_replace("//", "/", str_replace("//", "/", str_replace("//", "/", str_replace("//", "/", "/".$toppath."/"))));
 		// unset mediafiles
 		$mediafiles = '';
+        $pathsql = array();
+        $pathset = array();
+        if (is_array($path) && count($path)>0) {
+            // do only if this is an existing directory
+            foreach ($path AS $pk => $pathdata) {
+                if (is_dir(cleanPath(DOCUMENT_ROOT."/media/".$pathdata))) {
+                    $pathsql[] = " `filefolder` LIKE '".$pathdata."%' ";
+                    $pathset[] = $pathdata;
+                }
+            }
+        } else {
+            if (is_dir(cleanPath(DOCUMENT_ROOT."/media/".$path))) {
+                $pathsql[] = " (`filefolder` LIKE '".$path."%') ";
+                $pathset[] = $path;
+            }
+        }
 		// get last 10 uploads
-		$l_sql = "SELECT * FROM `wspmedia` WHERE `mediatype` = 'images' AND `filefolder` LIKE '".$path."%' ".$hidemedia." ORDER BY `filedate` DESC, `filefolder` ASC, `filename` ASC LIMIT 0,10";
+		$l_sql = "SELECT * FROM `wspmedia` WHERE `mediatype` = 'images' ".((count($pathsql)>0)?" AND (".implode(' OR ', $pathsql).") ":'')." ".$hidemedia." ORDER BY `filedate` DESC, `filefolder` ASC, `filename` ASC LIMIT 0,10";
 		$l_res = doSQL($l_sql);
-		if ($l_res['num']>0):
+		if ($l_res['num']>0) {
 			$mediafiles.= '<optgroup label="last uploaded">';
-			$mediafiles .= "<option value=\"#\" >last uploaded</option>"; if (!($buildforjs)): $mediafiles .= "\n"; endif;
-			if (!($buildforjs)): $mediafiles .= "\n"; endif;
+			$mediafiles .= "<option value=\"#\" >last uploaded</option>"; 
+            if (!($buildforjs)) { $mediafiles .= "\n"; }
 			for ($r=0; $r<$l_num; $r++):
 				$value = str_replace("//", "/", str_replace("//", "/", trim("/".mysql_result($l_res,$r,'filefolder')."/".mysql_result($l_res,$r,'filename'))));
 				$mediafiles .= "<option value=\"".$value."\" >";
@@ -5783,66 +5814,78 @@ if (!(function_exists('imageSelect'))):
 				endif;
 				$mediafiles .= "</option>"; if (!($buildforjs)): $mediafiles .= "\n"; endif;
 			endfor;
-			$mediafiles .= "<option value=\"#\" >--------</option>"; if (!($buildforjs)): $mediafiles .= "\n"; endif;
+			$mediafiles .= "<option value=\"#\" >--------</option>"; 
+            if (!($buildforjs)) { $mediafiles .= "\n"; }
 			$mediafiles.= '</optgroup>';
-			if (!($buildforjs)): $mediafiles .= "\n"; endif;
-		endif;
+			if (!($buildforjs)) { $mediafiles .= "\n"; }
+		}
 		
-		// setup empty arrays
-		$files = array();
-		$dir = array();
-		if (is_dir(str_replace("//", "/", str_replace("//", "/", $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/media/".$path)))):
-			$d = dir(str_replace("//", "/", str_replace("//", "/", $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd']."/media/".$path)));
-			while (false !== ($entry = $d->read())):
-				// get only folders with images in
-				if (substr($entry, 0, 1)!='.' && (stristr($path.$entry, 'images') || stristr($path.$entry, 'screen')) && !(in_array($entry, $hiddenmedia))):
-					if (is_file(str_replace("//", "/", str_replace("//", "/", $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd'].'/media/'.$path."/".$entry)))):
-						$files[] = str_replace("//", "/", str_replace("//", "/", "/media/".$path."/".$entry));
-					elseif (is_dir(str_replace("//", "/", str_replace("//", "/", $_SERVER['DOCUMENT_ROOT']."/".$_SESSION['wspvars']['wspbasediradd'].'/media/'.$path."/".$entry)))):
-						$dir[] = str_replace("//", "/", str_replace("//", "/", "/".$path."/".$entry."/"));
-					endif;
-				endif;
-			endwhile;
-			$d->close();
-			sort($files);
-			sort($dir);
-			$mediafiles .= "<optgroup label=\"".str_replace("//", "/", str_replace("//", "/", "/media/".$path))."\">"; if (!($buildforjs)): $mediafiles .= "\n"; endif;
-			foreach($files AS $value):
-				$returnvalue = $value;
-				if (trim($toppath)!='/' && strpos($value, $toppath)===0):
-					$returnvalue = str_replace("//", "/", str_replace("//", "/", "/".substr($value, strlen(trim($toppath)))));
-				endif;
-				$showvalue = $value;
-				if ($hidepath):
-					$showvalue = substr($value, (strrpos($value, "/")+1));
-				endif;
-				$mediafiles .= "<option value=\"".$returnvalue."\"";
-				if (in_array($value, $selected)):
-					$mediafiles .= " selected=\"selected\"";
-				endif;
-				$mediafiles .= ">";
-				$mediadesc = '';
-				$desc_sql = "SELECT * FROM `mediadesc` WHERE `mediafile` LIKE '%".str_replace("//", "/", str_replace("//", "/", $value))."%'";
-				$desc_res = doSQL($desc_sql);
-                if ($desc_res['num']>0):
-                    $mediadesc = trim($desc_res['set'][0]['filedesc']);
-                endif;
-				if (trim($mediadesc)!=""):
-					$mediafiles .= $mediadesc;
-				elseif (strlen($showvalue)>$trimname):
-					$mediafiles .= substr($showvalue,0,5)."...".substr($showvalue,-($trimname-5));
-				else:
-					$mediafiles .= $showvalue;
-				endif;
-				$mediafiles .= "</option>"; if (!($buildforjs)): $mediafiles .= "\n"; endif;
-			endforeach;
-			$mediafiles .= "</optgroup>"; if (!($buildforjs)): $mediafiles .= "\n"; endif;
-			foreach($dir AS $value):
-				if (trim(imageSelect($value, $toppath, $hidepath, $selected, $trimname, $buildforjs))!=''):
-					$mediafiles .= imageSelect($value, $toppath, $hidepath, $selected, $trimname, $buildforjs);
-				endif;
-			endforeach;
-		endif;
+        // setup empty return var
+		if (is_array($pathset) && count($pathset)>0) {
+            foreach ($pathset AS $pk => $pathdata) {
+            // setup empty arrays
+                $files = array();
+                $dir = array();
+                if (is_dir(str_replace("//", "/", str_replace("//", "/", DOCUMENT_ROOT."/".$_SESSION['wspvars']['wspbasediradd']."/media/".$pathdata)))) {
+                    $d = dir(str_replace("//", "/", str_replace("//", "/", DOCUMENT_ROOT."/".$_SESSION['wspvars']['wspbasediradd']."/media/".$pathdata)));
+                    while (false !== ($entry = $d->read())) {
+                        // get only folders with images in
+                        if (substr($entry, 0, 1)!='.' && (stristr($pathdata.$entry, 'images') || stristr($pathdata.$entry, 'screen')) && !(in_array($entry, $hiddenmedia))) {
+                            if (is_file(str_replace("//", "/", str_replace("//", "/", DOCUMENT_ROOT."/".$_SESSION['wspvars']['wspbasediradd'].'/media/'.$pathdata."/".$entry)))) {
+                                $files[] = str_replace("//", "/", str_replace("//", "/", "/media/".$pathdata."/".$entry));
+                            }
+                            else if (is_dir(str_replace("//", "/", str_replace("//", "/", DOCUMENT_ROOT."/".$_SESSION['wspvars']['wspbasediradd'].'/media/'.$pathdata."/".$entry)))) {
+                                $dir[] = str_replace("//", "/", str_replace("//", "/", "/".$pathdata."/".$entry."/"));
+                            }
+                        }
+                    }
+                    $d->close();
+                    sort($files);
+                    sort($dir);
+                    $mediafiles .= "<optgroup label=\"".str_replace("//", "/", str_replace("//", "/", "/media/".$pathdata))."\">"; 
+                    if (!($buildforjs)) { $mediafiles .= "\n"; }
+                    foreach($files AS $value) {
+                        $returnvalue = $value;
+                        if (trim($toppath)!='/' && strpos($value, $toppath)===0) {
+                            $returnvalue = str_replace("//", "/", str_replace("//", "/", "/".substr($value, strlen(trim($toppath)))));
+                        }
+                        $showvalue = $value;
+                        if ($hidepath) {
+                            $showvalue = substr($value, (strrpos($value, "/")+1));
+                        }
+                        $mediafiles .= "<option value=\"".$returnvalue."\"";
+                        if (in_array($value, $selected)) {
+                            $mediafiles .= " selected=\"selected\"";
+                        }
+                        $mediafiles .= ">";
+                        $mediadesc = '';
+                        $desc_sql = "SELECT * FROM `mediadesc` WHERE `mediafile` LIKE '%".str_replace("//", "/", str_replace("//", "/", $value))."%'";
+                        $desc_res = doSQL($desc_sql);
+                        if ($desc_res['num']>0) {
+                            $mediadesc = trim($desc_res['set'][0]['filedesc']);
+                        }
+                        if (trim($mediadesc)!="") {
+                            $mediafiles .= $mediadesc;
+                        }
+                        else if (strlen($showvalue)>$trimname) {
+                            $mediafiles .= substr($showvalue,0,5)."...".substr($showvalue,-($trimname-5));
+                        } 
+                        else {
+                            $mediafiles .= $showvalue;
+                        }
+                        $mediafiles .= "</option>"; 
+                        if (!($buildforjs)) { $mediafiles .= "\n"; }
+                    }
+                    $mediafiles .= "</optgroup>"; 
+                    if (!($buildforjs)) { $mediafiles .= "\n"; }
+                    foreach($dir AS $value) {
+                        if (trim(imageSelect($value, $toppath, $hidepath, $selected, $trimname, $buildforjs))!='') {
+                            $mediafiles .= imageSelect($value, $toppath, $hidepath, $selected, $trimname, $buildforjs);
+                        }
+                    }
+                }
+            }
+        }
 		return $mediafiles;
 		}	// imageSelect()
 endif;
@@ -7153,7 +7196,6 @@ function ftpDeleteFile($file, $output = true) {
 	endif;
 	}	// ftpDeleteFile()
 endif;
-
 
 if (!function_exists('buildModMenu')):
 	function buildModMenu($parent, $spaces, $rights) {

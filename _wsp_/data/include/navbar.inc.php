@@ -84,7 +84,7 @@
                         echo '<li class="dropdown">';
                         foreach ($showmodmenu AS $smmk => $smmv) {
                             $_SESSION['wspvars']['wspmodmenu'][intval($smmv[0]['id'])] = $smmv[0]['title'];
-                            echo '<a href="./modgoto.php?modid='.$smmv[0]['id'].'" id="modules-drop" class="dropdown-toggle" data-toggle="dropdown">
+                            echo '<a href="./modgoto.php?modid='.$smmv[0]['id'].'">
                             <i class="fa fa-folder" title="'.$smmv[0]['title'].'"></i> <span class="hide">'.$smmv[0]['title'].'</span>
                             </a>';
                         }

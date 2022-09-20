@@ -70,6 +70,18 @@ $(document).ready(function() {
         minHeight: 300,
         maxHeight: 700,
     });
+
+    $('.stylenote').summernote({
+        toolbar: [
+            // [groupName, [list of button]]
+            ['font', ['bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript','clear']],
+            ['misc', ['codeview']],
+            ['work', ['undo','redo']],
+        ],
+        lang: 'de-DE', // Change to your chosen language
+        minHeight: 200,
+        maxHeight: 500,
+    });
     
     $('.singleselect').multiselect();
     

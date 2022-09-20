@@ -125,6 +125,18 @@ if ($rights_res['num']==1) {
 			$_SESSION['wspvars']['rights'][$mrv['guid']] = 0;
 		}
 	}
+
+	// setup admin options
+	if (intval($_SESSION['wspvars']['usertype'])==1) {
+		$_SESSION['wspvars']['rights']['siteprops'] = 1;
+		$_SESSION['wspvars']['rights']["sitestructure"] = 1;
+		$_SESSION['wspvars']['rights']["contents"] = 1;
+		$_SESSION['wspvars']['rights']["rss"] = 1;
+		$_SESSION['wspvars']['rights']["publisher"] = 1;
+		$_SESSION['wspvars']['rights']["design"] = 1;
+		$_SESSION['wspvars']['rights']["menufacts"] = 1;
+	}
+
 } else {
 	if ($_SERVER['SCRIPT_NAME']!=str_replace("//", "/", str_replace("//", "/", "/".WSP_DIR."/login.php"))) {
 		echo "»»logout cause no rights»»";

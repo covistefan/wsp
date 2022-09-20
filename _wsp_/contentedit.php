@@ -3,8 +3,8 @@
  * @description edit contents
  * @author stefan@covi.de
  * @since 3.1
- * @version 7.0
- * @lastchange 2020-06-30
+ * @version 7.1
+ * @lastchange 2022-09-19
  */
 
 // start session -----------------------------
@@ -16,18 +16,18 @@ require ("./data/include/globalvars.inc.php");
 
 // which content shall be edited
 $cid = 0;
-if (array_key_exists('wspvars', $_SESSION) && array_key_exists('editcontentid', $_SESSION['wspvars']) && intval($_SESSION['wspvars']['editcontentid'])>0):
+if (array_key_exists('wspvars', $_SESSION) && array_key_exists('editcontentid', $_SESSION['wspvars']) && intval($_SESSION['wspvars']['editcontentid'])>0) {
 	$cid = intval($_SESSION['wspvars']['editcontentid']);
-endif;
-if (isset($_POST['editcontentid']) && intval($_POST['editcontentid'])>0):
+}
+if (isset($_POST['editcontentid']) && intval($_POST['editcontentid'])>0) {
 	$_SESSION['wspvars']['editcontentid'] = intval($_POST['editcontentid']);
 	$cid = intval($_POST['editcontentid']);
-endif;
-if (intval($cid)==0):
+}
+if (intval($cid)==0) {
 	// jump back, if no content was found
 	header("location: contents.php");
 	die();
-endif;
+}
 /* define actual system position ------------- */
 $_SESSION['wspvars']['menuposition'] = "contentedit";
 $_SESSION['wspvars']['mgroup'] = 5;
