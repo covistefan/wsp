@@ -232,23 +232,17 @@ if (isset($_POST) && array_key_exists('op', $_POST) && $_POST['op']=='modcheckin
     $modfiletype = false;
 	$install = false;
     
-    if (!is_dir($tmpdir)) {
-        // if modules dir doesnt exits create
-        if (createDirFTP('/'.WSP_DIR.'/tmp/')===false) {
-            addWSPMsg('errormsg', returnIntLang('system update could not create tmp directory'));
-            $install = false;
-        } else {
+    if (!(is_dir($tmpdir))) {
+        if (createFolder($tmpftpdir)) {
             $install = true;
+        } else {
+            $install = false;
+            addWSPMsg('errormsg', returnIntLang('modinstall could not create module install directory'));
         }
     } else {
         $install = true;
     }
-    
-    if (createDirFTP($tmpftpdir)===false) {
-        addWSPMsg('errormsg', returnIntLang('modinstall could not create tmp modules directory'));
-        $install = false;
-    }
-    
+
     // use server located module
 	if (isset($_POST['serverfile']) && trim($_POST['serverfile'])!="" && $install) {
         $serverfile = trim($_POST['serverfile']);
@@ -256,7 +250,7 @@ if (isset($_POST) && array_key_exists('op', $_POST) && $_POST['op']=='modcheckin
         // try to get file from update server by curl
         if (isCurl()) {
             $defaults = array( 
-                CURLOPT_URL => trim('https://'.WSP_UPDSRV.'/versions/modules/?file='.$serverfile), 
+                CURLOPT_URL => trim('https://update.wsp-server.info/versions/modules/?file='.$serverfile), 
                 CURLOPT_HEADER => 0, 
                 CURLOPT_RETURNTRANSFER => TRUE, 
                 CURLOPT_TIMEOUT => 50,
@@ -269,7 +263,7 @@ if (isset($_POST) && array_key_exists('op', $_POST) && $_POST['op']=='modcheckin
         }
         // try to get file from update server by fopen
         else {
-            $fh = fopen('https://'.WSP_UPDSRV."/versions/modules/?file=".trim($serverfile), 'r');
+            $fh = fopen('https://update.wsp-server.info/versions/modules/?file='.trim($serverfile), 'r');
             if (intval($fh)!=0) {
                 while (!feof($fh)) {
                     $fileupdate .= fgets($fh);
@@ -316,7 +310,7 @@ if (isset($_POST) && array_key_exists('op', $_POST) && $_POST['op']=='modcheckin
 	}
     
     // try to create tmp module folder
-    if (createDirFTP($modtmpftpdir)===false) {
+    if (createFolder($modtmpftpdir)===false) {
         addWSPMsg('errormsg', returnIntLang('modinstall could not create tmp module folder'));
         $install = false;
     }
@@ -352,12 +346,12 @@ if (isset($_POST) && array_key_exists('op', $_POST) && $_POST['op']=='modcheckin
                             // extract only interpreter files to check but create all folders to check for allowed folders
                             if (isset($fileinfo['dirname']) && $fileinfo['dirname']=='_wsp_/data/interpreter') {
                                 if (!(is_dir(cleanPath($modtmpdir.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']))))) {
-                                    $createdir = createDirFTP('/'.$modtmpftpdir.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/');
+                                    $createdir = createFolder('/'.$modtmpftpdir.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/');
                                 }
                                 @copy("zip://".$zipfile."#".$filename, cleanPath($modtmpdir.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/'.$fileinfo['basename']));
                             } else {
                                 if (!(is_dir(cleanPath($modtmpdir.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']))))) {
-                                    $createdir = createDirFTP('/'.$modtmpftpdir.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/');
+                                    $createdir = createFolder('/'.$modtmpftpdir.'/'.str_replace('_wsp_', WSP_DIR, $fileinfo['dirname']).'/');
                                 }
                             }
                         }
@@ -972,9 +966,7 @@ require ("./data/include/sidebar.inc.php");
                     }
 				
                     if (!($breakinstall)) { 
-                    
-                        error_reporting(E_ALL);
-                        ini_set('display_errors', 0);
+                        
                         if (intval($_POST['moduldev'])==1) {
                             // enable/disable warnings for false class definitions
                             error_reporting(E_ALL);
@@ -1016,26 +1008,26 @@ require ("./data/include/sidebar.inc.php");
                                         foreach ($modsetup->dependencies() as $guid => $modinfo):
                                             $dep_sql = "SELECT `version` FROM `modules` WHERE `guid` = '".$guid."'";
                                             $dep_res = doResultSQL($dep_sql);
-                                                        if ($dep_res!==false):
-                                                            $instversion = explode(".",trim($dep_res));
-                                                            $newversion = explode(".",$modinfo[1]);
-                                                            $thisdep = false;
-                                                            foreach ($instversion AS $vkey => $vvalue):
-                                                                if (intval($newversion[$vkey])>intval($instversion[$vkey])):
-                                                                    $thisdep = true;
-                                                                endif;
-                                                            endforeach;
-                                                            if ($thisdep):
-                                                                echo returnIntLang('modinstall updatebeforeinstall1')." <strong>".$modinfo[0]."</strong> ".returnIntLang('modinstall updatebeforeinstall2')." <strong>".$modinfo[1]."</strong> ".returnIntLang('modinstall updatebeforeinstall3')."<br />";
-                                                                $cntDeps++;
-                                                            else:
-                                                                echo "<strong>".$modinfo[0]."</strong> ".returnIntLang('modinstall depyetinstalled1')." <strong>".trim($dep_res)."</strong> ".returnIntLang('modinstall depyetinstalled2')."<br />";
-                                                                $cntDeps--;
-                                                            endif;
-                                                        endif;
-                                                    endforeach;
-                                                    // $cntDeps == 0 => required modules nicht vorhanden
-                                                    // $cntDeps > 0 && $cntDeps == count($modsetup->dependencies()) => alle installiert => versionierung pruefen
+                                            if ($dep_res!==false):
+                                                $instversion = explode(".",trim($dep_res));
+                                                $newversion = explode(".",$modinfo[1]);
+                                                $thisdep = false;
+                                                foreach ($instversion AS $vkey => $vvalue):
+                                                    if (intval($newversion[$vkey])>intval($instversion[$vkey])):
+                                                        $thisdep = true;
+                                                    endif;
+                                                endforeach;
+                                                if ($thisdep):
+                                                    echo returnIntLang('modinstall updatebeforeinstall1')." <strong>".$modinfo[0]."</strong> ".returnIntLang('modinstall updatebeforeinstall2')." <strong>".$modinfo[1]."</strong> ".returnIntLang('modinstall updatebeforeinstall3')."<br />";
+                                                    $cntDeps++;
+                                                else:
+                                                    echo "<strong>".$modinfo[0]."</strong> ".returnIntLang('modinstall depyetinstalled1')." <strong>".trim($dep_res)."</strong> ".returnIntLang('modinstall depyetinstalled2')."<br />";
+                                                    $cntDeps--;
+                                                endif;
+                                            endif;
+                                        endforeach;
+                                        // $cntDeps == 0 => required modules nicht vorhanden
+                                        // $cntDeps > 0 && $cntDeps == count($modsetup->dependencies()) => alle installiert => versionierung pruefen
                                         if ($cntDeps==0) {
                                             // KEINE erfuellten Abhaengigkeiten
                                             foreach ($modsetup->dependencies() as $guid => $modinfo) {
@@ -1091,41 +1083,50 @@ require ("./data/include/sidebar.inc.php");
                                         }
                                         // loading info
                                         $dpl = '';
-                                        if (is_file($modtmpdir."/".WSP_DIR."/data/interpreter/".$value)) {
+                                        if (is_file($modtmpdir.DIRECTORY_SEPARATOR.WSP_DIR."/data/interpreter/".$value)) {
                                             
-                                            $er = error_reporting();
-                                            error_reporting(0);
-                                            require $modtmpdir."/".WSP_DIR."/data/interpreter/".$value;
-                                            $parser = new $interpreterClass();
-                                            
-                                            $ic = true;
-                                            $me = array();
-                                            $rf = new ReflectionClass($interpreterClass);
-                                            //run through all methods
-                                            foreach ($rf->getMethods() as $method) {
-                                                $me[$method->name] = array();
-                                                //run through all parameters of the method.
-                                                foreach ($method->getParameters() as $parameter) {
-                                                    $me[$method->name][$parameter->getName()] = $parameter->getType();
-                                                }
-                                                // do compare
-                                                if (isset($ci[$method->name])) {
-                                                    if (count(array_diff_key($ci[$method->name], $me[$method->name]))>0 || count(array_diff_key($me[$method->name], $ci[$method->name]))>0) {
-                                                        $icmsg = returnIntLang('modules method error in interpreter1')." ".trim($parser->title)." ".trim($parser->version)." ".returnIntLang('modules method error in interpreter2')." ".$method->name." ".returnIntLang('modules method error in interpreter3');
-                                                        $ic = false;
+                                            try {
+                                                
+                                                echo '<span class="try-interpreter-loading">'.returnIntLang('modules method try loading interpreter').'</span>';
+
+                                                require $modtmpdir.DIRECTORY_SEPARATOR.WSP_DIR."/data/interpreter/".$value;
+                                                
+                                                $parser = new $interpreterClass();
+                                                
+                                                $ic = true;
+                                                $me = array();
+                                                $rf = new ReflectionClass($interpreterClass);
+                                                //run through all methods
+                                                foreach ($rf->getMethods() as $method) {
+                                                    $me[$method->name] = array();
+                                                    //run through all parameters of the method.
+                                                    foreach ($method->getParameters() as $parameter) {
+                                                        $me[$method->name][$parameter->getName()] = $parameter->getType();
+                                                    }
+                                                    // do compare
+                                                    if (isset($ci[$method->name])) {
+                                                        if (count(array_diff_key($ci[$method->name], $me[$method->name]))>0 || count(array_diff_key($me[$method->name], $ci[$method->name]))>0) {
+                                                            $icmsg = returnIntLang('modules method error in interpreter1')." ".trim($parser->title)." ".trim($parser->version)." ".returnIntLang('modules method error in interpreter2')." ".$method->name." ".returnIntLang('modules method error in interpreter3');
+                                                            $ic = false;
+                                                        }
                                                     }
                                                 }
-                                            }
-                                            error_reporting($er);
-                                            if ($ic===true) {
-                                                echo $parser->title.' '.$parser->version.'&nbsp;';
-                                                if ($parser->guid) {
-                                                    $sql = 'SELECT `name`, `version` FROM `interpreter` WHERE `guid` = "'.escapeSQL($parser->guid).'"';
-                                                    $res = doSQL($sql);
-                                                    $dpl = ($res['num']>0)?"<div class='col-md-3'>".trim($res['set'][0]['name'])." ".trim($res['set'][0]['version'])." ".returnIntLang('str installed')."</div>":'';
+                                                
+                                                if ($ic===true) {
+                                                    echo $parser->title.' '.$parser->version.'&nbsp;';
+                                                    if ($parser->guid) {
+                                                        $sql = 'SELECT `name`, `version` FROM `interpreter` WHERE `guid` = "'.escapeSQL($parser->guid).'"';
+                                                        $res = doSQL($sql);
+                                                        $dpl = ($res['num']>0)?"<div class='col-md-3'>".trim($res['set'][0]['name'])." ".trim($res['set'][0]['version'])." ".returnIntLang('str installed')."</div>":'';
+                                                    }
+                                                } else {
+                                                    echo $icmsg;
+                                                    $break = true;
                                                 }
-                                            } else {
-                                                echo $icmsg;
+
+                                            } catch (Exception $e) {
+                                                echo 'error in parser class';
+                                                echo $e->getMessage();
                                                 $break = true;
                                             }
                                         }
@@ -1140,25 +1141,70 @@ require ("./data/include/sidebar.inc.php");
                                 }
                                 // 
                                 if (isset($type['iscmsmodul']) && $type['iscmsmodul']!=0) {
+
                                     $output = false;
                                     foreach ($modsetup->getParser() as $value) {
+                                        
                                         echo "<div class='row'>";
                                         if ($output===false) {
                                             echo "<div class='col-md-3'>".returnIntLang('modinstall parser standalone')."</div>";
                                         }
                                         echo "<div class='col-md-6 ".(($output===true)?'col-md-offset-3':'')."'>";
-                                        if ($output===false) {
-                                            $output = true;
-                                        }
+                                        $output = ($output===false) ? true : $output;
+
                                         // load interpreter information
-                                        if (is_file($modtmpdir."/".WSP_DIR."/data/interpreter/".$value)):
-                                            include ($modtmpdir."/".WSP_DIR."/data/interpreter/".$value);
-                                            $parser = new $interpreterClass();
-                                            echo $parser->title.' '.$parser->version.'&nbsp;';
-                                        else:
+                                        if (is_file($modtmpdir."/".WSP_DIR."/data/interpreter/".$value)) {
+                                            
+                                            try {
+                                                
+                                                require $modtmpdir.DIRECTORY_SEPARATOR.WSP_DIR."/data/interpreter/".$value;
+
+                                                $ic = true;
+                                                $me = array();
+                                                $rf = new ReflectionClass($interpreterClass);
+                                                //run through all methods
+                                                foreach ($rf->getMethods() as $method) {
+                                                    $me[$method->name] = array();
+                                                    //run through all parameters of the method.
+                                                    foreach ($method->getParameters() as $parameter) {
+                                                        $me[$method->name][$parameter->getName()] = $parameter->getType();
+                                                    }
+                                                    // do compare
+                                                    if (isset($ci[$method->name])) {
+                                                        if (count(array_diff_key($ci[$method->name], $me[$method->name]))>0 || count(array_diff_key($me[$method->name], $ci[$method->name]))>0) {
+                                                            $icmsg = returnIntLang('modules method error in interpreter1')." ".trim($parser->title)." ".trim($parser->version)." ".returnIntLang('modules method error in interpreter2')." ".$method->name." ".returnIntLang('modules method error in interpreter3');
+                                                            $ic = false;
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                if ($ic===true) {
+                                                    echo $parser->title.' '.$parser->version.'&nbsp;';
+                                                    if ($parser->guid) {
+                                                        $sql = 'SELECT `name`, `version` FROM `interpreter` WHERE `guid` = "'.escapeSQL($parser->guid).'"';
+                                                        $res = doSQL($sql);
+                                                        $dpl = ($res['num']>0)?"<div class='col-md-3'>".trim($res['set'][0]['name'])." ".trim($res['set'][0]['version'])." ".returnIntLang('str installed')."</div>":'';
+                                                    }
+                                                } else {
+                                                    echo $icmsg;
+                                                    $break = true;
+                                                }
+                                                
+                                                // include ($modtmpdir."/".WSP_DIR."/data/interpreter/".$value);
+                                                // $parser = new $interpreterClass();
+                                                // echo $parser->title.' '.$parser->version.'&nbsp;';
+
+                                            } catch (Exception $e) {
+                                                echo 'error in parser class';
+                                                echo $e->getMessage();
+                                                $break = true;
+                                            }
+
+                                        } else {
                                             echo "Eine f&uuml;r die Ausf&uuml;hrung des Interpreters erforderliche Datei ist im Installationspaket nicht vorhanden.";
                                             $break = true;
-                                        endif;
+                                        }
+
                                         echo "</div>";
                                         $sql = 'SELECT `name`, `version` FROM `interpreter` WHERE `guid` = "'.$parser->guid.'"';
                                         $res = doSQL($sql);
@@ -1281,7 +1327,7 @@ require ("./data/include/sidebar.inc.php");
                 $values = false;
                 $xmldata = '';
                 $defaults = array( 
-                    CURLOPT_URL => 'https://'.WSP_UPDSRV.'/versions/modules/', 
+                    CURLOPT_URL => 'https://update.wsp-server.info/versions/modules/', 
                     CURLOPT_HEADER => 0, 
                     CURLOPT_RETURNTRANSFER => TRUE, 
                     CURLOPT_TIMEOUT => 4 

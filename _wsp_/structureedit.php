@@ -164,7 +164,7 @@ if ($op=='save'):
     $tmpaddscript = ''; if (array_key_exists('usejs', $_POST) && is_array($_POST['usejs'])) { $tmpaddscript = escapeSQL(serialize($_POST['usejs'])); unset($_POST['usejs']); }
     $menuupdate_sql.= ", `addscript` = '".$tmpaddscript."'";	
 	// create a tmp addcss var to hold it for dynamic menu
-    $tmpaddcss = ''; if (array_key_exists('usecss', $_POST) && is_array($_POST['usecss'])) { $tmpaddcss = escapeSQL(serialize($_POST['usecss'])); unset($_POST['usecss']); }
+	$menuupdate_sql.= ", `addcss` = '".escapeSQL((array_key_exists('usecss', $_POST) && is_array($_POST['usecss'])) ? serialize($_POST['usecss']) : '')."'"; unset($_POST['usecss']);
 	$menuupdate_sql.= ", `addclass` = '".escapeSQL(trim($_POST['useclass']))."'"; unset($_POST['useclass']);
 	$menuupdate_sql.= ", `linktoshortcut` = '".escapeSQL(trim($_POST['shortcut']))."'"; unset($_POST['shortcut']);
 	//	denylang
@@ -383,7 +383,7 @@ else:
     else {
         $menueditdata['filetarget'] = 'none';
     }
-        
+    
     require ("./data/include/header.inc.php");
     require ("./data/include/navbar.inc.php");
     require ("./data/include/sidebar.inc.php");

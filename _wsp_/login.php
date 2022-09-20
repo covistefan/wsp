@@ -140,8 +140,20 @@ if (isset($_POST['loginfield']) && $_POST['loginfield']=="true") {
             $_SESSION['wspvars']['ftp_pasv'] = (defined('FTP_PASV')?FTP_PASV:false);
             if ($_SESSION['wspvars']['ftp_host']!==false && $_SESSION['wspvars']['ftp_user']!==false && $_SESSION['wspvars']['ftp_pass']!==false && $_SESSION['wspvars']['ftp_base']!==false) {
                 // normal ftp-connection OR temporary ftp-connection are true
-                // check, if basedir is set correct by checking, if wsp-basefolder is found     
-                $ftp = (($_SESSION['wspvars']['ftp_ssl']===true)?ftp_ssl_connect($_SESSION['wspvars']['ftp_host'], $_SESSION['wspvars']['ftp_port'], 5):ftp_connect($_SESSION['wspvars']['ftp_host'], $_SESSION['wspvars']['ftp_port'], 5)); if ($ftp!==false) {if (!ftp_login($ftp, $_SESSION['wspvars']['ftp_user'], $_SESSION['wspvars']['ftp_pass'])) { $ftp = false; }} if ($ftp!==false) { ftp_pasv($ftp, $_SESSION['wspvars']['ftp_pasv']); }
+                // check, if basedir is set correct by checking, if wsp-basefolder is found  
+                if ($_SESSION['wspvars']['ftp_ssl']===true) {
+                    $ftp = ftp_ssl_connect($_SESSION['wspvars']['ftp_host'], $_SESSION['wspvars']['ftp_port'], 5);
+                } else {
+                    $ftp = ftp_connect($_SESSION['wspvars']['ftp_host'], $_SESSION['wspvars']['ftp_port'], 5);
+                }
+                if ($ftp!==false) {
+                    if (!ftp_login($ftp, $_SESSION['wspvars']['ftp_user'], $_SESSION['wspvars']['ftp_pass'])) { 
+                        $ftp = false; 
+                    }
+                } 
+                if ($ftp!==false) {
+                    ftp_pasv($ftp, $_SESSION['wspvars']['ftp_pasv']);
+                }
                 // create user directory with normal ftp-connection
                 if ($ftp!==false) {
                     $mkdir = ftp_mkdir($ftp, $_SESSION['wspvars']['ftp_base'].'/'.WSP_DIR.'/tmp/'.$_SESSION['wspvars']['usevar']);

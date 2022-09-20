@@ -90,6 +90,7 @@ if (isset($_POST['action']) && trim($_POST['action'])=='uploadthumb' && isset($_
 
 // save/update information
 if (isset($_POST['action']) && trim($_POST['action'])=='savefile') {
+    /*
     $file = unserializeBroken(base64_decode($_REQUEST['fl']));
     $handle['fullpath'] = cleanPath($file[1]);
     $handle['fullfile'] = basename($handle['fullpath']);
@@ -125,6 +126,7 @@ if (isset($_POST['action']) && trim($_POST['action'])=='savefile') {
     }
     // remove older stored data in mediadesc-table
     doSQL("DELETE FROM `mediadesc` WHERE `mediafile` = '".escapeSQL(trim($handle['fullpath']))."'");
+    */
 }
 
 // get details if not redirected
@@ -375,7 +377,7 @@ require ("./data/include/sidebar.inc.php");
                             <h3 class="panel-title"><?php echo returnIntLang('mediadetails preview', true); ?> <?php if ($details['thumbnail']!==false): ?> &nbsp; <i class="fa fa-refresh" onclick="$('#reloadthumb').submit();"></i><?php endif; ?></h3>
                         </div>
                         <div class="panel-body">
-                        <?php if ($details['thumbnail']!==false) { ?>
+                            <?php if ($details['thumbnail']!==false) { ?>
                                 <div class="text-center">
                                     <a onclick="showImage('<?php echo $details['fullpath']; ?>')"><img src="<?php echo $details['thumbnail']; ?>" class="previewimg" /></a>
                                     <script>
@@ -387,18 +389,18 @@ require ("./data/include/sidebar.inc.php");
                                     };
                                         
                                     </script>
-                                <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">              
-                                            <div class="modal-body">
-                                                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                                                <img src="" class="imagepreview" style="max-width: 100%;" >
+                                    <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">              
+                                                <div class="modal-body">
+                                                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                                                    <img src="" class="imagepreview" style="max-width: 100%;" >
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <hr />
+                                <hr />
                             <?php } ?>
                             <form id="uploadthumb" method="post" enctype="multipart/form-data" action="<?php echo $_SERVER['PHP_SELF']; ?>">
                                 <input type="hidden" name="fl" value="<?php echo $fl; ?>" />
@@ -719,5 +721,4 @@ $(document).ready(function() {
     });
 
 </script>
-        
 <?php include ("./data/include/footer.inc.php"); ?>

@@ -292,6 +292,11 @@ require ("./data/include/header.inc.php");
 require ("./data/include/navbar.inc.php");
 require ("./data/include/sidebar.inc.php");
 
+if (!(isset($_SESSION['wspvars']['rights']['sitestructure'])) && $_SESSION['wspvars']['usertype']==1) {
+    $_SESSION['wspvars']['rights']['sitestructure'] = 1;
+    addWSPMsg('noticemsg', 'rights not set');
+}
+
 ?>
 <!-- MAIN -->
 <div class="main">

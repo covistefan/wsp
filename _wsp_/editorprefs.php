@@ -496,9 +496,10 @@ include("./data/include/sidebar.inc.php");
                                         <div class="col-md-3">
                                             <div class="form-group">
                                                 <select name="filereplacer" id="filereplacer" class="form-control singleselect">
-                                                    <option value="-"<?php if($sitedata['filereplacer']=='-') echo ' selected="selected"' ?>>-</option>
-                                                    <option value="_"<?php if($sitedata['filereplacer']=='_') echo ' selected="selected"' ?>>_</option>
-                                                    <option value="."<?php if($sitedata['filereplacer']=='.') echo ' selected="selected"' ?>><?php echo returnIntLang('str remove', false); ?></option>
+                                                    <option value="" <?php if($sitedata['filereplacer']=='') echo ' selected="selected"' ?>><?php echo returnIntLang('str none', false); ?></option>
+                                                    <option value="-" <?php if($sitedata['filereplacer']=='-') echo ' selected="selected"' ?>>– (<?php echo returnIntLang('str minus', false); ?>)</option>
+                                                    <option value="_" <?php if($sitedata['filereplacer']=='_') echo ' selected="selected"' ?>>_ (<?php echo returnIntLang('str underscore', false); ?>)</option>
+                                                    <option value="." <?php if($sitedata['filereplacer']=='.') echo ' selected="selected"' ?>><?php echo returnIntLang('str remove', false); ?></option>
                                                 </select>
                                             </div>
                                         </div>

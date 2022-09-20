@@ -3,8 +3,8 @@
  * @description WSP3 install page
  * @author stefan@covi.de
  * @since 3.1
- * @version 7.0
- * @lastchange 2021-06-02
+ * @version 7.1
+ * @lastchange 2022-09-15
  */
 
 session_start();
@@ -14,10 +14,15 @@ ini_set("display_errors", 1);
 // define timezone
 if (phpversion()>5): date_default_timezone_set(@date_default_timezone_get()); endif;
 // define root dir (strato problem)
-$buildsysfile = str_replace("/", "/", str_replace("/", "/", $_SERVER['DOCUMENT_ROOT']."/".$_SERVER['SCRIPT_NAME']));
-if ($buildsysfile!=$_SERVER['SCRIPT_FILENAME']): define('DOCUMENT_ROOT', str_replace("//", "/", $_SERVER['DOCUMENT_ROOT']."/".str_replace($_SERVER['SCRIPT_NAME'], "", str_replace($_SERVER['DOCUMENT_ROOT'], "", $_SERVER['SCRIPT_FILENAME'])))); else: define('DOCUMENT_ROOT', $_SERVER['DOCUMENT_ROOT']); endif;
+$buildsyspart = $_SERVER['DOCUMENT_ROOT']."/".$_SERVER['SCRIPT_NAME'];
+$buildsysfile = dirname($buildsyspart)."/".basename($buildsyspart);
+if ($buildsysfile!=$_SERVER['SCRIPT_FILENAME']) {
+    define('DOCUMENT_ROOT', $buildsysfile, "", str_replace($_SERVER['DOCUMENT_ROOT'], "", $_SERVER['SCRIPT_FILENAME'])); 
+} else { 
+    define('DOCUMENT_ROOT', $_SERVER['DOCUMENT_ROOT']); 
+}
 // get wsp install directory
-$_SESSION['tmpwspbasedir'] = basename(__DIR__);
+$_SESSION['tmpwspbasedir'] = (__DIR__ != DOCUMENT_ROOT) ? basename(__DIR__) : '' ;
 $_SESSION['installserver'] = 'update.wsp-server.info';
 $_SESSION['locallanguage'] = array();
 $_SESSION['msg'] = array();
@@ -29,8 +34,8 @@ if (isset($_POST['wsplang'])) { $_SESSION['wspvars']['locallang'] = trim($_REQUE
 // even there is no saved or posted data 
 $data = array('DB_HOST' => 'localhost', 'DB_NAME' => '', 'DB_USER' => '', 'DB_PASS' => '', 'DB_PREFIX' => '', 'FTP_HOST' => 'localhost',  'FTP_BASE' => '/', 'FTP_USER' => '', 'FTP_PASS' => '', 'FTP_PORT' => 21, 'FTP_SSL' => false, 'SMTP_HOST' => '', 'SMTP_USER' => '', 'SMTP_PASS' => '', 'SMTP_PORT' => '', 'SMTP_SSL' => true, 'ROOTPHRASE' => '', 'WSP_LANG' => '', 'WSP_DIR' => $_SESSION['tmpwspbasedir'], 'ADMINUSER' => '', 'ADMINPASS' => '', 'ADMINMAIL' => '', 'REPEATMAIL' => '');
 // get the functions
-if (is_file(DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/data/include/funcs.inc.php')) {
-    include_once(DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/data/include/funcs.inc.php');
+if (is_file(str_replace("//", "/", DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/data/include/funcs.inc.php'))) {
+    include_once(str_replace("//", "/", DOCUMENT_ROOT.'/'.$_SESSION['tmpwspbasedir'].'/data/include/funcs.inc.php'));
     $data['ADMINPASS'] = generate_password();
 } 
 else {
@@ -673,7 +678,7 @@ else {
                                                 <span class="icon-wrapper custom-bg-<?php echo ((floatval(phpversion())<7.1)?'red':'green'); ?>"><i class="fas fa-code"></i></span>
                                                 <div class="right">
                                                     <span class="value"><?php echo returnIntLang('install steps system phpmin'); ?></span>
-                                                    <span class="title"><?php echo returnIntLang('install steps system phpversion'); ?></span>
+                                                    <span class="title"><?php echo sprintf(returnIntLang('install steps system phpversion %s'), phpversion()) ; ?></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -682,7 +687,7 @@ else {
                                                 <span class="icon-wrapper custom-bg-<?php echo ((intval(mysqli_get_client_version())>=50000)?'green':'red'); ?>"><i class="fas fa-database"></i></span>
                                                 <div class="right">
                                                     <span class="value"><?php echo returnIntLang('install steps system mysqlmin'); ?></span>
-                                                    <span class="title"><?php echo returnIntLang('install steps system mysqlversion'); ?></span>
+                                                    <span class="title"><?php echo sprintf(returnIntLang('install steps system mysqlversion %s'), preg_replace('/[a-z ]*/m', '', mysqli_get_client_info())); ?></span>
                                                 </div>
                                             </div>
                                         </div>

@@ -495,11 +495,13 @@ require ("./data/include/sidebar.inc.php");
                                 <?php
 
                                 $structure = returnIDRoot(0);
-                                
-                                foreach ($structure AS $sk => $sv) {
-                                    if (isset($_SESSION['wspvars']['publisherfilterid']) && is_array($_SESSION['wspvars']['publisherfilterid']) && count($_SESSION['wspvars']['publisherfilterid'])>0) {
-                                        if (!(in_array($sv, $_SESSION['wspvars']['publisherfilterid']))) {
-                                            unset($structure[$sk]);
+
+                                if (count($structure)>0) {
+                                    foreach ($structure AS $sk => $sv) {
+                                        if (isset($_SESSION['wspvars']['publisherfilterid']) && is_array($_SESSION['wspvars']['publisherfilterid']) && count($_SESSION['wspvars']['publisherfilterid'])>0) {
+                                            if (!(in_array($sv, $_SESSION['wspvars']['publisherfilterid']))) {
+                                                unset($structure[$sk]);
+                                            }
                                         }
                                     }
                                 }

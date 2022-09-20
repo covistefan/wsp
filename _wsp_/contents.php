@@ -150,10 +150,7 @@ if (!($_SESSION['wspvars']['rights']['contents']==2 || $_SESSION['wspvars']['rig
 
 if ((isset($_POST['op']) && $_POST['op']=='add') && isset($_POST['sid']) && isset($_POST['gcid']) && isset($_POST['mid']) && intval($_POST['mid'])>0) {
     $ncid = insertContent(intval($_POST['mid']), 'add', trim($_POST['lang']), intval($_POST['carea']), intval($_POST['posvor']), $_POST['sid'], $_POST['gcid']);
-	
-    var_export($ncid);
-    
-    if (intval($ncid)>0) {
+	if (intval($ncid)>0) {
 		$_SESSION['wspvars']['editcontentid'] = intval($ncid);
         addWSPMsg('resultmsg', returnIntLang('contentedit new content created succesfully'));
         header('location: contentedit.php');
@@ -285,9 +282,9 @@ require ("./data/include/sidebar.inc.php");
                                     
                                     $datatable = 'menu';
                                     $mid_res = doSQL("SELECT `mid` FROM `".$datatable."` WHERE `connected` = 0 AND !(`visibility` = 0 AND (`internlink_id` > 0 || `forwarding_id` > 0)) ORDER BY `position`");
-                                    foreach ($mid_res['set'] AS $mk => $mv):
+                                    foreach ($mid_res['set'] AS $mk => $mv) {
                                         echo returnContentStructureItem($datatable, $mv['mid'], true, 9999, $openpath, $_SESSION['wspvars']['contentfiltermid'], 'list', array('visible'=>1));
-                                    endforeach;
+                                    }
                                     
                                     ?>
                             
@@ -377,12 +374,35 @@ if($_SESSION['wspvars']['rights']['contents']!=3 && $_SESSION['wspvars']['rights
         }
     }
     
+function areaUpdate(cid = false, mid = false) {
+    if (mid===false && cid>0) {
+        mid = $('#' + cid).parentsUntil('.panel').parent().attr('id').replace('midblock-','');
+    }
+    console.log(mid + ' : ' + cid);
+    var ullength = $('#midblock-' + mid + ' ul.dd-list').length;
+    var lilength = $('#midblock-' + mid + ' li.dd-item').length;
+    var contentl = lilength - ullength;
+    if (contentl>1) {
+        $('#content-num-' + mid).html('<span class="label inline-label label-primary">' + contentl + '<span class="longdesc"> <?php echo returnIntLang('str contents', false); ?></span></span>').show();
+    } 
+    else if (contentl>0) {
+        $('#content-num-' + mid).html('<span class="label inline-label label-primary">' + contentl + '<span class="longdesc"> <?php echo returnIntLang('str content', false); ?></span></span>').show();
+    } 
+    else {
+        $('#content-num-' + mid).hide();
+    }
+}
+
 function doDelete(cid, cname) {
     if (parseInt(cid)>0) {
         if (confirm('<?php echo returnIntLang('contentstructure jshint confirmdelete content1', false); ?>»' + cname + '«<?php echo returnIntLang('contentstructure jshint confirmdelete content2', false); ?>')) {
             $.post("xajax/ajax.contentdelete.php", { 'cid': cid })
             .done (function(data) {
-                $(data).toggle('fade', {}, 300);
+                var handle = $('#' + data.replace('#','')).parentsUntil('.panel').parent().attr('id').replace('midblock-','');
+                $(data).toggle('fade', {}, 300, function(){
+                    $(data).remove();
+                    areaUpdate(false,handle);
+                });
                 $('#sidebar-trash-menu').show();
             });
         }
@@ -442,8 +462,30 @@ function createSortable(){
         dropOnEmpty: true,
         appendTo: document.body,
     })
-    .on('sortupdate', function(event, ui) {
+    .on('sortreceive', function(event, ui) {
+        console.log('received: ' + $(this).sortable('toArray'));
         $.post("xajax/ajax.sortcontent.php", { 'copy': event.shiftKey, 'mid': $(this).attr('mid'), 'dataset': window.JSON.stringify($(this).sortable('toArray')) }).done (function(data) {
+            if (data!='') {
+                data = JSON.parse(data);
+                if (data && typeof data === 'object') {
+                    // $('#outputDD1').text(data);
+                    // console.info(data);
+                    for (const [key, value] of Object.entries(data.mid)) {
+                        $.post("xajax/ajax.showcontent.php", { 'mid': value }).done (function(subdata) {
+                            $('#carea-' + value).html(subdata);
+                            areaUpdate(false, value);
+                            createSortable();
+                        });
+                    }
+                }
+            return false;
+            }
+        });
+    })
+    .on('sortstop', function(event, ui) {
+        console.log('sorted: ' + $(this).sortable('toArray'));
+        // $.post("xajax/ajax.sortcontent.php", { 'copy': event.shiftKey, 'mid': $(this).attr('mid'), 'dataset': window.JSON.stringify($(this).sortable('toArray')) }).done (function(data) {
+        $.post("xajax/ajax.sortcontent.php", { 'copy': false, 'mid': $(this).attr('mid'), 'dataset': window.JSON.stringify($(this).sortable('toArray')) }).done (function(data) {
             if (data!='') {
                 $('#outputDD1').text(data);
                 console.info(data);
@@ -496,7 +538,7 @@ $(document).ready(function() {
                 carea.html(data).show();
                 createSortable();
                 });
-            } 
+            }
         else {
             carea.hide();
             carea.html('<em>this area will show contents on call</em>');

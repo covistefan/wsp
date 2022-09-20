@@ -55,13 +55,15 @@ if ($mod_res['num']>0) {
 
 $loadmodule = false;
 
-if ($_SESSION['wspvars']['usertype']!=1 && (!(isset($_SESSION['wspvars']['wspmodmenu'])) || (isset($_SESSION['wspvars']['wspmodmenu']) && !(is_array($_SESSION['wspvars']['wspmodmenu']))) || (isset($_SESSION['wspvars']['wspmodmenu']) && count($_SESSION['wspvars']['wspmodmenu'])<1))) {
-    addWSPMsg('errormsg', returnIntLang('modules no modules access allowed'));
-}
-else if ($_SESSION['wspvars']['usertype']!=1 && (!(array_key_exists($_SESSION['wspvars']['lockstat'], $_SESSION['wspvars']['wspmodmenu'])))) {
-    addWSPMsg('errormsg', returnIntLang('modules no access to this module allowed'));
-}
-else if (($mod_res['num']>0 && !(is_file(DOCUMENT_ROOT."/".WSP_DIR."/data/modules/".$mod_res['set'][0]['link'])))) {
+    // if ($_SESSION['wspvars']['usertype']!=1 && (!(isset($_SESSION['wspvars']['wspmodmenu'])) || (isset($_SESSION['wspvars']['wspmodmenu']) && !(is_array($_SESSION['wspvars']['wspmodmenu']))) || (isset($_SESSION['wspvars']['wspmodmenu']) && count($_SESSION['wspvars']['wspmodmenu'])<1))) {
+    //     addWSPMsg('errormsg', returnIntLang('modules no modules access allowed'));
+    // }
+    // else if ($_SESSION['wspvars']['usertype']!=1 && (!(array_key_exists($_SESSION['wspvars']['lockstat'], $_SESSION['wspvars']['wspmodmenu'])))) {
+    //     addWSPMsg('errormsg', returnIntLang('modules no access to this module allowed'));
+    // }
+    // else 
+
+if (($mod_res['num']>0 && !(is_file(DOCUMENT_ROOT."/".WSP_DIR."/data/modules/".$mod_res['set'][0]['link'])))) {
     addWSPMsg('errormsg', returnIntLang('modules no associated contents found'));
 }
 else if ($mod_res['num']==0) {

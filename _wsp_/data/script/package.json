@@ -1,0 +1,9 @@
+{
+	"name": "wsp-scripts",
+	"version": "7.1",
+	"description": "",
+	"main": "wspbase.min.js",
+	"author": "Stefan Roscher",
+	"dependencies": {
+	}
+}

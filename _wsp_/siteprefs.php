@@ -67,6 +67,14 @@ require("./data/include/sidebar.inc.php");
 
 $sitedata = getWSPProperties();
 
+// predefined
+$sitedata['doctype'] = $sitedata['doctype'] ?? 'html5';
+$sitedata['codepage'] = $sitedata['codepage'] ?? 'utf8';
+$sitedata['contentvardesc'] = unserializeBroken($sitedata['contentvardesc']) ?? array();
+$sitedata['languages'] = $sitedata['languages'] ?? array();
+$sitedata['showlang'] = $sitedata['showlang'] ?? 'text';
+$sitedata['setoutputlang'] = $sitedata['setoutputlang'] ?? 'page';
+
 ?>
 <!-- MAIN -->
 <div class="main">
@@ -129,7 +137,19 @@ $sitedata = getWSPProperties();
                         </div>
                         <div class="panel-body">
                             <div class="form-horizontal">
-                                <?php $show = 4; if(array_key_exists('contentvardesc', $sitedata)): $sitedata['contentvardesc'] = unserializeBroken($sitedata['contentvardesc']); foreach($sitedata['contentvardesc'] AS $sk => $sv): if (trim($sv)==""): unset($sitedata['contentvardesc'][$sk]); endif; endforeach; $show = $show - count($sitedata['contentvardesc']); if($show<2): $show = 2; endif; endif; ?>
+                                <?php 
+                                
+                                $show = 4;
+                                if(is_array($sitedata['contentvardesc'])): 
+                                    foreach($sitedata['contentvardesc'] AS $sk => $sv): 
+                                        if (trim($sv)==""): unset($sitedata['contentvardesc'][$sk]); endif; 
+                                    endforeach; 
+                                    $show = $show - count($sitedata['contentvardesc']); 
+                                    if($show<2): $show = 2; 
+                                    endif; 
+                                endif;
+                                
+                                ?>
                                 <?php for($s=0; $s<(count($sitedata['contentvardesc'])+$show); $s++): ?>
                                 <div class="form-group">
                                     <div class="col-md-12">

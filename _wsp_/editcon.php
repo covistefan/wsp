@@ -311,17 +311,19 @@ include ("data/include/sidebar.inc.php");
                         <div class="panel-body" >
                             <div class="tab-content no-padding">
                                 <div class="tab-pane fade in active" id="conftp">
+                                    <?php
+                                                    
+                                    if ($_SESSION['wspvars']['ftp']===false) {
+                                        print('<div class="row">
+                                        <div class="col-md-12"><p>'.returnIntLang('editcon no ftp connection setup. wsp works in srv mode.').'</p></div>
+                                        </div>');
+                                    }
+                                    else {
+                                    
+                                    ?>
                                     <div class="row">
+                                        
                                         <div class="col-md-6">
-                                                <?php
-                                                
-                                                if ($_SESSION['wspvars']['ftp']===false) {
-                                                    print('<div class="row">
-                                                    <div class="col-md-12"><p>'.returnIntLang('no ftp connection setup. wsp works in srv mode.').'</p></div>
-                                                    </div>');
-                                                }
-                                                
-                                                ?>
                                                 <div class="form-group">
                                                     <label for="ticket-name" class="col-sm-3 control-label">FTP_HOST</label>
                                                     <div class="col-sm-9">
@@ -387,18 +389,19 @@ include ("data/include/sidebar.inc.php");
                                         </div>
                                         <div class="col-md-6">
 <pre id="conftp_preview">
-define('FTP_HOST', 'localhost' );
-define('FTP_BASE', '/dev/' );
-define('FTP_USER', 'ftp_wsp' );
-define('FTP_PASS', 'ypGM7W2J' );
-define('FTP_PORT', '21' );
-define('FTP_SSL', false );
-define('FTP_PASV', false );
+define('FTP_HOST', … );
+define('FTP_BASE', … );
+define('FTP_USER', … );
+define('FTP_PASS', … );
+define('FTP_PORT', … );
+define('FTP_SSL', … );
+define('FTP_PASV', … );
 </pre>
                                             <input type="hidden" id="conftp_checked" value="1" class="con-checked" />
                                             <p><a onclick="checkCon('ftp', 'conftp')" class="btn btn-primary disabled"><?php echo returnIntLang('str check', false); ?></a></p>
                                         </div>
                                     </div>
+                                    <?php } ?>
                                 </div>
                                 <div class="tab-pane fade in" id="condb">
                                     <div class="row">
@@ -451,11 +454,11 @@ define('FTP_PASV', false );
                                         </div>
                                         <div class="col-md-6">
 <pre id="condb_preview">
-define('DB_HOST', 'localhost' );
-define('DB_NAME', 'wsp_dev' );
-define('DB_USER', 'wsp_dev_usr' );
-define('DB_PASS', 'tSdDtEjm' );
-define('DB_PREFIX', '' );
+define('DB_HOST', … );
+define('DB_NAME', … );
+define('DB_USER', … );
+define('DB_PASS', … );
+define('DB_PREFIX', … );
 </pre>                   
                                             <input type="hidden" id="condb_checked" value="1" class="con-checked" />
                                             <p><a onclick="checkCon('db', 'condb')" class="btn btn-primary disabled"><?php echo returnIntLang('str check', false); ?></a></p>

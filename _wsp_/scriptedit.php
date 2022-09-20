@@ -256,7 +256,7 @@ require("./data/include/sidebar.inc.php");
             $js_sql = "SELECT `file` FROM `javascript` WHERE `cfolder` = `lastchange` ORDER BY `file`";
             $js_res = getResultSQL($js_sql);
 
-            $sysjsfiles = array();
+            $sysjsfiles = array('covifuncs.js');
             if (is_array($js_res) && count($js_res)>0) {
                 foreach ($js_res AS $jk => $jv) {
                     $sysjsfiles[] = trim($jv).".js";
@@ -358,25 +358,25 @@ require("./data/include/sidebar.inc.php");
                                     $jsmenuuse_sql = "SELECT mj.`description` AS mdesc, mj.`mid` AS mid FROM `menu` AS mj WHERE mj.`addscript` LIKE '%\"".$jfv['id']."\"%'";
                                     $jsmenuuse_res = doSQL($jsmenuuse_sql);
 
-                                    if ($jsmenuuse_res['num']>0):
-                                        echo "Men&uuml;punkte:<br />"; 
-                                        if ($jsmenuuse_num>5):
+                                    if ($jsmenuuse_res['num']>0) {
+                                        echo returnIntLang('str menupoints', false).":<br />"; 
+                                        if ($jsmenuuse_num>5) {
                                             $smushow = 5;
-                                        else:
+                                        } else {
                                             $smushow = $jsmenuuse_num;
-                                        endif;
-                                        for($cures=0; $cures<$smushow; $cures++):
-                                            echo "<a href=\"".$_SERVER['PHP_SELF']."?action=menuedit&id=".mysql_result($jsmenuuse_res, $cures, "mid")."\">".mysql_result($jsmenuuse_res, $cures, "mdesc")."</a><br />";
-                                        endfor;
-                                        if ($jsmenuuse_num>5):
+                                        }
+                                        for ($cures=0; $cures<$smushow; $cures++) {
+                                            echo trim($jsmenuuse_res['set'][$cures]['mdesc'])."<br />";
+                                        }
+                                        if ($jsmenuuse_num>5) {
                                             echo "<a style=\"cursor: pointer;\" id=\"showmore\" onclick=\"document.getElementById('hidemore').style.display = 'block'; document.getElementById('showmore').style.display = 'none';\" >".($jsmenuuse_num-5)." weitere ..</a>";
                                             echo "<span id=\"hidemore\" style=\"display: none;\">";
-                                            for($cures=5; $cures<$jsmenuuse_num; $cures++):
-                                                echo "<a href=\"".$_SERVER['PHP_SELF']."?action=menuedit&id=".mysql_result($jsmenuuse_res, $cures, "mid")."\">".mysql_result($jsmenuuse_res, $cures, "mdesc")."</a><br />";
-                                            endfor;
+                                            for ($cures=5; $cures<$jsmenuuse_num; $cures++) {
+                                                echo trim($jsmenuuse_res['set'][$cures]['mdesc'])."</a><br />";
+                                            }
                                             echo "</span>";
-                                        endif;
-                                    endif;
+                                        }
+                                    }
                                     
                                     echo "</td>";
                                     // action fields
@@ -438,35 +438,43 @@ require("./data/include/sidebar.inc.php");
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($jsfiles_res['set'] AS $cfk => $cfv): ?>
+                                    <?php foreach ($jsfiles_res['set'] AS $cfk => $cfv) { ?>
                                     <tr>
                                         <td class='col-md-8'><?php 
                                         echo "<a style=\"cursor: pointer;\" onClick=\"document.getElementById('edit_design_".$cfk."').submit();\">".$cfv['describ']." [ ".$cfv['file'].".js ]</a>"; ?></td>
                                         <td class='col-md-3'><?php
+                                        
                                         $jsuse_sql = "SELECT t.`name` AS tname, t.`id` AS tid FROM `r_temp_styles` AS rtc, `templates` AS t WHERE rtc.`templates_id` = t.`id` AND rtc.`stylesheets_id` = ".intval($cfv['id']);
                                         $jsuse_res = doSQL($jsuse_sql);
-                                        if ($jsuse_res['num']>0):
-                                            for($cures=0; $cures<$jsuse_res['num']; $cures++):
-                                                echo "<a href=\"./templates.php?op=edit&id=".mysql_result($jsuse_res, $cures, "tid")."\">".setUTF8(mysql_result($jsuse_res, $cures, "tname"))."</a><br />";
-                                            endfor;
-                                        else:
+
+                                        if ($jsuse_res['num']>0) {
+                                            $tpl = array();
+                                            foreach ($jsuse_res['set'] AS $jursk => $jursv) {
+                                                $tpl[] =  "<a href='./templates.php?op=edit&id=".intval($jursv['tid'])."'>".setUTF8(trim($jursv['tname']))."</a>";
+                                            }
+                                            echo implode(", ", $tpl);
+                                            unset($tpl);
+                                        } else {
                                             echo returnIntLang('str no usage', false);
-                                        endif;
+                                        }
+
                                         ?></td>
                                         <td class="col-md-1 text-right"><?php
+                                       
                                         echo "<a onClick=\"document.getElementById('edit_design_".$cfk."').submit();\"><i class='fa fa-pencil-alt fa-btn'></i></a> ";
-                                        if ($jsuse_res['num']==0):
+                                        if ($jsuse_res['num']==0) {
                                             echo " <a onclick=\"return confirmDelete('".$cfv['describ']."', ".intval($cfv['id']).");\" ><i class='fa fa-trash fa-btn'></i></a>";
-                                        else:
+                                        } else {
                                             echo " <i class='fa fa-trash fa-disabled fa-btn'></i>";
-                                        endif;
+                                        }
                                         echo "\t<form name=\"edit_design_".$cfk."\" id=\"edit_design_".$cfk."\" method=\"post\">";
                                         echo "<input name=\"op\" id=\"\" type=\"hidden\" value=\"edit\" />";
                                         echo "<input name=\"id\" id=\"\" type=\"hidden\" value=\"".intval($cfv['id'])."\" />";
                                         echo "</form>\n";
+                                        
                                         ?></td>
                                     </tr>
-                                    <?php endforeach; ?>
+                                    <?php } ?>
                                     
                                 </tbody>    
                             </table>

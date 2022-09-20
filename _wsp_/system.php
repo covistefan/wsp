@@ -649,8 +649,8 @@ require ("./data/include/sidebar.inc.php");
             showWSPMsg($_SESSION['wspvars']['shownotice']);
 
 			if (defined('WSP_UPDSRV') && WSP_UPDSRV=='git') {
-				echo date(returnIntLang('format date time'), $_SESSION['wspvars']['updatedate']);
-				$updversion = time();
+				$updversion = returnIntLang('system git avaiable version1').' '.date(returnIntLang('format date time'), $_SESSION['wspvars']['updatedate']);
+				$showupdate = true;
 			} else if (defined('WSP_UPDSRV') && preg_match('#(\w{1,}\.\w{2,})#i', WSP_UPDSRV)>0) {
 				// get update version from update server
 				$updversion = false;
@@ -675,11 +675,12 @@ require ("./data/include/sidebar.inc.php");
 					endif;
 					fclose($fh);
 				}
+				$showupdate = (version_compare($updversion, $_SESSION['wspvars']['localversion'])>0)?true:false;
 			}
 
             ?>
             <div class="row">
-                <div class="col-md-6" <?php echo (version_compare($updversion, $_SESSION['wspvars']['localversion'])>0)?'':' style="display: none;" '; ?>>
+                <div class="col-md-6" <?php echo ($showupdate)?'':' style="display: none;" '; ?>>
                     <div class="panel">
                         <div class="panel-heading">
                             <h3 class="panel-title"><?php echo returnIntLang('system automatic update'); ?></h3>
@@ -688,7 +689,7 @@ require ("./data/include/sidebar.inc.php");
                             <form name="uploadsystem_zip" id="uploadsystem_zip" method="post" enctype="multipart/form-data">
                                 <input type="hidden" name="doupdate" value="server" />
                                 <input type="hidden" name="getversion" value="full" />
-                                <p><?php echo returnIntLang('system automatic update your version1')." ".$_SESSION['wspvars']['localversion']." ".returnIntLang('system automatic update your version2'); echo returnIntLang('system automatic update avaiable version1')." <strong>".$updversion."</strong> ".returnIntLang('system automatic update avaiable version2') ?></p>
+                                <p><?php echo returnIntLang('system automatic update your version1').' <strong>'.$_SESSION['wspvars']['localversion']."</strong> ".returnIntLang('system automatic update your version2').' <strong>'.date(returnIntLang('format date time'), getWSPProperties('lastupdate')).'</strong> '.returnIntLang('system automatic update your version3').' '.returnIntLang('system automatic update avaiable version1')." <strong>".$updversion."</strong> ".returnIntLang('system automatic update avaiable version2') ?></p>
                                 <?php if ((defined('WSP_DEV') && WSP_DEV) || (defined('WSP_BETA') && WSP_BETA)) { ?>
                                     <p><input type="checkbox" name="getversion" value="nightly" checked="checked" /> <?php echo returnIntLang('system automatic update use nightly'); ?></p>
                                 <?php } ?>

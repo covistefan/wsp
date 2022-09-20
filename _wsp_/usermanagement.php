@@ -284,6 +284,7 @@ include ("./data/include/sidebar.inc.php");
     <!-- END MAIN CONTENT -->
 </div>
 <!-- END MAIN -->
+<?php require ("./data/panels/usermanagement.script.inc.php"); ?>
 <script>
     
 $(document).ready(function() { 

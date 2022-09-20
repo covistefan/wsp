@@ -1177,6 +1177,11 @@ require ("./data/include/sidebar.inc.php");
         }
     }
 
+    $(function(){
+        $(".ui-sortable").sortable(); 
+        $(".ui-sortable").disableSelection();
+    });
+
     $('.section-opener').on('click', function(){
         $(this).parents('.panel-body').find('.section-opener').addClass('inactive').removeClass('active');
         $(this).parents('.panel-body').find('section').hide();

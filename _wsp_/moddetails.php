@@ -132,7 +132,7 @@ $serverversion = $servertag = $serverfile = array();
 $values = false;
 $xmldata = '';
 $defaults = array( 
-    CURLOPT_URL => 'https://'.WSP_UPDSRV.'/versions/modules/', 
+    CURLOPT_URL => 'https://update.wsp-server.info/versions/modules/', 
     CURLOPT_HEADER => 0, 
     CURLOPT_RETURNTRANSFER => TRUE, 
     CURLOPT_TIMEOUT => 4 
@@ -188,7 +188,7 @@ require ("./data/include/sidebar.inc.php");
         <div class="container-fluid">
             <?php showWSPMsg(1); ?>
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-6 col-left">
                     <div class="panel">
                         <div class="panel-heading">
                             <h3 class="panel-title"><?php echo returnIntLang('moddetails info'); ?></h3>
@@ -235,7 +235,7 @@ require ("./data/include/sidebar.inc.php");
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6 col-right">
                     <div class="panel">
                         <div class="panel-heading">
                             <h3 class="panel-title"><?php echo returnIntLang('moddetails files'); ?></h3>
@@ -250,7 +250,7 @@ require ("./data/include/sidebar.inc.php");
                                 <div class="col-md-3"><?php echo returnIntLang('moddetails filelist'); ?></div>
                                 <div class="col-md-9"><?php
                                     
-                                $filelist = unserializeBroken($modules_res['set'][0]['filelist']);    
+                                $filelist = unserializeBroken(trim($modules_res['set'][0]['filelist']));    
                                 if (!($filelist) && trim($modules_res['set'][0]['filelist'])!='') {
                                     $filelist = explode(PHP_EOL, trim($modules_res['set'][0]['filelist']));
                                 }
@@ -259,25 +259,22 @@ require ("./data/include/sidebar.inc.php");
                                         if (substr(trim($flv),-4)=='.sql') {
                                             echo returnIntLang('moddetails filelist dbfile')."<br />";
                                         }
-                                        else if (trim($flv)=='/database.xml') {
+                                        else if (trim($flv)=='/database.xml' || trim($flv)=='database.xml') {
                                             echo returnIntLang('moddetails filelist dbfile xml')."<br />";
                                         }
-                                        else if (trim($flv)=='/setup.php') {
+                                        else if (trim($flv)=='/setup.php' || trim($flv)=='setup.php') {
                                             // setup will not be output
                                         }
                                         else {
-                                            if (substr(trim($flv),0,14)=='/data/modules/') {
-                                                echo returnIntLang('moddetails filelist data').substr(trim($flv),13)."<br />";
+                                            if (substr(strstr(trim($flv), '/data/modules/'),0,14)=='/data/modules/') {
+                                                echo returnIntLang('moddetails filelist modules').' '.substr(strstr(trim($flv), '/data/modules/'),13)."<br />";
                                             }
-                                            else if (substr(trim($flv),4,18)=='/data/interpreter/') {
-                                                echo returnIntLang('moddetails filelist interpreter').substr(trim($flv),21)."<br />";
+                                            else if (substr(strstr(trim($flv), '/data/interpreter/'),0,18)=='/data/interpreter/') {
+                                                echo returnIntLang('moddetails filelist interpreter').' '.substr(strstr(trim($flv), '/data/interpreter/'),18)."<br />";
                                             }
-                                            else if (substr(trim($flv),4,14)=='/data/modules/') {
-                                                echo returnIntLang('moddetails filelist modules').substr(trim($flv),17)."<br />";
-                                            }
-//                                          else {
-//                                              echo $flv."<br />";
-//                                          }
+                                            // else {
+                                            //     echo $flv."<br />";
+                                            // }
                                         }
                                     }
                                 }
@@ -302,8 +299,10 @@ require ("./data/include/sidebar.inc.php");
                     $itp_set[] = $sv['guid'];
                 }
                 
+                $col = ['col-left','col-right']; $c = 0;
+
                 if ($itp_res['num']>0) { ?>
-                    <div class="col-md-6">
+                    <div class="col-md-6 <?php echo $col[$c]; $c = abs($c-1); ?>">
                         <div class="panel">
                             <div class="panel-heading">
                                 <h3 class="panel-title"><?php echo returnIntLang('moddetails accoc interpreter'); ?></h3>
@@ -326,7 +325,7 @@ require ("./data/include/sidebar.inc.php");
                 $mnu_res = doSQL($mnu_sql);
 
                 if ($mnu_res['num']>0) { ?>
-                    <div class="col-md-6">
+                    <div class="col-md-6 <?php echo $col[$c]; $c = abs($c-1); ?>">
                         <div class="panel">
                             <div class="panel-heading">
                                 <h3 class="panel-title"><?php echo returnIntLang('moddetails rights'); ?></h3>
@@ -400,9 +399,9 @@ require ("./data/include/sidebar.inc.php");
                 $gcon_res = doSQL($gcon_sql);
                 
                 if ($con_res['num']>0 || $gcon_res['num']>0) {
-                
+                    $midset = array();
                 ?>
-                <div class="col-md-6">
+                <div class="col-md-6 <?php echo $col[$c]; $c = abs($c-1); ?>">
                     <div class="panel">
                         <div class="panel-heading">
                             <h3 class="panel-title"><?php echo returnIntLang('moddetails usage'); ?></h3>
@@ -414,9 +413,12 @@ require ("./data/include/sidebar.inc.php");
                                 <div class="col-md-8"><?php
                                     
                                 foreach ($con_res['set'] AS $csk => $csv) {
-                                    $cdata_sql = "SELECT `description` FROM `menu` WHERE `mid` = ".intval($csv['cmid']);
-                                    $cdata_res = doResultSQL($cdata_sql);
-                                    echo "<p><a onclick='jtC(".$csv['cid'].")' style='cursor: pointer;'>".$cdata_res."</a></p>";
+                                    if (!in_array(intval($csv['cmid']), $midset)) {
+                                        $cdata_sql = "SELECT `description` FROM `menu` WHERE `mid` = ".intval($csv['cmid']);
+                                        $cdata_res = doResultSQL($cdata_sql);
+                                        echo "<p><a onclick='jtC(".$csv['cid'].")' style='cursor: pointer;'>".$cdata_res."</a></p>";
+                                    }
+                                    $midset[] = intval($csv['cmid']);
                                 }
                                     
                                 ?></div>
@@ -470,7 +472,7 @@ require ("./data/include/sidebar.inc.php");
                 
                 // connected contents from module table and media system
                 if (count($colset)>0) { ?>
-                    <div class="col-md-6">
+                    <div class="col-md-6 <?php echo $col[$c]; $c = abs($c-1); ?>">
                         <div class="panel">
                             <div class="panel-heading">
                                 <h3 class="panel-title"><?php echo returnIntLang('moddetails affects'); ?></h3>
@@ -526,7 +528,7 @@ require ("./data/include/sidebar.inc.php");
                 
                 // connected module table fields and dynamic contents
                 if (count($colset)>0) { ?>
-                    <div class="col-md-6">
+                    <div class="col-md-6 <?php echo $col[$c]; $c = abs($c-1); ?>">
                         <div class="panel">
                             <div class="panel-heading">
                                 <h3 class="panel-title"><?php echo returnIntLang('moddetails dynamic'); ?></h3>
@@ -563,7 +565,7 @@ require ("./data/include/sidebar.inc.php");
             
                 if ($modules_res['set'][0]['dependencies']!='' || $dep_res['num']>0) {
                     ?>
-                    <div class="col-md-6">
+                    <div class="col-md-6 <?php echo $col[$c]; $c = abs($c-1); ?>">
                         <div class="panel">
                             <div class="panel-heading">
                                 <h3 class="panel-title"><?php echo returnIntLang('moddetails dependencies'); ?></h3>

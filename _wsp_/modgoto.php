@@ -37,6 +37,9 @@ if (isset($_REQUEST['modguid'])) {
 }
 else if (isset($_REQUEST['modid'])) {
     $_SESSION['modid'] = intval($_REQUEST['modid']);
+    if (isset($_POST) && is_array($_POST) && count($_POST)==0) {
+        unset ($_SESSION['modgotoparam']);
+    }
 }
 
 header("location: modinterpreter.php");

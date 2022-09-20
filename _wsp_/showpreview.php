@@ -42,23 +42,9 @@ if (isset($_REQUEST['show']) && trim($_REQUEST['show'])!='') {
             $_REQUEST['previewlang'] = trim($showdata[1]);
         endif;
         // create local directory for external request
+        
         $_SESSION['wspvars']['usevar'] = md5(mt_rand());
-        if (!(isset($_SESSION['wspvars']['ftp'])) || $_SESSION['wspvars']['ftp']!==true) {
-            $_SESSION['wspvars']['ftp_host'] = trim(FTP_HOST);
-            $_SESSION['wspvars']['ftp_user'] = trim(FTP_USER);
-            $_SESSION['wspvars']['ftp_pass'] = trim(FTP_PASS);
-            $_SESSION['wspvars']['ftp_base'] = trim(FTP_BASE);
-            $_SESSION['wspvars']['ftp_port'] = (defined('FTP_PORT')?intval(FTP_PORT):21);
-            $_SESSION['wspvars']['ftp_ssl'] = (defined('FTP_SSL')?FTP_SSL:false);
-            $_SESSION['wspvars']['ftp_pasv'] = (defined('FTP_PASV')?FTP_PASV:false);
-            $_SESSION['wspvars']['ftp'] = true;
-        }
-        $ftp = doFTP();
-        $mkdir = ftp_mkdir($ftp, FTP_BASE.'/'.WSP_DIR.'/tmp/'.$_SESSION['wspvars']['usevar']);
-        if ($mkdir) {
-            $chmod = ftp_chmod($ftp, 0777, $mkdir);
-            @ftp_close($ftp);
-        }
+        createDir('/'.WSP_DIR.'/tmp/'.$_SESSION['wspvars']['usevar']);
     }
 }
 
